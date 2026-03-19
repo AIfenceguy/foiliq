@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>FoilIQ — Smart Fencing Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#111;max-width:480px;margin:0 auto;background:#f5f5f3;min-height:100vh;padding-bottom:80px}
@@ -38,7 +39,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1
 .chip.tour-chip.sel{background:#BA7517;color:#FAEEDA;border-color:#BA7517}
 .savebtn{width:100%;padding:16px;background:#185FA5;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;margin-top:4px;transition:all 0.15s}
 .savebtn:active{background:#0C447C;transform:scale(0.99)}
+.savebtn:disabled{background:#aaa;cursor:not-allowed}
 .savemsg{text-align:center;font-size:14px;color:#3B6D11;margin-top:12px;display:none;font-weight:600}
+.errmsg{text-align:center;font-size:14px;color:#A32D2D;margin-top:12px;display:none;font-weight:600}
 .scorerow{display:grid;grid-template-columns:1fr 32px 1fr;gap:6px;align-items:end}
 .scorediv{font-size:22px;color:#aaa;text-align:center;padding-bottom:10px}
 .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
@@ -74,6 +77,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1
 .nav-btn.active{color:#185FA5}
 .nav-btn svg{width:22px;height:22px}
 .empty{text-align:center;padding:32px 16px;color:#aaa;font-size:14px}
+.loading{text-align:center;padding:32px 16px;color:#aaa;font-size:14px}
 #page-landing{display:flex;flex-direction:column;min-height:100vh;background:#fff;padding:0;padding-bottom:0}
 .landing-hero{background:#185FA5;padding:48px 24px 40px;text-align:center;color:#fff}
 .landing-logo{width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
@@ -91,6 +95,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1
 .tour-banner{background:#FAEEDA;border:1px solid #EF9F27;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px}
 .tour-banner.show{display:flex}
 .tour-dot{width:8px;height:8px;border-radius:50%;background:#BA7517;flex-shrink:0}
+.sync-indicator{font-size:11px;color:#3B6D11;display:none;align-items:center;gap:4px;margin-left:auto}
+.sync-indicator.show{display:flex}
 </style>
 </head>
 <body>
@@ -130,6 +136,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1
 <div class="topbar" id="topbar" style="display:none">
   <div class="logo-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17L17 3M17 3H11M17 3V9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   <div><div style="font-size:17px;font-weight:600">FoilIQ</div><div style="font-size:11px;color:#aaa">Smart fencing analytics</div></div>
+  <div class="sync-indicator" id="sync-indicator">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+    Synced
+  </div>
 </div>
 
 <div id="page-log" class="page">
@@ -207,8 +217,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1
     <div class="fg"><label>Notes (optional)</label><textarea id="f-notes" placeholder="Key moments, observations..."></textarea></div>
     <div class="fg" style="margin-bottom:0"><label>Coach notes <span class="new-tag" style="vertical-align:middle">NEW</span></label><textarea id="f-coach" placeholder="What did the coach say after this bout?"></textarea></div>
   </div>
-  <button class="savebtn" onclick="saveMatch()">Save match</button>
-  <div class="savemsg" id="savemsg">Match saved!</div>
+  <button class="savebtn" id="savebtn" onclick="saveMatch()">Save match</button>
+  <div class="savemsg" id="savemsg">&#10003; Match saved to cloud!</div>
+  <div class="errmsg" id="errmsg">Error saving. Check connection.</div>
 </div>
 
 <div id="page-history" class="page">
@@ -223,13 +234,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1
     <div class="chip tour-chip" id="hf-tournament" data-hf="Tournament" onclick="setHType(this)" style="font-size:12px;padding:6px 12px">Tournament</div>
   </div>
   <div class="mgrid" id="hmetrics"></div>
-  <div class="card" id="hlist"></div>
+  <div class="card" id="hlist"><div class="loading">Loading...</div></div>
 </div>
 
 <div id="page-opponents" class="page">
   <div id="olist-view">
     <div class="section-lbl" style="margin-bottom:10px">Opponent scouts</div>
-    <div class="card" id="olist"></div>
+    <div class="card" id="olist"><div class="loading">Loading...</div></div>
   </div>
   <div id="odetail-view" style="display:none">
     <div class="backrow" onclick="backOpps()"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10L12 16" stroke="#185FA5" stroke-width="2.2" stroke-linecap="round"/></svg>All opponents</div>
@@ -271,7 +282,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1
 </div>
 
 <script>
-var fencer='Raedyn',hf='Raedyn',htf='all';
+var SUPABASE_URL = 'https://kyfkiigbiwhczrtnlivc.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_GbLL0419rGP6EYSmq42Bsg_r5EkOYtg';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var fencer='Raedyn', hf='Raedyn', htf='all';
 var C={opptype:null,control:null,action:null,mistake:null,result:null,matchtype:'Practice'};
 var RECS={
   'Comes Forward Fast':['Make Them Go First — wait for commitment','Parry the attack then riposte immediately','Hold distance until they fully lunge'],
@@ -289,13 +304,6 @@ function enterApp(){
   showPage('log');
 }
 
-function loadMatches(){
-  try{var d=localStorage.getItem('foiliq-v1');return d?JSON.parse(d):[]}catch(e){return[]}
-}
-function storeMatches(d){
-  try{localStorage.setItem('foiliq-v1',JSON.stringify(d))}catch(e){}
-}
-
 function setF(n){
   fencer=n;
   document.querySelectorAll('[id^="fb-"]').forEach(function(b){b.classList.remove('active')});
@@ -310,7 +318,7 @@ function sc(el,g){
 
 function toggleTourBanner(){
   var b=document.getElementById('tour-banner');
-  if(C.matchtype==='Tournament')b.classList.add('show');
+  if(C.matchtype==='Tournament') b.classList.add('show');
   else b.classList.remove('show');
 }
 
@@ -319,27 +327,41 @@ function showPage(n){
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active')});
   document.getElementById('page-'+n).classList.add('active');
   document.getElementById('nav-'+n).classList.add('active');
-  if(n==='history')renderH();
-  if(n==='opponents')renderO();
+  if(n==='history') renderH();
+  if(n==='opponents') renderO();
 }
 
-function saveMatch(){
+async function saveMatch(){
   var opp=document.getElementById('f-opp').value.trim();
   if(!opp){alert('Enter opponent name');return}
   if(!C.result){alert('Select Win or Loss');return}
   var me=document.getElementById('f-me').value;
   var them=document.getElementById('f-them').value;
-  var m={
-    id:Date.now(),fencer:fencer,
+  var btn=document.getElementById('savebtn');
+  btn.disabled=true;
+  btn.textContent='Saving...';
+  var row={
+    fencer:fencer,
     date:document.getElementById('f-date').value||new Date().toISOString().split('T')[0],
-    opponent:opp,matchType:C.matchtype||'Practice',
-    oppType:C.opptype||'',control:C.control||'',
-    action:C.action||'',mistake:C.mistake||'',
-    result:C.result,score:me&&them?me+'-'+them:'',
+    opponent:opp,
+    match_type:C.matchtype||'Practice',
+    opp_type:C.opptype||'',
+    control:C.control||'',
+    action:C.action||'',
+    mistake:C.mistake||'',
+    result:C.result,
+    score:me&&them?me+'-'+them:'',
     notes:document.getElementById('f-notes').value.trim(),
-    coachNotes:document.getElementById('f-coach').value.trim()
+    coach_notes:document.getElementById('f-coach').value.trim()
   };
-  var ms=loadMatches();ms.unshift(m);storeMatches(ms);
+  var res=await sb.from('matches').insert([row]);
+  btn.disabled=false;
+  btn.textContent='Save match';
+  if(res.error){
+    document.getElementById('errmsg').style.display='block';
+    setTimeout(function(){document.getElementById('errmsg').style.display='none'},3000);
+    return;
+  }
   document.getElementById('f-opp').value='';
   document.getElementById('f-me').value='';
   document.getElementById('f-them').value='';
@@ -353,15 +375,25 @@ function saveMatch(){
   document.querySelectorAll('#chips-matchtype .chip').forEach(function(c){c.classList.remove('sel')});
   document.querySelector('#chips-matchtype .chip[data-val="Practice"]').classList.add('sel');
   document.getElementById('tour-banner').classList.remove('show');
+  var si=document.getElementById('sync-indicator');
+  si.classList.add('show');
+  setTimeout(function(){si.classList.remove('show')},3000);
   var msg=document.getElementById('savemsg');
   msg.style.display='block';
-  setTimeout(function(){msg.style.display='none'},2500);
+  setTimeout(function(){msg.style.display='none'},3000);
 }
 
-function renderH(){
-  var all=loadMatches();
+async function getMatches(){
+  var q=sb.from('matches').select('*').order('created_at',{ascending:false});
+  var res=await q;
+  return res.data||[];
+}
+
+async function renderH(){
+  document.getElementById('hlist').innerHTML='<div class="loading">Loading...</div>';
+  var all=await getMatches();
   var ms=hf==='All'?all:all.filter(function(m){return m.fencer===hf});
-  if(htf!=='all')ms=ms.filter(function(m){return m.matchType===htf});
+  if(htf!=='all') ms=ms.filter(function(m){return m.match_type===htf});
   var wins=ms.filter(function(m){return m.result==='Win'}).length;
   var ctrl=ms.filter(function(m){return m.control==='I was controlling'}).length;
   var ctrlPct=ms.length?Math.round(ctrl/ms.length*100):0;
@@ -375,11 +407,11 @@ function renderH(){
     return '<div class="mitem">'+
       '<div>'+
         '<div style="font-size:15px;font-weight:600">'+m.opponent+' <span style="font-size:12px;color:#aaa;font-weight:400">'+m.fencer+'</span></div>'+
-        '<div style="font-size:12px;color:#aaa;margin-top:2px">'+m.date+(m.oppType?' &middot; '+m.oppType:'')+(m.control?' &middot; '+m.control:'')+'</div>'+
-        (m.coachNotes?'<div style="font-size:12px;color:#534AB7;margin-top:3px;font-style:italic">&ldquo;'+m.coachNotes.substring(0,60)+(m.coachNotes.length>60?'...':'')+'&rdquo;</div>':'')+
+        '<div style="font-size:12px;color:#aaa;margin-top:2px">'+m.date+(m.opp_type?' &middot; '+m.opp_type:'')+(m.control?' &middot; '+m.control:'')+'</div>'+
+        (m.coach_notes?'<div style="font-size:12px;color:#534AB7;margin-top:3px;font-style:italic">&ldquo;'+m.coach_notes.substring(0,60)+(m.coach_notes.length>60?'...':'')+'&rdquo;</div>':'')+
       '</div>'+
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
-        (m.matchType==='Tournament'?'<span class="bdg bt">Tour</span>':'')+
+        (m.match_type==='Tournament'?'<span class="bdg bt">Tour</span>':'')+
         (m.score?'<span style="font-size:13px;color:#aaa">'+m.score+'</span>':'')+
         '<span class="bdg '+(m.result==='Win'?'bw':'bl')+'">'+m.result+'</span>'+
       '</div>'+
@@ -401,14 +433,15 @@ function setHType(el){
   renderH();
 }
 
-function renderO(){
-  var matches=loadMatches();
+async function renderO(){
+  document.getElementById('olist').innerHTML='<div class="loading">Loading...</div>';
+  var matches=await getMatches();
   var om={};
   matches.forEach(function(m){
     if(!m.opponent)return;
     if(!om[m.opponent])om[m.opponent]={matches:[],types:[],mistakes:[],controls:[]};
     om[m.opponent].matches.push(m);
-    if(m.oppType)om[m.opponent].types.push(m.oppType);
+    if(m.opp_type)om[m.opponent].types.push(m.opp_type);
     if(m.mistake)om[m.opponent].mistakes.push(m.mistake);
     if(m.control)om[m.opponent].controls.push(m.control);
   });
@@ -422,13 +455,23 @@ function renderO(){
     var init=n.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
     var topType=d.types.length?d.types.sort(function(a,b){return d.types.filter(function(x){return x===b}).length-d.types.filter(function(x){return x===a}).length})[0]:'Unknown';
     var ctrlMe=d.controls.filter(function(c){return c==='I was controlling'}).length;
-    var tourCount=d.matches.filter(function(m){return m.matchType==='Tournament'}).length;
-    return '<div class="oitem" onclick="showOpp(\''+n.replace(/'/g,"\\'")+'\')">'+'<div class="avatar">'+init+'</div>'+'<div style="flex:1;margin-left:12px"><div style="font-size:15px;font-weight:600">'+n+(tourCount?' <span class="bdg bt">'+tourCount+' tour</span>':'')+'</div><div style="font-size:12px;color:#aaa;margin-top:2px">'+total+' match'+(total>1?'es':'')+' &middot; '+topType+'</div></div>'+'<div style="text-align:right"><div style="font-size:14px;font-weight:600;color:'+(pct>=50?'#3B6D11':'#A32D2D')+'">'+pct+'% WR</div><div style="font-size:11px;color:#534AB7;margin-top:2px">'+ctrlMe+'/'+total+' ctrl</div></div>'+'</div>';
+    var tourCount=d.matches.filter(function(m){return m.match_type==='Tournament'}).length;
+    return '<div class="oitem" onclick="showOpp(\''+n.replace(/'/g,"\\'")+'\')">'+
+      '<div class="avatar">'+init+'</div>'+
+      '<div style="flex:1;margin-left:12px">'+
+        '<div style="font-size:15px;font-weight:600">'+n+(tourCount?' <span class="bdg bt">'+tourCount+' tour</span>':'')+'</div>'+
+        '<div style="font-size:12px;color:#aaa;margin-top:2px">'+total+' match'+(total>1?'es':'')+' &middot; '+topType+'</div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div style="font-size:14px;font-weight:600;color:'+(pct>=50?'#3B6D11':'#A32D2D')+'">'+pct+'% WR</div>'+
+        '<div style="font-size:11px;color:#534AB7;margin-top:2px">'+ctrlMe+'/'+total+' ctrl</div>'+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
-function showOpp(name){
-  var matches=loadMatches();
+async function showOpp(name){
+  var matches=await getMatches();
   var opp=matches.filter(function(m){return m.opponent===name});
   var wins=opp.filter(function(m){return m.result==='Win'}).length;
   var total=opp.length;
@@ -438,22 +481,62 @@ function showOpp(name){
   var ctrlNs=opp.filter(function(m){return m.control==='Not sure'}).length;
   var mc={};
   opp.forEach(function(m){if(m.mistake)mc[m.mistake]=(mc[m.mistake]||0)+1});
-  var types=opp.map(function(m){return m.oppType}).filter(Boolean);
+  var types=opp.map(function(m){return m.opp_type}).filter(Boolean);
   var topType=types.length?types.sort(function(a,b){return types.filter(function(x){return x===b}).length-types.filter(function(x){return x===a}).length})[0]:'Unknown';
   var recList=RECS[topType]||['Study their patterns','Use Test to probe','Adapt to what they show'];
   var maxM=Math.max.apply(null,Object.values(mc).concat([1]));
   var init=name.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
   var ctrlMsg=ctrlMe>ctrlOpp?'You tend to control this matchup — keep the pressure on.':ctrlOpp>ctrlMe?'They control this fight — reclaiming initiative is priority.':'Control is even — a small edge will decide it.';
-  var coachNotes=opp.filter(function(m){return m.coachNotes}).map(function(m){return '<div style="background:#FAEEDA;border-radius:10px;padding:10px 12px;margin-bottom:8px"><div style="font-size:11px;color:#BA7517;font-weight:600;margin-bottom:4px">'+m.date+' &middot; '+m.fencer+'</div><div style="font-size:13px;color:#633806;font-style:italic">&ldquo;'+m.coachNotes+'&rdquo;</div></div>'}).join('');
-  var mistakeBars=Object.entries(mc).sort(function(a,b){return b[1]-a[1]}).map(function(e){return '<div class="mbar"><div class="mbarlbl">'+e[0]+'</div><div class="btrack"><div class="bfill" style="width:'+Math.round(e[1]/maxM*100)+'%"></div></div><div style="font-size:12px;color:#aaa;min-width:16px;text-align:right">'+e[1]+'</div></div>'}).join('');
+  var coachNotes=opp.filter(function(m){return m.coach_notes}).map(function(m){
+    return '<div style="background:#FAEEDA;border-radius:10px;padding:10px 12px;margin-bottom:8px">'+
+      '<div style="font-size:11px;color:#BA7517;font-weight:600;margin-bottom:4px">'+m.date+' &middot; '+m.fencer+'</div>'+
+      '<div style="font-size:13px;color:#633806;font-style:italic">&ldquo;'+m.coach_notes+'&rdquo;</div>'+
+    '</div>';
+  }).join('');
+  var mistakeBars=Object.entries(mc).sort(function(a,b){return b[1]-a[1]}).map(function(e){
+    return '<div class="mbar"><div class="mbarlbl">'+e[0]+'</div><div class="btrack"><div class="bfill" style="width:'+Math.round(e[1]/maxM*100)+'%"></div></div><div style="font-size:12px;color:#aaa;min-width:16px;text-align:right">'+e[1]+'</div></div>';
+  }).join('');
   document.getElementById('odetail').innerHTML=
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="avatar" style="width:48px;height:48px;font-size:17px">'+init+'</div><div><div style="font-size:20px;font-weight:700">'+name+'</div><div style="font-size:13px;color:#aaa">'+total+' match'+(total>1?'es':'')+' &middot; '+topType+'</div></div></div>'+
-    '<div class="mgrid"><div class="mcard"><div class="mv">'+total+'</div><div class="ml">Matches</div></div><div class="mcard"><div class="mv" style="color:#3B6D11">'+wins+'</div><div class="ml">Wins</div></div><div class="mcard"><div class="mv" style="color:#A32D2D">'+(total-wins)+'</div><div class="ml">Losses</div></div><div class="mcard"><div class="mv" style="color:'+(pct>=50?'#3B6D11':'#A32D2D')+'">'+pct+'%</div><div class="ml">Win rate</div></div></div>'+
-    '<div class="card ctrl-card"><div class="section-lbl">Control breakdown <span class="key-tag">KEY</span></div><div class="csgrid"><div class="cscard" style="background:#EEEDFE"><div style="font-size:22px;font-weight:700;color:#3C3489">'+ctrlMe+'</div><div style="font-size:10px;color:#534AB7;margin-top:2px">I controlled</div></div><div class="cscard" style="background:#FAECE7"><div style="font-size:22px;font-weight:700;color:#712B13">'+ctrlOpp+'</div><div style="font-size:10px;color:#993C1D;margin-top:2px">They controlled</div></div><div class="cscard" style="background:#f5f5f3"><div style="font-size:22px;font-weight:700;color:#666">'+ctrlNs+'</div><div style="font-size:10px;color:#aaa;margin-top:2px">Not sure</div></div></div><div style="font-size:13px;color:#666">'+ctrlMsg+'</div></div>'+
-    '<div class="card"><div class="section-lbl">Opponent style</div><span class="opill">'+topType+'</span><div class="recbox"><div class="recttl">Recommended strategy</div>'+recList.map(function(r){return '<div class="recrow"><div class="recdot"></div><div style="font-size:13px;color:#0C447C">'+r+'</div></div>'}).join('')+'</div></div>'+
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'+
+      '<div class="avatar" style="width:48px;height:48px;font-size:17px">'+init+'</div>'+
+      '<div><div style="font-size:20px;font-weight:700">'+name+'</div><div style="font-size:13px;color:#aaa">'+total+' match'+(total>1?'es':'')+' &middot; '+topType+'</div></div>'+
+    '</div>'+
+    '<div class="mgrid">'+
+      '<div class="mcard"><div class="mv">'+total+'</div><div class="ml">Matches</div></div>'+
+      '<div class="mcard"><div class="mv" style="color:#3B6D11">'+wins+'</div><div class="ml">Wins</div></div>'+
+      '<div class="mcard"><div class="mv" style="color:#A32D2D">'+(total-wins)+'</div><div class="ml">Losses</div></div>'+
+      '<div class="mcard"><div class="mv" style="color:'+(pct>=50?'#3B6D11':'#A32D2D')+'">'+pct+'%</div><div class="ml">Win rate</div></div>'+
+    '</div>'+
+    '<div class="card ctrl-card"><div class="section-lbl">Control breakdown <span class="key-tag">KEY</span></div>'+
+      '<div class="csgrid">'+
+        '<div class="cscard" style="background:#EEEDFE"><div style="font-size:22px;font-weight:700;color:#3C3489">'+ctrlMe+'</div><div style="font-size:10px;color:#534AB7;margin-top:2px">I controlled</div></div>'+
+        '<div class="cscard" style="background:#FAECE7"><div style="font-size:22px;font-weight:700;color:#712B13">'+ctrlOpp+'</div><div style="font-size:10px;color:#993C1D;margin-top:2px">They controlled</div></div>'+
+        '<div class="cscard" style="background:#f5f5f3"><div style="font-size:22px;font-weight:700;color:#666">'+ctrlNs+'</div><div style="font-size:10px;color:#aaa;margin-top:2px">Not sure</div></div>'+
+      '</div>'+
+      '<div style="font-size:13px;color:#666">'+ctrlMsg+'</div>'+
+    '</div>'+
+    '<div class="card"><div class="section-lbl">Opponent style</div><span class="opill">'+topType+'</span>'+
+      '<div class="recbox"><div class="recttl">Recommended strategy</div>'+
+        recList.map(function(r){return '<div class="recrow"><div class="recdot"></div><div style="font-size:13px;color:#0C447C">'+r+'</div></div>'}).join('')+
+      '</div>'+
+    '</div>'+
     (mistakeBars?'<div class="card"><div class="section-lbl">Your patterns vs '+name+'</div>'+mistakeBars+'</div>':'')+
     (coachNotes?'<div class="card"><div class="section-lbl">Coach notes</div>'+coachNotes+'</div>':'')+
-    '<div class="card"><div class="section-lbl">Match history</div>'+opp.map(function(m){return '<div class="mitem"><div><div style="font-size:14px;font-weight:600">'+m.fencer+' &middot; '+m.date+'</div><div style="font-size:12px;color:#aaa">'+(m.action||'&mdash;')+(m.mistake?' &middot; '+m.mistake:'')+(m.control?' &middot; '+m.control:'')+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">'+(m.matchType==='Tournament'?'<span class="bdg bt">Tour</span>':'')+(m.score?'<span style="font-size:13px;color:#aaa">'+m.score+'</span>':'')+'<span class="bdg '+(m.result==='Win'?'bw':'bl')+'">'+m.result+'</span></div></div>'}).join('')+'</div>';
+    '<div class="card"><div class="section-lbl">Match history</div>'+
+      opp.map(function(m){
+        return '<div class="mitem">'+
+          '<div>'+
+            '<div style="font-size:14px;font-weight:600">'+m.fencer+' &middot; '+m.date+'</div>'+
+            '<div style="font-size:12px;color:#aaa">'+(m.action||'&mdash;')+(m.mistake?' &middot; '+m.mistake:'')+(m.control?' &middot; '+m.control:'')+'</div>'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">'+
+            (m.match_type==='Tournament'?'<span class="bdg bt">Tour</span>':'')+
+            (m.score?'<span style="font-size:13px;color:#aaa">'+m.score+'</span>':'')+
+            '<span class="bdg '+(m.result==='Win'?'bw':'bl')+'">'+m.result+'</span>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
+    '</div>';
   document.getElementById('olist-view').style.display='none';
   document.getElementById('odetail-view').style.display='block';
 }
