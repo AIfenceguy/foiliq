@@ -1468,46 +1468,70 @@ function ftHideResults() {
 
 async function ftSelectProfile(profile) {
   ftHideResults();
-  // Set name field
-  document.getElementById('om-name').value = profile.name || profile.label || '';
+  document.getElementById('om-name').value = profile.name || '';
 
   const loaded = document.getElementById('ft-loaded');
   loaded.style.display = 'block';
-  loaded.innerHTML = `<div class="ft-loaded-box"><div class="ftl-name">⏳ Loading profile for ${profile.name||''}...</div></div>`;
 
-  try {
-    // Build the history URL from the profile URL or id+slug
-    let histUrl;
-    if (profile.url && profile.url.includes('/p/')) {
-      // Use the exact URL from search results + /history
-      histUrl = profile.url.replace(/\/$/, '') + '/history';
-    } else if (profile.slug) {
-      histUrl = `${FT_BASE}/p/${profile.slug}/history`;
-    } else {
-      histUrl = `${FT_BASE}/p/${profile.id}/${(profile.name||'').replace(/\s+/g,'-')}/history`;
-    }
+  // Apply what we already have from search results immediately
+  // club and division came from the search table — use them right away
+  if (profile.club) document.getElementById('om-club').value = profile.club;
 
-    // Try proxies in order
-    let html = null;
-    for (const proxy of ['https://api.allorigins.win/raw?url=','https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest=']) {
-      try {
-        const r = await fetch(proxy + encodeURIComponent(histUrl), { signal: AbortSignal.timeout(6000) });
-        if (r.ok) { html = await r.text(); break; }
-      } catch(e) { continue; }
-    }
-    if (!html) throw new Error('Could not fetch profile');
-    const parsed = ftParseHistory(html, profile.name);
+  loaded.innerHTML = `<div class="ft-loaded-box">
+    <div class="ftl-name">⏳ Loading profile for ${profile.name||''}...</div>
+    ${profile.club ? `<div class="ftl-row"><strong>Club:</strong> ${profile.club}</div>` : ''}
+    ${profile.division ? `<div class="ftl-row"><strong>Division:</strong> ${profile.division}</div>` : ''}
+    <div class="ftl-row" style="font-size:.6rem;color:var(--muted)">Fetching: ${histUrl.replace('https://fencingtracker.com','')}</div>
+  </div>`;
 
-    ftCurrentProfile = { ...profile, ...parsed };
-    ftApplyToModal(ftCurrentProfile);
+  // Build history URL — try the raw slug URL first, then fallback formats
+  // FencingTracker profile URL: /p/{id}/{Name-Slug}
+  // The slug from search is the raw URL segment — use it directly
+  const histUrl = profile.url
+    ? profile.url.replace(/\/$/, '') + '/history'
+    : `${FT_BASE}/p/${profile.id}/${profile.slug}/history`;
 
-  } catch(e) {
-    // Even if history fails, at least the name is set
+  const proxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://api.codetabs.com/v1/proxy?quest=',
+  ];
+
+  let html = null;
+  let usedProxy = null;
+  for (const proxy of proxies) {
+    try {
+      const r = await fetch(proxy + encodeURIComponent(histUrl), { signal: AbortSignal.timeout(10000) });
+      if (r.ok) { html = await r.text(); usedProxy = proxy; break; }
+    } catch(e) { continue; }
+  }
+
+  if (!html) {
+    // Couldn't get history — but apply what we have from search + let user fill rest
     ftCurrentProfile = profile;
+    ftApplyBasicToModal(profile);
     loaded.innerHTML = `<div class="ft-loaded-box">
       <div class="ftl-name">✓ ${profile.name}</div>
-      <div class="ftl-row" style="color:var(--orange)">Could not load full stats — fill in details manually.</div>
+      ${profile.club ? `<div class="ftl-row"><strong>Club:</strong> ${profile.club}</div>` : ''}
+      ${profile.division ? `<div class="ftl-row"><strong>Division:</strong> ${profile.division}</div>` : ''}
+      <div class="ftl-row" style="color:var(--orange);margin-top:.3rem">⚠ Could not load full stats — fill in SWOT manually</div>
     </div>`;
+    return;
+  }
+
+  const parsed = ftParseHistory(html, profile.name);
+  ftCurrentProfile = { ...profile, ...parsed };
+  ftApplyToModal(ftCurrentProfile);
+}
+
+function ftApplyBasicToModal(p) {
+  // Apply just the basics we got from search results
+  if (p.club) document.getElementById('om-club').value = p.club;
+  // Try to guess age group from year if we have it
+  if (p.year) {
+    const age = new Date().getFullYear() - parseInt(p.year);
+    const ag = age<=10?'Y10':age<=12?'Y12':age<=14?'Y14':age<=17?'Cadet':age<=20?'Junior':'Senior';
+    omSingle('age', ag);
   }
 }
 
@@ -1614,6 +1638,7 @@ function ftApplyToModal(p) {
     p.winRatioPool? `Pool win rate: ${p.winRatioPool}` : '',
     p.rating      ? `FT rating: ${p.rating}` : '',
     p.ftStrength  ? `FT strength: ${p.ftStrength}` : '',
+    p.division    ? `Division: ${p.division}` : '',
   ].filter(Boolean).join(' | ');
   if (statsNote) document.getElementById('om-notes').value = statsNote;
 
