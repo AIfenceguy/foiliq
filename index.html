@@ -1316,19 +1316,16 @@ async function ftSearch(q) {
   ];
 
   const searchUrl = `${FT_BASE}/search?q=${encodeURIComponent(q)}`;
+  const qWords = q.toLowerCase().trim().replace(/[^a-z0-9 ]/g,'').split(/\s+/).filter(Boolean);
 
   for (const proxy of proxies) {
     try {
-      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(6000) });
       if (!res.ok) continue;
       const html = await res.text();
-      const results = ftParseSearchPage(html, q);
+      const results = ftParseSearchPage(html, qWords);
       if (!results.length) {
-        box.innerHTML = '<div class="ft-result-item loading">No results found — try full name (e.g. "Tristan Chong")</div>';
-        return;
-      }
-      if (!results.length) {
-        box.innerHTML = '<div class="ft-result-item loading">No results found — try full name</div>';
+        box.innerHTML = `<div class="ft-result-item loading">No matches for "<strong>${q}</strong>" — try last name only or check spelling</div>`;
         return;
       }
 
@@ -1367,59 +1364,67 @@ async function ftSearch(q) {
   </div>`;
 }
 
-function ftParseSearchPage(html, query) {
+function ftParseSearchPage(html, qWords) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const results = [];
   const seen = new Set();
 
-  // Normalize query for matching — split into words
-  const queryWords = query.toLowerCase().replace(/[^a-z0-9 ]/g,'').split(/\s+/).filter(Boolean);
-
+  // FencingTracker search results appear as links with pattern /p/{numericId}/{name-slug}
+  // We ONLY want links where the slug/text matches the search query
   doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
     const href = a.getAttribute('href') || '';
-    const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
+    // Must match /p/{digits}/{slug} — slug must start with letter (not another number)
+    const match = href.match(/\/p\/(\d+)\/([A-Za-z][^/?#]*)/);
     if (!match) return;
     const [, id, slug] = match;
     if (seen.has(id)) return;
-    seen.add(id);
 
-    let name = a.textContent.replace(/\s+/g,' ').trim();
-    if (!name || name.length < 2) return;
-    // Skip nav/UI links
-    if (['History','Strength','Summary','Log in','Sign up','Epee','Foil','Saber',
-         'Largest Clubs','Top Clubs','National Circuit','Recruiting'].includes(name)) return;
-    if (name.length > 60) return;
+    // Decode the slug to get the name
+    let nameFromSlug = '';
+    try {
+      nameFromSlug = decodeURIComponent(slug)
+        .replace(/[-_]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    } catch(e) { nameFromSlug = slug.replace(/[-_]/g,' ').trim(); }
 
-    // Decode slug to get the real name
-    let slugName = '';
-    try { slugName = decodeURIComponent(slug).replace(/-/g,' ').replace(/\s+/g,' ').trim(); } catch(e) {}
+    // Also check the link text
+    const linkText = a.textContent.replace(/\s+/g,' ').trim();
 
-    // Use whichever is more name-like (has a space = first+last name)
-    const candidateName = name.includes(' ') ? name : (slugName.includes(' ') ? slugName : name);
+    // Pick the better name (prefer one with a space = has first+last)
+    let name = (nameFromSlug.includes(' ') ? nameFromSlug : '') ||
+               (linkText.includes(' ') ? linkText : '') ||
+               nameFromSlug || linkText;
 
-    // ── KEY FIX: only include if name matches the search query ──
-    const nameLower = candidateName.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-    const nameWords = nameLower.split(/\s+/);
-    const matchScore = queryWords.filter(qw =>
-      nameWords.some(nw => nw.startsWith(qw) || qw.startsWith(nw))
+    if (!name || name.length < 2 || name.length > 80) return;
+
+    // Skip UI/nav text
+    const skipList = ['History','Strength','Summary','Log in','Sign up','Epee','Foil',
+                      'Saber','Search','Largest Clubs','Top Clubs','National Circuit',
+                      'Recruiting','Men','Women','Light','Dark','Auto','Discord'];
+    if (skipList.some(s => name === s)) return;
+
+    // ── STRICT NAME MATCH: slug must contain the search words ──
+    const slugLower = nameFromSlug.toLowerCase().replace(/[^a-z0-9 ]/g,'');
+    const slugWords = slugLower.split(/\s+/);
+    const matchCount = qWords.filter(qw =>
+      slugWords.some(sw => sw.startsWith(qw) || qw.startsWith(sw))
     ).length;
-    // Must match at least half the query words
-    if (matchScore < Math.max(1, Math.ceil(queryWords.length * 0.5))) return;
 
-    let year = '', club = '';
-    const row = a.closest('tr') || a.closest('li') || a.parentElement;
-    if (row) {
-      const ym = row.textContent.match(/\b(20\d{2}|19\d{2})\b/);
-      if (ym) year = ym[1];
-      const cells = row.querySelectorAll('td');
-      if (cells.length >= 3) club = cells[2]?.textContent?.trim() || '';
-    }
+    // Need to match at least 1 word (for single-word queries) or half for multi-word
+    const minMatch = qWords.length === 1 ? 1 : Math.ceil(qWords.length * 0.5);
+    if (matchCount < minMatch) return;
 
-    results.push({ id, slug, name: candidateName, url: `${FT_BASE}/p/${id}/${slug}`, year, club });
+    seen.add(id);
+    results.push({
+      id, slug, name,
+      url: `${FT_BASE}/p/${id}/${slug}`,
+      year: '', club: '', rating: ''
+    });
   });
 
-  return results.slice(0, 10);
+  return results.slice(0, 8);
 }
 
 async function ftFetchClub(result, proxy) {
