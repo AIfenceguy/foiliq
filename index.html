@@ -2,492 +2,1557 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FoilIQ — Smart Fencing Analytics</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#111;max-width:480px;margin:0 auto;background:#f5f5f3;min-height:100vh;padding-bottom:80px}
-.topbar{background:#fff;border-bottom:1px solid #e8e8e6;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
-.logo-icon{width:32px;height:32px;background:#185FA5;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.page{display:none;padding:16px}
-.page.active{display:block}
-.card{background:#fff;border:1px solid #e8e8e6;border-radius:16px;padding:16px;margin-bottom:12px}
-.card.ctrl-card{border-color:#534AB7;border-width:1.5px}
-.section-lbl{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.key-tag{background:#EEEDFE;color:#534AB7;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600}
-.new-tag{background:#E6F1FB;color:#185FA5;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600}
-.toggle{display:flex;background:#f0f0ee;border-radius:12px;padding:3px;margin-bottom:16px}
-.tbtn{flex:1;padding:9px;border:none;background:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;color:#888;transition:all 0.15s}
-.tbtn.active{background:#fff;color:#185FA5;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
-.fg{margin-bottom:12px}
-.fg label{display:block;font-size:13px;color:#888;margin-bottom:5px;font-weight:500}
-.fg input,.fg textarea{width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:12px;background:#fff;color:#111;font-size:16px;outline:none}
-.fg input:focus,.fg textarea:focus{border-color:#185FA5}
-.fg textarea{height:75px;resize:none}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{padding:9px 15px;border-radius:999px;border:1.5px solid #ddd;background:#fff;color:#666;font-size:13px;cursor:pointer;font-weight:500;transition:all 0.15s;user-select:none;-webkit-user-select:none}
-.chip:active{transform:scale(0.97)}
-.chip.sel{background:#185FA5;color:#fff;border-color:#185FA5}
-.chip.win.sel{background:#3B6D11;color:#EAF3DE;border-color:#3B6D11}
-.chip.loss.sel{background:#A32D2D;color:#FCEBEB;border-color:#A32D2D}
-.chip.cme.sel{background:#534AB7;color:#EEEDFE;border-color:#534AB7}
-.chip.copp.sel{background:#993C1D;color:#FAECE7;border-color:#993C1D}
-.chip.cns.sel{background:#5F5E5A;color:#F1EFE8;border-color:#5F5E5A}
-.chip.isnew{border-color:#185FA5;border-style:dashed;color:#185FA5}
-.chip.isnew.sel{border-style:solid;background:#185FA5;color:#fff}
-.chip.tour-chip.sel{background:#BA7517;color:#FAEEDA;border-color:#BA7517}
-.savebtn{width:100%;padding:16px;background:#185FA5;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;margin-top:4px}
-.savebtn:disabled{background:#aaa;cursor:not-allowed}
-.savemsg{text-align:center;font-size:14px;color:#3B6D11;margin-top:12px;display:none;font-weight:600}
-.errmsg{text-align:center;font-size:14px;color:#A32D2D;margin-top:12px;display:none;font-weight:600}
-.scorerow{display:grid;grid-template-columns:1fr 32px 1fr;gap:6px;align-items:end}
-.scorediv{font-size:22px;color:#aaa;text-align:center;padding-bottom:10px}
-.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.mcard{background:#f5f5f3;border-radius:12px;padding:10px 6px;text-align:center}
-.mcard .mv{font-size:20px;font-weight:600}
-.mcard .ml{font-size:10px;color:#888;margin-top:2px}
-.mitem{padding:12px 0;border-bottom:1px solid #f0f0ee;display:flex;justify-content:space-between;align-items:center}
-.mitem:last-child{border-bottom:none}
-.bdg{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
-.bw{background:#EAF3DE;color:#27500A}
-.bl{background:#FCEBEB;color:#791F1F}
-.bt{background:#FAEEDA;color:#633806;font-size:11px;padding:2px 7px}
-.oitem{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0ee;cursor:pointer}
-.oitem:last-child{border-bottom:none}
-.avatar{width:40px;height:40px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#185FA5;flex-shrink:0}
-.backrow{display:flex;align-items:center;gap:6px;margin-bottom:16px;cursor:pointer;color:#185FA5;font-size:14px;font-weight:500}
-.mbar{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-.mbarlbl{font-size:12px;color:#888;min-width:135px}
-.btrack{flex:1;height:6px;background:#f0f0ee;border-radius:3px;overflow:hidden}
-.bfill{height:100%;background:#378ADD;border-radius:3px}
-.csgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
-.cscard{border-radius:12px;padding:10px 8px;text-align:center}
-.opill{font-size:11px;font-weight:600;color:#534AB7;background:#EEEDFE;padding:3px 10px;border-radius:8px;display:inline-block;margin-bottom:8px}
-.recbox{background:#E6F1FB;border-radius:12px;padding:12px 14px;margin-top:10px}
-.recttl{font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.recrow{display:flex;gap:8px;margin-bottom:5px;align-items:flex-start}
-.recdot{width:5px;height:5px;border-radius:50%;background:#185FA5;margin-top:5px;flex-shrink:0}
-.sitem{padding:14px 0;border-bottom:1px solid #f0f0ee}
-.sitem:last-child{border-bottom:none}
-.rpill{padding:9px 14px;border-radius:11px;font-size:13px;font-weight:600;display:inline-block;margin:0 4px 8px 0}
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #e8e8e6;display:flex;z-index:100}
-.nav-btn{flex:1;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:#aaa;cursor:pointer;font-size:10px;font-weight:600}
-.nav-btn.active{color:#185FA5}
-.nav-btn svg{width:22px;height:22px}
-.empty{text-align:center;padding:32px 16px;color:#aaa;font-size:14px}
-.loading{text-align:center;padding:32px 16px;color:#aaa;font-size:14px}
-#page-landing{display:flex;flex-direction:column;min-height:100vh;background:#fff;padding:0}
-.landing-hero{background:#185FA5;padding:48px 24px 40px;text-align:center;color:#fff}
-.landing-logo{width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-.landing-title{font-size:32px;font-weight:700;margin-bottom:8px}
-.landing-sub{font-size:15px;opacity:0.85;line-height:1.5;max-width:280px;margin:0 auto}
-.landing-features{padding:24px 20px;flex:1}
-.feature-item{display:flex;gap:14px;align-items:flex-start;margin-bottom:20px}
-.feature-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.feature-title{font-size:15px;font-weight:600;margin-bottom:3px}
-.feature-desc{font-size:13px;color:#888;line-height:1.5}
-.landing-cta{padding:20px;background:#fff;border-top:1px solid #f0f0ee}
-.cta-btn{width:100%;padding:16px;background:#185FA5;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
-.tour-banner{background:#FAEEDA;border:1px solid #EF9F27;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px}
-.tour-banner.show{display:flex}
-.tour-dot{width:8px;height:8px;border-radius:50%;background:#BA7517;flex-shrink:0}
+:root {
+  --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3350;
+  --gold:#f0c040; --gold2:#c99a20; --blue:#4a90e2; --green:#3ecf8e;
+  --red:#e05c5c; --orange:#f0834c; --purple:#9b6ff0;
+  --text:#e8eaf0; --muted:#8892b0; --pill-bg:#1e2235;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
+
+/* TOP BAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.2rem;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100;}
+.logo{font-weight:800;font-size:1.1rem;color:var(--gold);letter-spacing:.04em;}
+.logo span{color:var(--muted);font-weight:400;font-size:.75rem;margin-left:.5rem;}
+.api-badge{font-size:.65rem;padding:.2rem .6rem;border-radius:99px;background:rgba(240,192,64,.12);color:var(--gold);border:1px solid var(--gold2);cursor:pointer;}
+.api-badge.connected{background:rgba(62,207,142,.12);color:var(--green);border-color:var(--green);}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;}
+.nav-btn{padding:.75rem 1rem;font-size:.78rem;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.nav-btn:hover:not(.active){color:var(--text);}
+
+/* PAGES */
+.page{display:none;padding:1rem;max-width:700px;margin:0 auto;}
+.page.active{display:block;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;}
+.card-title{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem;}
+
+/* FENCER TOGGLE */
+.fencer-toggle{display:flex;gap:.5rem;margin-bottom:1rem;}
+.ftog{flex:1;padding:.55rem;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-weight:600;cursor:pointer;transition:all .2s;font-size:.85rem;}
+.ftog.active{border-color:var(--gold);background:rgba(240,192,64,.1);color:var(--gold);}
+
+/* FORM */
+label{font-size:.72rem;font-weight:600;color:var(--muted);display:block;margin-bottom:.3rem;margin-top:.8rem;text-transform:uppercase;letter-spacing:.06em;}
+label:first-child{margin-top:0;}
+input[type=text],input[type=number],input[type=date],input[type=password],select,textarea{
+  width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+  color:var(--text);padding:.55rem .75rem;font-size:.85rem;outline:none;transition:border-color .2s;font-family:inherit;}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:60px;}
+select option{background:var(--surface2);}
+
+/* PILLS */
+.pill-grid{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem;}
+.pill{padding:.35rem .8rem;border-radius:99px;border:1.5px solid var(--border);background:var(--pill-bg);color:var(--muted);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.pill:hover{border-color:var(--muted);color:var(--text);}
+.pill.sel{border-color:var(--gold);background:rgba(240,192,64,.12);color:var(--gold);}
+.pill.sel-multi{border-color:var(--blue);background:rgba(74,144,226,.12);color:var(--blue);}
+.pill.sel-bad{border-color:var(--red);background:rgba(224,92,92,.12);color:var(--red);}
+
+/* SCORE ROW */
+.score-row{display:grid;grid-template-columns:1fr 20px 1fr;gap:.4rem;align-items:center;max-width:200px;}
+.score-sep{text-align:center;color:var(--muted);}
+
+/* BUTTONS */
+.btn{display:block;width:100%;padding:.75rem;border-radius:8px;border:none;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;text-align:center;}
+.btn-gold{background:var(--gold);color:#0f1117;}
+.btn-gold:hover{background:#f7d060;}
+.btn-gold:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.btn-sm{padding:.35rem .8rem;font-size:.75rem;border-radius:6px;display:inline-block;width:auto;}
+.btn-danger{background:rgba(224,92,92,.15);border:1px solid var(--red);color:var(--red);}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--green);color:#0f1117;padding:.6rem 1.2rem;border-radius:99px;font-weight:700;font-size:.82rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;}
+.toast.error{background:var(--red);color:#fff;}
+
+/* MATCH CARDS */
+.match-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.8rem;margin-bottom:.6rem;}
+.match-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;}
+.match-name{font-weight:700;font-size:.9rem;}
+.badge{font-size:.72rem;font-weight:700;padding:.2rem .6rem;border-radius:99px;}
+.win{background:rgba(62,207,142,.15);color:var(--green);}
+.loss{background:rgba(224,92,92,.15);color:var(--red);}
+.match-meta{font-size:.72rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.4rem;}
+.tag{background:var(--pill-bg);border:1px solid var(--border);border-radius:4px;padding:.15rem .45rem;font-size:.67rem;color:var(--muted);}
+
+/* OPPONENT CARDS */
+.opp-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.8rem;cursor:pointer;transition:border-color .2s;}
+.opp-card:hover{border-color:var(--gold);}
+.opp-name{font-weight:700;font-size:1rem;margin-bottom:.2rem;}
+.opp-record{font-size:.75rem;color:var(--muted);}
+.opp-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem;}
+.otag{font-size:.67rem;padding:.15rem .5rem;border-radius:4px;font-weight:600;}
+.t-hand{background:rgba(74,144,226,.15);color:var(--blue);}
+.t-style{background:rgba(240,192,64,.12);color:var(--gold);}
+.t-age{background:rgba(62,207,142,.12);color:var(--green);}
+.t-action{background:rgba(155,111,240,.12);color:var(--purple);}
+.t-weak{background:rgba(224,92,92,.12);color:var(--red);}
+
+/* SWOT GRID */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.4rem;}
+.swot-box{border-radius:8px;padding:.7rem;border:1px solid var(--border);}
+.swot-box.s{background:rgba(62,207,142,.05);border-color:rgba(62,207,142,.3);}
+.swot-box.w{background:rgba(224,92,92,.05);border-color:rgba(224,92,92,.3);}
+.swot-box.o{background:rgba(74,144,226,.05);border-color:rgba(74,144,226,.3);}
+.swot-box.t{background:rgba(240,131,76,.05);border-color:rgba(240,131,76,.3);}
+.swot-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;}
+.swot-box.s .swot-label{color:var(--green);}
+.swot-box.w .swot-label{color:var(--red);}
+.swot-box.o .swot-label{color:var(--blue);}
+.swot-box.t .swot-label{color:var(--orange);}
+.swot-item{font-size:.7rem;color:var(--text);padding:.2rem 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.swot-item:last-child{border-bottom:none;}
+.swot-empty{font-size:.7rem;color:var(--muted);font-style:italic;}
+
+/* PERIOD BAR */
+.period-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;margin:.6rem 0;}
+.period-btn{padding:.5rem .2rem;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.68rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.period-btn.active{border-color:var(--gold);background:rgba(240,192,64,.12);color:var(--gold);}
+.period-btn.break-btn.active{border-color:var(--orange);background:rgba(240,131,76,.15);color:var(--orange);}
+
+/* SCORE SITUATION */
+.score-situation{border-radius:8px;padding:.7rem 1rem;margin:.6rem 0;font-size:.8rem;font-weight:600;text-align:center;}
+.sit-winning{background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.4);color:var(--green);}
+.sit-losing{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.4);color:var(--red);}
+.sit-tied{background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.4);color:var(--gold);}
+.sit-close{background:rgba(74,144,226,.1);border:1px solid rgba(74,144,226,.4);color:var(--blue);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:560px;padding:1.2rem;margin:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.modal-title{font-weight:800;font-size:1rem;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;}
+
+/* AI ADVICE */
+.ai-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.ai-mode-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:1rem;cursor:pointer;transition:all .2s;text-align:center;}
+.ai-mode-card:hover{border-color:var(--gold);}
+.ai-mode-card .mode-icon{font-size:1.8rem;margin-bottom:.4rem;}
+.ai-mode-card .mode-label{font-size:.8rem;font-weight:700;color:var(--text);}
+.ai-mode-card .mode-desc{font-size:.68rem;color:var(--muted);margin-top:.2rem;line-height:1.4;}
+
+.step-bar{display:flex;gap:.3rem;align-items:center;margin-bottom:1.2rem;}
+.step-pip{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:var(--muted);flex-shrink:0;cursor:pointer;transition:all .2s;}
+.step-pip.done{border-color:var(--gold2);background:rgba(240,192,64,.15);color:var(--gold);}
+.step-pip.active{border-color:var(--gold);background:rgba(240,192,64,.2);color:var(--gold);}
+.step-line{flex:1;height:1px;background:var(--border);}
+.step-line.done{background:var(--gold2);}
+
+.q-label{font-size:.68rem;font-weight:700;color:var(--gold2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;}
+.q-text{font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:.25rem;line-height:1.45;}
+.q-hint{font-size:.7rem;color:var(--muted);margin-bottom:.8rem;}
+
+.q-nav{display:flex;gap:.5rem;margin-top:1rem;}
+.q-nav .back{flex:0 0 auto;padding:.65rem 1rem;border-radius:8px;background:transparent;border:1.5px solid var(--border);color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;}
+.q-nav .next{flex:1;padding:.65rem;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);color:var(--gold);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.q-nav .next:hover,.q-nav .next.go{background:var(--gold);color:#0f1117;border-color:var(--gold);}
+
+.ai-summary{background:rgba(240,192,64,.06);border:1px solid var(--gold2);border-radius:8px;padding:.8rem 1rem;margin-top:.8rem;font-size:.75rem;line-height:1.8;color:var(--muted);}
+.ai-summary strong{color:var(--text);}
+
+.ai-response{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.ai-resp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
+.ai-resp-mode{font-weight:700;color:var(--gold);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;}
+.ai-resp-body{font-size:.82rem;line-height:1.85;color:var(--text);white-space:pre-wrap;}
+
+.loading-pulse{display:flex;align-items:center;gap:.8rem;padding:1rem;background:var(--surface2);border-radius:8px;margin-top:1rem;}
+.pulse-bar{flex:1;height:3px;background:linear-gradient(90deg,var(--gold),transparent,var(--gold));background-size:200%;animation:pulse 1.2s infinite linear;border-radius:2px;}
+@keyframes pulse{0%{background-position:200%}100%{background-position:-200%}}
+.pulse-text{font-size:.68rem;color:var(--gold2);white-space:nowrap;font-weight:600;}
+
+.followup-row{display:flex;gap:.4rem;margin-top:.8rem;}
+.followup-row input{flex:1;border-radius:8px 0 0 8px;}
+.followup-row button{padding:0 1rem;border-radius:0 8px 8px 0;background:var(--gold2);border:1px solid var(--gold2);color:#0f1117;font-weight:700;font-size:.8rem;cursor:pointer;}
+.followup-row button:hover{background:var(--gold);}
+
+/* PROFILE LOADED BOX */
+.profile-loaded{background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.3);border-radius:8px;padding:.7rem .9rem;font-size:.72rem;line-height:1.75;color:var(--text);}
+.profile-loaded .pl-name{color:var(--green);font-weight:700;margin-bottom:.3rem;font-size:.8rem;}
+.profile-loaded .pl-row{color:var(--muted);}
+.profile-loaded .pl-row strong{color:var(--text);}
+
+/* FT SEARCH */
+.ft-search-wrap { position:relative; }
+.ft-results { position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--gold); border-top:none; border-radius:0 0 8px 8px; z-index:50; max-height:220px; overflow-y:auto; }
+.ft-result-item { padding:.6rem .9rem; cursor:pointer; font-size:.82rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.ft-result-item:last-child { border-bottom:none; }
+.ft-result-item:hover { background:var(--surface2); }
+.ft-result-name { font-weight:600; color:var(--text); }
+.ft-result-meta { font-size:.68rem; color:var(--muted); }
+.ft-result-item.loading { color:var(--muted); font-size:.75rem; padding:.8rem; justify-content:center; }
+.ft-loaded-box { background:rgba(62,207,142,.07); border:1px solid rgba(62,207,142,.3); border-radius:8px; padding:.65rem .9rem; margin-top:.5rem; font-size:.72rem; line-height:1.7; }
+.ft-loaded-box .ftl-name { color:var(--green); font-weight:700; margin-bottom:.2rem; font-size:.8rem; }
+.ft-loaded-box .ftl-row { color:var(--muted); }
+.ft-loaded-box .ftl-row strong { color:var(--text); }
+
+/* GUIDE */
+.guide-block{background:var(--surface2);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:.8rem 1rem;margin-bottom:.8rem;}
+.guide-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem;}
+.guide-action{color:var(--gold);font-size:.8rem;font-weight:700;margin-bottom:.15rem;}
+.guide-desc{font-size:.75rem;color:var(--muted);line-height:1.5;}
+
+/* STAT */
+.stat-row{display:flex;justify-content:space-between;font-size:.78rem;padding:.35rem 0;border-bottom:1px solid var(--border);}
+.stat-row:last-child{border-bottom:none;}
+.stat-val{font-weight:700;}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.82rem;}
+.empty-icon{font-size:2rem;margin-bottom:.5rem;}
+
+/* section divider */
+.section-sep{height:1px;background:var(--border);margin:1rem 0;}
+.section-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:.8rem 0 .4rem;}
 </style>
 </head>
 <body>
 
-<div id="page-landing" class="page active" style="padding:0;padding-bottom:0">
-  <div class="landing-hero">
-    <div class="landing-logo"><svg width="28" height="28" viewBox="0 0 20 20" fill="none"><path d="M3 17L17 3M17 3H11M17 3V9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="landing-title">FoilIQ</div>
-    <div class="landing-sub">Smart fencing analytics for competitive youth fencers</div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">FoilIQ <span>Smart Fencing Analytics</span></div>
+  <span class="api-badge" id="api-badge" onclick="openSettings()">⚙ API: Not set</span>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('log')">📋 Log</button>
+  <button class="nav-btn" onclick="showPage('history')">📊 History</button>
+  <button class="nav-btn" onclick="showPage('opponents')">🎯 Opponents</button>
+  <button class="nav-btn" onclick="showPage('ai')">🤖 AI Advice</button>
+  <button class="nav-btn" onclick="showPage('guide')">📖 Guide</button>
+  <button class="nav-btn" onclick="showPage('import')">⬇ Import</button>
+</div>
+
+<!-- ══════════════════════════ LOG ══════════════════════════ -->
+<div class="page active" id="page-log">
+  <div class="fencer-toggle">
+    <button class="ftog active" id="tog-R" onclick="setFencer('R')">⚔ Raedyn</button>
+    <button class="ftog" id="tog-K" onclick="setFencer('K')">⚔ Kaylan</button>
   </div>
-  <div class="landing-features">
-    <div class="feature-item">
-      <div class="feature-icon" style="background:#E6F1FB"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
-      <div><div class="feature-title">Log every bout</div><div class="feature-desc">Track opponent type, actions, control, and results in seconds — courtside.</div></div>
+  <div class="card">
+    <div class="card-title">Match details</div>
+    <label>Opponent</label>
+    <div style="display:flex;gap:.4rem">
+      <input type="text" id="log-opp" placeholder="Name..." list="opp-datalist">
+      <datalist id="opp-datalist"></datalist>
     </div>
-    <div class="feature-item">
-      <div class="feature-icon" style="background:#EEEDFE"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
-      <div><div class="feature-title">Opponent scouting</div><div class="feature-desc">Build a profile on every opponent. See patterns, win rate, and strategy.</div></div>
+    <label>Date</label>
+    <input type="date" id="log-date">
+    <label>Match type</label>
+    <div class="pill-grid" id="pg-type">
+      <button class="pill" onclick="pickPill('type','Practice')">Practice</button>
+      <button class="pill" onclick="pickPill('type','Tournament')">Tournament</button>
     </div>
-    <div class="feature-item">
-      <div class="feature-icon" style="background:#EAF3DE"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      <div><div class="feature-title">Control tracking</div><div class="feature-desc">The metric that separates good fencers from national-level competitors.</div></div>
+    <label>Opponent type today</label>
+    <div class="pill-grid" id="pg-opptype">
+      <button class="pill" onclick="pickPill('opptype','Comes Forward Fast')">Comes Forward Fast</button>
+      <button class="pill" onclick="pickPill('opptype','Keeps Backing Up')">Keeps Backing Up</button>
+      <button class="pill" onclick="pickPill('opptype','Waits to Hit You')">Waits to Hit You</button>
+      <button class="pill" onclick="pickPill('opptype','Counter Attacks You')">Counter Attacks You</button>
+      <button class="pill" onclick="pickPill('opptype','Not Doing Much')">Not Doing Much</button>
     </div>
-    <div class="feature-item">
-      <div class="feature-icon" style="background:#FAEEDA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-      <div><div class="feature-title">Tournament mode</div><div class="feature-desc">Separate practice and competition data for clearer performance insights.</div></div>
+    <label>Control <span style="color:var(--gold);font-size:.68rem;">KEY METRIC</span></label>
+    <div class="pill-grid" id="pg-control">
+      <button class="pill" onclick="pickPill('control','I was controlling')">I was controlling</button>
+      <button class="pill" onclick="pickPill('control','Opponent controlling')">Opponent controlling</button>
+      <button class="pill" onclick="pickPill('control','Not sure')">Not sure</button>
     </div>
-  </div>
-  <div class="landing-cta">
-    <button class="cta-btn" onclick="enterApp()">Get started</button>
-    <div style="text-align:center;font-size:12px;color:#aaa;margin-top:8px">Free for Raedyn &amp; Kaylan</div>
+    <label>Action used</label>
+    <div class="pill-grid" id="pg-action">
+      <button class="pill" onclick="pickPill('action','Test')">Test</button>
+      <button class="pill" onclick="pickPill('action','Make Them Go First')">Make Them Go First</button>
+      <button class="pill" onclick="pickPill('action','Go Attack')">Go Attack</button>
+      <button class="pill" onclick="pickPill('action','Prepare (setup)')">Prepare (setup)</button>
+    </div>
+    <label>What happened</label>
+    <div class="pill-grid" id="pg-what">
+      <button class="pill" onclick="pickPill('what','Good execution')">Good execution</button>
+      <button class="pill" onclick="pickPill('what','Backed up too much')">Backed up too much</button>
+      <button class="pill" onclick="pickPill('what','Attacked too early')">Attacked too early</button>
+      <button class="pill" onclick="pickPill('what','Without setup')">Without setup</button>
+      <button class="pill" onclick="pickPill('what','Hesitated')">Hesitated</button>
+      <button class="pill" onclick="pickPill('what','Got countered')">Got countered</button>
+      <button class="pill" onclick="pickPill('what','Too far distance')">Too far distance</button>
+    </div>
+    <label>Result</label>
+    <div class="pill-grid" id="pg-result">
+      <button class="pill" onclick="pickPill('result','Win')">Win</button>
+      <button class="pill" onclick="pickPill('result','Loss')">Loss</button>
+    </div>
+    <label>Score</label>
+    <div class="score-row">
+      <input type="number" id="log-score-me" placeholder="Mine" min="0" max="15">
+      <div class="score-sep">—</div>
+      <input type="number" id="log-score-opp" placeholder="Theirs" min="0" max="15">
+    </div>
+    <label>Notes</label>
+    <textarea id="log-notes" placeholder="Optional..."></textarea>
+    <label>Coach notes</label>
+    <textarea id="log-coach" placeholder="Coach feedback..."></textarea>
+    <div style="margin-top:1rem"><button class="btn btn-gold" onclick="saveMatch()">Save match</button></div>
   </div>
 </div>
 
-<div class="topbar" id="topbar" style="display:none">
-  <div class="logo-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17L17 3M17 3H11M17 3V9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-  <div><div style="font-size:17px;font-weight:600">FoilIQ</div><div style="font-size:11px;color:#aaa">Smart fencing analytics</div></div>
+<!-- ══════════════════════════ HISTORY ══════════════════════════ -->
+<div class="page" id="page-history">
+  <div class="fencer-toggle">
+    <button class="ftog active" id="htog-R" onclick="setHistFencer('R')">Raedyn</button>
+    <button class="ftog" id="htog-K" onclick="setHistFencer('K')">Kaylan</button>
+    <button class="ftog" id="htog-A" onclick="setHistFencer('A')">All</button>
+  </div>
+  <div style="display:flex;gap:.5rem;margin-bottom:.8rem">
+    <select id="hist-filter-type" onchange="renderHistory()" style="flex:1">
+      <option value="">All types</option>
+      <option>Practice</option><option>Tournament</option>
+    </select>
+    <select id="hist-filter-opp" onchange="renderHistory()" style="flex:1">
+      <option value="">All opponents</option>
+    </select>
+  </div>
+  <div id="hist-stats" class="card"></div>
+  <div id="history-list"></div>
 </div>
 
-<div id="page-log" class="page">
-  <div class="tour-banner" id="tour-banner"><div class="tour-dot"></div><div style="font-size:13px;font-weight:600;color:#633806">Tournament mode active</div></div>
-  <div class="toggle">
-    <button class="tbtn active" id="fb-Raedyn" onclick="setF('Raedyn')">Raedyn</button>
-    <button class="tbtn" id="fb-Kaylan" onclick="setF('Kaylan')">Kaylan</button>
-  </div>
-  <div class="card">
-    <div class="fg"><label>Opponent name</label><input type="text" id="f-opp" placeholder="e.g. Alex Chen" autocomplete="off"></div>
-    <div class="fg" style="margin-bottom:0"><label>Date</label><input type="date" id="f-date"></div>
-  </div>
-  <div class="card">
-    <div class="section-lbl">Match type <span class="new-tag">NEW</span></div>
-    <div class="chips" id="chips-matchtype">
-      <div class="chip sel" data-val="Practice" onclick="sc(this,'matchtype');toggleTourBanner()">Practice</div>
-      <div class="chip tour-chip" data-val="Tournament" onclick="sc(this,'matchtype');toggleTourBanner()">Tournament</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="section-lbl">Opponent type</div>
-    <div class="chips" id="chips-opptype">
-      <div class="chip" data-val="Comes Forward Fast" onclick="sc(this,'opptype')">Comes Forward Fast</div>
-      <div class="chip" data-val="Keeps Backing Up" onclick="sc(this,'opptype')">Keeps Backing Up</div>
-      <div class="chip" data-val="Waits to Hit You" onclick="sc(this,'opptype')">Waits to Hit You</div>
-      <div class="chip isnew" data-val="Counter Attacks You" onclick="sc(this,'opptype')">Counter Attacks You</div>
-      <div class="chip" data-val="Not Doing Much" onclick="sc(this,'opptype')">Not Doing Much</div>
-    </div>
-  </div>
-  <div class="card ctrl-card">
-    <div class="section-lbl">Control <span class="key-tag">KEY</span></div>
-    <div class="chips" id="chips-control">
-      <div class="chip cme" data-val="I was controlling" onclick="sc(this,'control')">I was controlling</div>
-      <div class="chip copp" data-val="Opponent controlling" onclick="sc(this,'control')">Opponent controlling</div>
-      <div class="chip cns" data-val="Not sure" onclick="sc(this,'control')">Not sure</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="section-lbl">Action used</div>
-    <div class="chips" id="chips-action">
-      <div class="chip" data-val="Test" onclick="sc(this,'action')">Test</div>
-      <div class="chip" data-val="Make Them Go First" onclick="sc(this,'action')">Make Them Go First</div>
-      <div class="chip" data-val="Go Attack" onclick="sc(this,'action')">Go Attack</div>
-      <div class="chip isnew" data-val="Prepare (setup)" onclick="sc(this,'action')">Prepare (setup)</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="section-lbl">What happened</div>
-    <div class="chips" id="chips-mistake">
-      <div class="chip" data-val="Good execution" onclick="sc(this,'mistake')">Good execution</div>
-      <div class="chip" data-val="Backed up too much" onclick="sc(this,'mistake')">Backed up too much</div>
-      <div class="chip" data-val="Attacked too early" onclick="sc(this,'mistake')">Attacked too early</div>
-      <div class="chip" data-val="Without setup" onclick="sc(this,'mistake')">Without setup</div>
-      <div class="chip" data-val="Hesitated" onclick="sc(this,'mistake')">Hesitated</div>
-      <div class="chip" data-val="Too slow" onclick="sc(this,'mistake')">Too slow</div>
-      <div class="chip" data-val="Too late" onclick="sc(this,'mistake')">Too late</div>
-      <div class="chip isnew" data-val="Got countered" onclick="sc(this,'mistake')">Got countered</div>
-      <div class="chip" data-val="Too far distance" onclick="sc(this,'mistake')">Too far distance</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="section-lbl">Result</div>
-    <div class="chips" id="chips-result" style="margin-bottom:14px">
-      <div class="chip win" data-val="Win" onclick="sc(this,'result')">Win</div>
-      <div class="chip loss" data-val="Loss" onclick="sc(this,'result')">Loss</div>
-    </div>
-    <div class="section-lbl">Score</div>
-    <div class="scorerow">
-      <div class="fg" style="margin-bottom:0"><label style="text-align:center;display:block">My score</label><input type="number" id="f-me" placeholder="5" min="0" max="15" style="text-align:center;font-size:22px;font-weight:600;padding:10px"></div>
-      <div class="scorediv">&#8212;</div>
-      <div class="fg" style="margin-bottom:0"><label style="text-align:center;display:block">Their score</label><input type="number" id="f-them" placeholder="3" min="0" max="15" style="text-align:center;font-size:22px;font-weight:600;padding:10px"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="fg"><label>Notes (optional)</label><textarea id="f-notes" placeholder="Key moments, observations..."></textarea></div>
-    <div class="fg" style="margin-bottom:0"><label>Coach notes <span class="new-tag" style="vertical-align:middle">NEW</span></label><textarea id="f-coach" placeholder="What did the coach say after this bout?"></textarea></div>
-  </div>
-  <button class="savebtn" id="savebtn" onclick="saveMatch()">Save match</button>
-  <div class="savemsg" id="savemsg">&#10003; Match saved to cloud!</div>
-  <div class="errmsg" id="errmsg">Error saving. Check connection.</div>
+<!-- ══════════════════════════ OPPONENTS ══════════════════════════ -->
+<div class="page" id="page-opponents">
+  <button class="btn btn-gold" style="margin-bottom:1rem" onclick="openOppModal(null)">+ Add Opponent Profile</button>
+  <div id="opp-list"></div>
 </div>
 
-<div id="page-history" class="page">
-  <div class="toggle">
-    <button class="tbtn active" id="hb-Raedyn" onclick="setHF('Raedyn')">Raedyn</button>
-    <button class="tbtn" id="hb-Kaylan" onclick="setHF('Kaylan')">Kaylan</button>
-    <button class="tbtn" id="hb-All" onclick="setHF('All')">All</button>
+<!-- ══════════════════════════ AI ADVICE ══════════════════════════ -->
+<div class="page" id="page-ai">
+  <!-- Mode selector -->
+  <div id="ai-mode-selector">
+    <div class="card-title" style="margin-bottom:.8rem">What do you need right now?</div>
+    <div class="ai-mode-grid">
+      <div class="ai-mode-card" onclick="startAI('pre')">
+        <div class="mode-icon">📍</div>
+        <div class="mode-label">Pre-Bout Strategy</div>
+        <div class="mode-desc">Game plan before the bout starts. Uses opponent SWOT.</div>
+      </div>
+      <div class="ai-mode-card" onclick="startAI('break')">
+        <div class="mode-icon">⏱</div>
+        <div class="mode-label">Break Advice</div>
+        <div class="mode-desc">1-min break between periods. Score-aware urgent advice.</div>
+      </div>
+      <div class="ai-mode-card" onclick="startAI('post')">
+        <div class="mode-icon">📋</div>
+        <div class="mode-label">Post-Bout Review</div>
+        <div class="mode-desc">What happened & what to fix before next bout.</div>
+      </div>
+      <div class="ai-mode-card" onclick="startAI('train')">
+        <div class="mode-icon">🎯</div>
+        <div class="mode-label">Training Focus</div>
+        <div class="mode-desc">Build today's training session around real weaknesses.</div>
+      </div>
+    </div>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:12px">
-    <div class="chip sel" id="hf-all" data-hf="all" onclick="setHType(this)" style="font-size:12px;padding:6px 12px">All</div>
-    <div class="chip" id="hf-practice" data-hf="Practice" onclick="setHType(this)" style="font-size:12px;padding:6px 12px">Practice</div>
-    <div class="chip tour-chip" id="hf-tournament" data-hf="Tournament" onclick="setHType(this)" style="font-size:12px;padding:6px 12px">Tournament</div>
+
+  <!-- Questionnaire -->
+  <div id="ai-questionnaire" style="display:none">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+        <span id="ai-mode-title" style="font-size:.8rem;font-weight:700;color:var(--gold)"></span>
+        <span style="font-size:.72rem;color:var(--muted);cursor:pointer;text-decoration:underline" onclick="resetAI()">← Back</span>
+      </div>
+      <div class="step-bar" id="ai-step-bar"></div>
+      <div id="ai-q-body"></div>
+    </div>
   </div>
-  <div class="mgrid" id="hmetrics"></div>
-  <div class="card" id="hlist"><div class="loading">Loading...</div></div>
+
+  <div id="ai-result-area"></div>
 </div>
 
-<div id="page-opponents" class="page">
-  <div id="olist-view">
-    <div class="section-lbl" style="margin-bottom:10px">Opponent scouts</div>
-    <div class="card" id="olist"><div class="loading">Loading...</div></div>
+<!-- ══════════════════════════ GUIDE ══════════════════════════ -->
+<div class="page" id="page-guide">
+  <div class="card-title" style="margin-bottom:.8rem">Foil Decision Guide</div>
+  <div class="guide-block">
+    <div class="guide-title">Comes Forward Fast</div>
+    <div class="guide-action">→ Make Them Go First</div>
+    <div class="guide-desc">Let them commit → parry → riposte. Never attack into their pressure.</div>
   </div>
-  <div id="odetail-view" style="display:none">
-    <div class="backrow" onclick="backOpps()"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10L12 16" stroke="#185FA5" stroke-width="2.2" stroke-linecap="round"/></svg>All opponents</div>
-    <div id="odetail"></div>
+  <div class="guide-block">
+    <div class="guide-title">Keeps Backing Up</div>
+    <div class="guide-action">→ Go Attack</div>
+    <div class="guide-desc">Chase, pressure, commit to score. Don't let them reset.</div>
+  </div>
+  <div class="guide-block">
+    <div class="guide-title">Waits to Hit You</div>
+    <div class="guide-action">→ Fake, then Go</div>
+    <div class="guide-desc">Draw the counter-attack → parry → attack. They are baiting you.</div>
+  </div>
+  <div class="guide-block">
+    <div class="guide-title">Counter Attacks You</div>
+    <div class="guide-action">→ Prepare first — remove the angle</div>
+    <div class="guide-desc">Never attack open. Setup → remove their blade → then commit.</div>
+  </div>
+  <div class="guide-block">
+    <div class="guide-title">Not Doing Much</div>
+    <div class="guide-action">→ Take Control</div>
+    <div class="guide-desc">Test → dominate center → force reaction. You set the tempo.</div>
+  </div>
+  <div style="background:rgba(240,192,64,.07);border:1px solid var(--gold2);border-radius:8px;padding:.9rem;margin-top:.5rem;font-size:.78rem;color:var(--muted);line-height:1.7">
+    <strong style="color:var(--gold)">SWOT principle:</strong> Use YOUR strengths to hit THEIR weaknesses. Hide YOUR weaknesses. Don't let them use their strengths against you.<br><br>
+    <strong style="color:var(--gold)">Every forward move must be:</strong> Test → Prepare → Make Them Go First → Go Attack
   </div>
 </div>
 
-<div id="page-system" class="page">
-  <div class="section-lbl">Decision guide</div>
+<!-- ══════════════════════════ IMPORT PAGE ══════════════════════════ -->
+<div class="page" id="page-import">
   <div class="card">
-    <div class="sitem"><div class="opill">Comes Forward Fast</div><div style="font-size:15px;font-weight:600">Make Them Go First</div><div style="font-size:12px;color:#888;margin-top:3px">Let them commit &#8594; parry &#8594; riposte</div></div>
-    <div class="sitem"><div class="opill">Keeps Backing Up</div><div style="font-size:15px;font-weight:600">Go Attack</div><div style="font-size:12px;color:#888;margin-top:3px">Chase, pressure, commit to score</div></div>
-    <div class="sitem"><div class="opill">Waits to Hit You</div><div style="font-size:15px;font-weight:600">Fake, then Go</div><div style="font-size:12px;color:#888;margin-top:3px">Draw the counter &#8594; parry &#8594; attack</div></div>
-    <div class="sitem"><div class="opill">Counter Attacks You</div><div style="font-size:15px;font-weight:600">Prepare &#8212; remove the angle first</div><div style="font-size:12px;color:#888;margin-top:3px">Never attack open &#8594; setup &#8594; then commit</div></div>
-    <div class="sitem"><div class="opill">Not Doing Much</div><div style="font-size:15px;font-weight:600">Take Control</div><div style="font-size:12px;color:#888;margin-top:3px">Test &#8594; dominate center &#8594; force reaction</div></div>
+    <div class="card-title">Import from FencingTracker</div>
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">Paste a FencingTracker profile URL to auto-import the fencer's stats and their recent opponents into FoilIQ.</p>
+
+    <label>FencingTracker Profile URL</label>
+    <input type="text" id="ft-url" placeholder="https://fencingtracker.com/p/100280844/Raedyn Ho Hin-Tsui">
+    <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Works for Raedyn, Kaylan, or any opponent's profile</div>
+
+    <div style="margin-top:1rem;display:flex;gap:.5rem">
+      <button class="btn btn-gold" onclick="runImport()">⬇ Import Profile</button>
+      <button class="btn btn-outline" onclick="document.getElementById('ft-url').value='https://fencingtracker.com/p/100280844/Raedyn Ho Hin-Tsui'">Try Raedyn</button>
+    </div>
   </div>
-  <div class="section-lbl" style="margin-top:8px">Every forward move must be</div>
-  <div style="margin:8px 0 20px">
-    <span class="rpill" style="background:#EAF3DE;color:#27500A">Test</span>
-    <span class="rpill" style="background:#EEEDFE;color:#3C3489">Prepare</span>
-    <span class="rpill" style="background:#E6F1FB;color:#0C447C">Make Them Go First</span>
-    <span class="rpill" style="background:#FAECE7;color:#712B13">Go Attack</span>
+
+  <div id="import-status" style="display:none" class="card">
+    <div class="loading-pulse"><div class="pulse-bar"></div><div class="pulse-text" id="import-status-text">Fetching...</div></div>
   </div>
-  <div class="section-lbl">Control &#8212; the real differentiator</div>
-  <div class="card">
-    <div style="font-size:13px;color:#666;line-height:1.8">Top fencers don't just score &#8212; they <strong style="color:#111">control the fight.</strong> This separates good fencers from top 8 nationals.</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-      <div style="background:#EEEDFE;color:#3C3489;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600">I control &#8594; goal every bout</div>
-      <div style="background:#FAECE7;color:#712B13;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600">They control &#8594; fix this first</div>
+
+  <div id="import-result" style="display:none"></div>
+</div>
+
+<!-- ══════════════ OPPONENT MODAL ══════════════ -->
+<div class="modal-overlay" id="opp-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="opp-modal-title">Add Opponent</div>
+      <button class="modal-close" onclick="closeOppModal()">✕</button>
+    </div>
+
+    <label>Full name * <span style="color:var(--gold);font-weight:400;font-size:.68rem">— type to search FencingTracker</span></label>
+    <div class="ft-search-wrap">
+      <input type="text" id="om-name" placeholder="e.g. Tristan Chong" autocomplete="off"
+        oninput="ftSearchDebounce(this.value)" onblur="setTimeout(()=>ftHideResults(),200)">
+      <div class="ft-results" id="ft-results" style="display:none"></div>
+    </div>
+    <div id="ft-loaded" style="display:none"></div>
+    <label>Club / Team</label>
+    <input type="text" id="om-club" placeholder="e.g. NY Fencers Club">
+    <label>Country / Region</label>
+    <input type="text" id="om-country" placeholder="e.g. USA / California">
+
+    <label>Age group</label>
+    <div class="pill-grid" id="pg-age">
+      <button class="pill" onclick="omSingle('age','Y10')">Y10</button>
+      <button class="pill" onclick="omSingle('age','Y12')">Y12</button>
+      <button class="pill" onclick="omSingle('age','Y14')">Y14</button>
+      <button class="pill" onclick="omSingle('age','Cadet')">Cadet</button>
+      <button class="pill" onclick="omSingle('age','Junior')">Junior</button>
+      <button class="pill" onclick="omSingle('age','Senior')">Senior</button>
+    </div>
+    <label>Handedness</label>
+    <div class="pill-grid" id="pg-hand">
+      <button class="pill" onclick="omSingle('hand','Right-handed')">Right-handed</button>
+      <button class="pill" onclick="omSingle('hand','Left-handed')">Left-handed</button>
+    </div>
+    <label>Height / Reach</label>
+    <div class="pill-grid" id="pg-height">
+      <button class="pill" onclick="omSingle('height','Tall — long reach')">Tall — long reach</button>
+      <button class="pill" onclick="omSingle('height','Average')">Average</button>
+      <button class="pill" onclick="omSingle('height','Short — short reach')">Short — short reach</button>
+    </div>
+    <label>Fencing style</label>
+    <div class="pill-grid" id="pg-style">
+      <button class="pill" onclick="omSingle('style','Aggressive / Forward')">Aggressive / Forward</button>
+      <button class="pill" onclick="omSingle('style','Defensive / Retreating')">Defensive / Retreating</button>
+      <button class="pill" onclick="omSingle('style','Counter-attacker')">Counter-attacker</button>
+      <button class="pill" onclick="omSingle('style','Parry-riposte')">Parry-riposte</button>
+      <button class="pill" onclick="omSingle('style','Second-intention')">Second-intention</button>
+      <button class="pill" onclick="omSingle('style','Well-rounded')">Well-rounded</button>
+    </div>
+    <label>Preferred actions <span style="color:var(--muted);font-weight:400">(select all)</span></label>
+    <div class="pill-grid" id="pg-prefActions">
+      <button class="pill" onclick="omMulti('prefActions','Fleche')">Fleche</button>
+      <button class="pill" onclick="omMulti('prefActions','Beat attack')">Beat attack</button>
+      <button class="pill" onclick="omMulti('prefActions','Feints / compound')">Feints / compound</button>
+      <button class="pill" onclick="omMulti('prefActions','Long distance')">Long distance</button>
+      <button class="pill" onclick="omMulti('prefActions','Close infighting')">Close infighting</button>
+      <button class="pill" onclick="omMulti('prefActions','Parry 6 dominant')">Parry 6 dominant</button>
+      <button class="pill" onclick="omMulti('prefActions','Parry 4 dominant')">Parry 4 dominant</button>
+      <button class="pill" onclick="omMulti('prefActions','Strong preparation')">Strong preparation</button>
+    </div>
+
+    <!-- ── SWOT ── -->
+    <div class="section-sep"></div>
+    <div style="font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.5rem">⚡ SWOT Analysis</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:.8rem;line-height:1.5">Use our strengths to hit their weaknesses. Hide our weaknesses from their strengths.</div>
+
+    <div class="swot-grid">
+      <div class="swot-box s">
+        <div class="swot-label">MY Strengths vs Them</div>
+        <div class="pill-grid" style="flex-direction:column;gap:.3rem" id="pg-myStrengths">
+          <button class="pill" onclick="omMulti('myStrengths','Fast footwork')">Fast footwork</button>
+          <button class="pill" onclick="omMulti('myStrengths','Strong parry')">Strong parry</button>
+          <button class="pill" onclick="omMulti('myStrengths','Better prep game')">Better prep game</button>
+          <button class="pill" onclick="omMulti('myStrengths','Counter-attack')">Counter-attack</button>
+          <button class="pill" onclick="omMulti('myStrengths','Distance control')">Distance control</button>
+          <button class="pill" onclick="omMulti('myStrengths','Aggressive attack')">Aggressive attack</button>
+          <button class="pill" onclick="omMulti('myStrengths','Mental strength')">Mental strength</button>
+        </div>
+      </div>
+      <div class="swot-box w">
+        <div class="swot-label">MY Weaknesses to Hide</div>
+        <div class="pill-grid" style="flex-direction:column;gap:.3rem" id="pg-myWeaknesses">
+          <button class="pill" onclick="omMulti('myWeaknesses','Slow recovery')">Slow recovery</button>
+          <button class="pill" onclick="omMulti('myWeaknesses','Predictable attack')">Predictable attack</button>
+          <button class="pill" onclick="omMulti('myWeaknesses','Weak parry 4')">Weak parry 4</button>
+          <button class="pill" onclick="omMulti('myWeaknesses','Weak parry 6')">Weak parry 6</button>
+          <button class="pill" onclick="omMulti('myWeaknesses','Back up too much')">Back up too much</button>
+          <button class="pill" onclick="omMulti('myWeaknesses','Attack without setup')">Attack without setup</button>
+        </div>
+      </div>
+      <div class="swot-box o">
+        <div class="swot-label">THEIR Weaknesses to Exploit</div>
+        <div class="pill-grid" style="flex-direction:column;gap:.3rem" id="pg-oppWeaknesses">
+          <button class="pill" onclick="omMulti('oppWeaknesses','Wide parry (deceivable)')">Wide parry</button>
+          <button class="pill" onclick="omMulti('oppWeaknesses','Slow recovery')">Slow recovery</button>
+          <button class="pill" onclick="omMulti('oppWeaknesses','Predictable attack')">Predictable attack</button>
+          <button class="pill" onclick="omMulti('oppWeaknesses','Panic under pressure')">Panic under pressure</button>
+          <button class="pill" onclick="omMulti('oppWeaknesses','Poor distance')">Poor distance</button>
+          <button class="pill" onclick="omMulti('oppWeaknesses','Drops guard')">Drops guard</button>
+          <button class="pill" onclick="omMulti('oppWeaknesses','Slow footwork')">Slow footwork</button>
+        </div>
+      </div>
+      <div class="swot-box t">
+        <div class="swot-label">THEIR Strengths — Avoid!</div>
+        <div class="pill-grid" style="flex-direction:column;gap:.3rem" id="pg-oppStrengths">
+          <button class="pill" onclick="omMulti('oppStrengths','Strong fleche')">Strong fleche</button>
+          <button class="pill" onclick="omMulti('oppStrengths','Powerful beat')">Powerful beat</button>
+          <button class="pill" onclick="omMulti('oppStrengths','Fast counter')">Fast counter</button>
+          <button class="pill" onclick="omMulti('oppStrengths','Long reach')">Long reach</button>
+          <button class="pill" onclick="omMulti('oppStrengths','Strong parry')">Strong parry</button>
+          <button class="pill" onclick="omMulti('oppStrengths','Mental pressure')">Mental pressure</button>
+          <button class="pill" onclick="omMulti('oppStrengths','Great prep game')">Great prep game</button>
+        </div>
+      </div>
+    </div>
+
+    <label>Additional coach / scout notes</label>
+    <textarea id="om-notes" placeholder="Anything else worth remembering..."></textarea>
+
+    <div style="display:flex;gap:.5rem;margin-top:1rem">
+      <button class="btn btn-gold" onclick="saveOppProfile()">Save profile</button>
+      <button class="btn btn-danger btn-sm" id="om-delete-btn" onclick="deleteOppProfile()" style="display:none">Delete</button>
     </div>
   </div>
 </div>
 
-<div class="bottom-nav" id="bottom-nav" style="display:none">
-  <button class="nav-btn active" id="nav-log" onclick="showPage('log')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Log</button>
-  <button class="nav-btn" id="nav-history" onclick="showPage('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>History</button>
-  <button class="nav-btn" id="nav-opponents" onclick="showPage('opponents')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87"/></svg>Scouts</button>
-  <button class="nav-btn" id="nav-system" onclick="showPage('system')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Guide</button>
+<!-- ══════════════ API SETTINGS MODAL ══════════════ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">AI Settings</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <label>AI Provider</label>
+    <div class="pill-grid" id="pg-provider">
+      <button class="pill" onclick="providerPick('claude')">Claude (Anthropic)</button>
+      <button class="pill" onclick="providerPick('openai')">GPT-4o (OpenAI)</button>
+    </div>
+    <label>API Key</label>
+    <input type="password" id="settings-key" placeholder="sk-ant-... or sk-...">
+    <div style="font-size:.65rem;color:var(--muted);margin-top:.3rem">🔒 Stored in your browser only — never sent to FoilIQ servers</div>
+    <div style="margin-top:1rem"><button class="btn btn-gold" onclick="saveSettings()">Save</button></div>
+  </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-var SUPABASE_URL = 'https://kyfkiigbiwhczrtnlivc.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_GbLL0419rGP6EYSmq42Bsg_r5EkOYtg';
-var sb;
+// ══════════════════════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════════════════════
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+const getMatches  = () => DB.get('foiliq_matches')   || [];
+const getOpps     = () => DB.get('foiliq_opponents') || [];
+const getSettings = () => DB.get('foiliq_settings')  || { provider:'claude', key:'' };
+const saveMatches = m => DB.set('foiliq_matches', m);
+const saveOpps    = o => DB.set('foiliq_opponents', o);
+const saveSettingsDB = s => DB.set('foiliq_settings', s);
 
-function initSupabase(){
-  try {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log('Supabase connected');
-  } catch(e) {
-    console.error('Supabase init error:', e);
-  }
+// ══════════════════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const idx = ['log','history','opponents','ai','guide','import'].indexOf(id);
+  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  if (id === 'history')   renderHistory();
+  if (id === 'opponents') renderOpponents();
 }
 
-var fencer='Raedyn', hf='Raedyn', htf='all';
-var C={opptype:null,control:null,action:null,mistake:null,result:null,matchtype:'Practice'};
-var RECS={
-  'Comes Forward Fast':['Make Them Go First — wait for commitment','Parry the attack then riposte immediately','Hold distance until they fully lunge'],
-  'Keeps Backing Up':['Go Attack — chase and apply pressure','Control the strip, force them to the end','Commit fully when you engage'],
-  'Waits to Hit You':['Feint to draw the counterattack','Parry their reaction then attack','Never go straight — always fake first'],
-  'Counter Attacks You':['Prepare first — close the attack line','Remove the counter angle before committing','Setup is mandatory — never attack open'],
-  'Not Doing Much':['Test to gauge their reaction','Take center and dominate the strip','Force them to make a decision']
+// ══════════════════════════════════════════════════════
+//  PILL HELPERS (log page)
+// ══════════════════════════════════════════════════════
+const sel = {};
+function pickPill(group, val) {
+  sel[group] = val;
+  document.querySelectorAll(`#pg-${group} .pill`).forEach(b =>
+    b.classList.toggle('sel', b.textContent.trim() === val));
+}
+const getPill = g => sel[g] || '';
+
+// ══════════════════════════════════════════════════════
+//  FENCER TOGGLE
+// ══════════════════════════════════════════════════════
+let curFencer = 'R';
+function setFencer(f) {
+  curFencer = f;
+  ['R','K'].forEach(x => document.getElementById('tog-'+x).classList.toggle('active', x===f));
+  refreshDatalist();
+}
+
+// ══════════════════════════════════════════════════════
+//  LOG
+// ══════════════════════════════════════════════════════
+document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+
+function refreshDatalist() {
+  document.getElementById('opp-datalist').innerHTML =
+    getOpps().map(o => `<option value="${o.name}">`).join('');
+}
+
+function saveMatch() {
+  const opp  = document.getElementById('log-opp').value.trim();
+  const date = document.getElementById('log-date').value;
+  if (!opp)  { showToast('Enter opponent name', true); return; }
+  if (!date) { showToast('Pick a date', true); return; }
+  const match = {
+    id: Date.now(), fencer: curFencer, opp, date,
+    type: getPill('type'), oppType: getPill('opptype'), control: getPill('control'),
+    action: getPill('action'), what: getPill('what'), result: getPill('result'),
+    scoreMe:  document.getElementById('log-score-me').value  || '',
+    scoreOpp: document.getElementById('log-score-opp').value || '',
+    notes: document.getElementById('log-notes').value.trim(),
+    coach: document.getElementById('log-coach').value.trim(),
+  };
+  const matches = getMatches();
+  matches.unshift(match);
+  saveMatches(matches);
+  // auto-stub opponent
+  const opps = getOpps();
+  if (!opps.find(o => o.name.toLowerCase() === opp.toLowerCase())) {
+    opps.push({ id: Date.now()+1, name: opp, club:'', country:'', age:'', hand:'', height:'', style:'', prefActions:[], myStrengths:[], myWeaknesses:[], oppWeaknesses:[], oppStrengths:[], notes:'' });
+    saveOpps(opps); refreshDatalist();
+  }
+  // reset
+  ['type','opptype','control','action','what','result'].forEach(g => {
+    delete sel[g];
+    document.querySelectorAll(`#pg-${g} .pill`).forEach(b => b.classList.remove('sel'));
+  });
+  ['log-opp','log-notes','log-coach'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('log-score-me').value = '';
+  document.getElementById('log-score-opp').value = '';
+  document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+  showToast('✓ Match saved!');
+}
+
+// ══════════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════════
+let histFencer = 'R';
+function setHistFencer(f) {
+  histFencer = f;
+  ['R','K','A'].forEach(x => document.getElementById('htog-'+x).classList.toggle('active', x===f));
+  renderHistory();
+}
+
+function renderHistory() {
+  let matches = getMatches();
+  if (histFencer !== 'A') matches = matches.filter(m => m.fencer === histFencer);
+  const tf = document.getElementById('hist-filter-type')?.value;
+  const of2 = document.getElementById('hist-filter-opp')?.value;
+  if (tf) matches = matches.filter(m => m.type === tf);
+  if (of2) matches = matches.filter(m => m.opp === of2);
+  const oppSel = document.getElementById('hist-filter-opp');
+  if (oppSel) {
+    const all = [...new Set(getMatches().map(m => m.opp))].sort();
+    const cur = oppSel.value;
+    oppSel.innerHTML = `<option value="">All opponents</option>` + all.map(o => `<option ${o===cur?'selected':''}>${o}</option>`).join('');
+  }
+  const wins  = matches.filter(m => m.result==='Win').length;
+  const losses= matches.filter(m => m.result==='Loss').length;
+  const total = wins+losses;
+  const iCtrl = matches.filter(m => m.control==='I was controlling').length;
+  document.getElementById('hist-stats').innerHTML = `
+    <div class="card-title">Summary — ${total} bouts</div>
+    <div class="stat-row"><span>Win rate</span><span class="stat-val">${total?Math.round(wins/total*100):0}% (${wins}W/${losses}L)</span></div>
+    <div class="stat-row"><span>I controlled</span><span class="stat-val">${total?Math.round(iCtrl/total*100):0}% of bouts</span></div>
+    <div class="stat-row"><span>Total bouts</span><span class="stat-val">${total}</span></div>`;
+  const list = document.getElementById('history-list');
+  if (!matches.length) { list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>No matches found.</div>`; return; }
+  list.innerHTML = matches.map(m => `
+    <div class="match-card">
+      <div class="match-header">
+        <div class="match-name">${m.opp}</div>
+        <span class="badge ${m.result==='Win'?'win':'loss'}">${m.result||'—'}</span>
+      </div>
+      <div class="match-meta">
+        <span>${m.fencer==='R'?'Raedyn':'Kaylan'}</span><span>${m.date}</span>
+        ${m.scoreMe!==''?`<span>${m.scoreMe}—${m.scoreOpp}</span>`:''}
+        ${m.type?`<span class="tag">${m.type}</span>`:''}
+        ${m.oppType?`<span class="tag">${m.oppType}</span>`:''}
+        ${m.control?`<span class="tag">${m.control}</span>`:''}
+        ${m.action?`<span class="tag">${m.action}</span>`:''}
+      </div>
+      ${m.notes?`<div style="font-size:.72rem;color:var(--muted);margin-top:.4rem">${m.notes}</div>`:''}
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  OPPONENT PROFILES
+// ══════════════════════════════════════════════════════
+let editingOppId = null;
+const omS = {};   // single picks
+const omM = {};   // multi picks
+
+function omSingle(group, val) {
+  omS[group] = val;
+  document.querySelectorAll(`#pg-${group} .pill`).forEach(b =>
+    b.classList.toggle('sel', b.textContent.trim() === val));
+}
+function omMulti(group, val) {
+  if (!omM[group]) omM[group] = [];
+  const i = omM[group].indexOf(val);
+  if (i > -1) omM[group].splice(i,1); else omM[group].push(val);
+  document.querySelectorAll(`#pg-${group} .pill`).forEach(b => {
+    if (b.textContent.trim() === val)
+      b.classList.toggle('sel-multi', omM[group].includes(val));
+  });
+}
+
+function renderOpponents() {
+  const opps    = getOpps();
+  const matches = getMatches();
+  const list    = document.getElementById('opp-list');
+  if (!opps.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🎯</div>No opponents saved yet.<br>Add one above, or it auto-creates when you log a match.</div>`;
+    return;
+  }
+  list.innerHTML = opps.map(o => {
+    const om     = matches.filter(m => m.opp.toLowerCase()===o.name.toLowerCase());
+    const wins   = om.filter(m => m.result==='Win').length;
+    const total  = om.filter(m => m.result).length;
+    const wr     = total ? `${Math.round(wins/total*100)}% W (${wins}/${total} bouts)` : 'No bouts logged';
+    const tags = [
+      o.hand   ? `<span class="otag t-hand">${o.hand}</span>` : '',
+      o.style  ? `<span class="otag t-style">${o.style}</span>` : '',
+      o.age    ? `<span class="otag t-age">${o.age}</span>` : '',
+      o.height ? `<span class="otag t-age">${o.height}</span>` : '',
+      ...(o.prefActions||[]).map(a=>`<span class="otag t-action">${a}</span>`),
+      ...(o.oppWeaknesses||[]).slice(0,2).map(a=>`<span class="otag t-weak">${a}</span>`),
+    ].join('');
+    // mini SWOT preview
+    const hasSWOT = (o.myStrengths||[]).length || (o.oppWeaknesses||[]).length;
+    const swotPreview = hasSWOT ? `
+      <div style="margin-top:.6rem;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.68rem">
+        ${(o.myStrengths||[]).length?`<div style="color:var(--green)">💪 ${o.myStrengths.join(', ')}</div>`:''}
+        ${(o.oppWeaknesses||[]).length?`<div style="color:var(--blue)">🎯 ${o.oppWeaknesses.join(', ')}</div>`:''}
+      </div>` : '';
+    return `<div class="opp-card" onclick="openOppModal('${o.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div class="opp-name">${o.name}</div><div class="opp-record">${o.club?o.club+' · ':''}${wr}</div></div>
+        <span style="color:var(--muted);font-size:.72rem">edit ›</span>
+      </div>
+      ${tags?`<div class="opp-tags">${tags}</div>`:''}
+      ${swotPreview}
+    </div>`;
+  }).join('');
+}
+
+function openOppModal(id) {
+  editingOppId = id;
+  Object.keys(omS).forEach(k => delete omS[k]);
+  Object.keys(omM).forEach(k => delete omM[k]);
+  ['om-name','om-club','om-country','om-notes'].forEach(i => document.getElementById(i).value = '');
+  document.querySelectorAll('.modal .pill').forEach(b => b.classList.remove('sel','sel-multi'));
+  if (id) {
+    const o = getOpps().find(x => String(x.id)===String(id));
+    if (!o) return;
+    document.getElementById('opp-modal-title').textContent = 'Edit Opponent';
+    document.getElementById('om-delete-btn').style.display = 'inline-block';
+    document.getElementById('om-name').value    = o.name    || '';
+    document.getElementById('om-club').value    = o.club    || '';
+    document.getElementById('om-country').value = o.country || '';
+    document.getElementById('om-notes').value   = o.notes   || '';
+    if (o.age)    omSingle('age',    o.age);
+    if (o.hand)   omSingle('hand',   o.hand);
+    if (o.height) omSingle('height', o.height);
+    if (o.style)  omSingle('style',  o.style);
+    (o.prefActions||[]).forEach(a => omMulti('prefActions', a));
+    (o.myStrengths||[]).forEach(a => omMulti('myStrengths', a));
+    (o.myWeaknesses||[]).forEach(a => omMulti('myWeaknesses', a));
+    (o.oppWeaknesses||[]).forEach(a => omMulti('oppWeaknesses', a));
+    (o.oppStrengths||[]).forEach(a => omMulti('oppStrengths', a));
+  } else {
+    document.getElementById('opp-modal-title').textContent = 'Add Opponent';
+    document.getElementById('om-delete-btn').style.display = 'none';
+  }
+  document.getElementById('opp-modal').classList.add('open');
+}
+function closeOppModal() { document.getElementById('opp-modal').classList.remove('open'); }
+
+function saveOppProfile() {
+  const name = document.getElementById('om-name').value.trim();
+  if (!name) { showToast('Name is required', true); return; }
+  const profile = {
+    id: editingOppId || Date.now(),
+    name,
+    club:         document.getElementById('om-club').value.trim(),
+    country:      document.getElementById('om-country').value.trim(),
+    notes:        document.getElementById('om-notes').value.trim(),
+    age:          omS['age']    || '',
+    hand:         omS['hand']   || '',
+    height:       omS['height'] || '',
+    style:        omS['style']  || '',
+    prefActions:  omM['prefActions']  || [],
+    myStrengths:  omM['myStrengths']  || [],
+    myWeaknesses: omM['myWeaknesses'] || [],
+    oppWeaknesses:omM['oppWeaknesses']|| [],
+    oppStrengths: omM['oppStrengths'] || [],
+  };
+  const opps = getOpps();
+  if (editingOppId) {
+    const i = opps.findIndex(o => String(o.id)===String(editingOppId));
+    if (i > -1) opps[i] = profile; else opps.push(profile);
+  } else {
+    opps.push(profile);
+  }
+  saveOpps(opps);
+  refreshDatalist();
+  closeOppModal();
+  renderOpponents();
+  showToast('✓ Profile saved!');
+}
+function deleteOppProfile() {
+  if (!editingOppId) return;
+  saveOpps(getOpps().filter(o => String(o.id)!==String(editingOppId)));
+  closeOppModal(); renderOpponents(); showToast('Profile deleted');
+}
+
+// ══════════════════════════════════════════════════════
+//  AI ADVICE — QUESTIONNAIRES
+// ══════════════════════════════════════════════════════
+const AI_Q = {
+
+  pre: {
+    label: '📍 Pre-Bout Strategy',
+    questions: [
+      { id:'fencer',    text:'Who is fencing?',              hint:'',                                                                  type:'pills', opts:['Raedyn','Kaylan'] },
+      { id:'opp',       text:'Who is the opponent?',         hint:'Select their profile — SWOT loads automatically.',                 type:'opp_select' },
+      { id:'comp_type', text:'What type of competition?',    hint:'',                                                                  type:'pills', opts:['Practice','Pool round','Direct Elimination (DE)','Team bout','Qualifier'] },
+      { id:'my_form',   text:'How are you feeling?',         hint:'Be honest — this shapes the mental side of the plan.',             type:'pills', opts:['Sharp & confident','Bit nervous but ready','Anxious','Tired / low energy','Coming back from a loss'] },
+      { id:'goal',      text:'What is the #1 goal today?',   hint:'One focus only.',                                                   type:'pills', opts:['Win — no excuses','Test a new tactic','Apply the SWOT plan','Stay controlled — no panic touches','Build confidence'] },
+    ]
+  },
+
+  break: {
+    label: '⏱ Break Advice',
+    questions: [
+      { id:'fencer',       text:'Who is fencing?',                        hint:'',                                                                   type:'pills', opts:['Raedyn','Kaylan'] },
+      { id:'opp',          text:'Who is the opponent?',                   hint:'Load their profile for smarter advice.',                             type:'opp_select' },
+      { id:'period',       text:'Which period just ended?',               hint:'Foil has 3 periods — pick which one just finished.',                  type:'pills', opts:['Period 1','Period 2'] },
+      { id:'score',        text:'What is the score right now?',           hint:'Your touches first. This completely changes the advice.',             type:'score' },
+      { id:'period_issue', text:'What was the main problem that period?', hint:'Be honest — this is the most important question.',                    type:'pills', opts:['I kept backing up','Attacked without setup','Got hit on my preparation','Lost right-of-way repeatedly','Bad distance control','Felt rushed / panicked','Opponent was faster than expected','Parries failed','Going well — just need next plan'] },
+      { id:'opp_change',   text:'Did your opponent change anything?',     hint:'Did you notice any new pattern or tactic from them?',                 type:'pills', opts:['No — same as before','Started attacking more','Started retreating more','Changed to counter-attacks','Attacking my blade more','Hard to tell'] },
+    ]
+  },
+
+  post: {
+    label: '📋 Post-Bout Review',
+    questions: [
+      { id:'fencer',      text:'Who just fenced?',              hint:'',                                                                       type:'pills', opts:['Raedyn','Kaylan'] },
+      { id:'opp',         text:'Opponent?',                     hint:'',                                                                       type:'opp_select' },
+      { id:'result',      text:'How did the bout go?',          hint:'',                                                                       type:'pills', opts:['Won clearly','Won narrowly','Lost narrowly','Lost clearly','Draw / tie'] },
+      { id:'control',     text:'Who controlled the bout?',      hint:'The most important question.',                                           type:'pills', opts:['I controlled most of it','They controlled most of it','Went back and forth','Hard to tell'] },
+      { id:'what_failed', text:'What cost you the most touches?', hint:'',                                                                     type:'pills', opts:['Attacked without setup','Backed up too much','Got countered repeatedly','Parries were off','Lost right-of-way','Poor distance','Hesitated at key moments','Nothing major — good bout'] },
+    ]
+  },
+
+  train: {
+    label: '🎯 Training Focus',
+    questions: [
+      { id:'fencer',       text:'Who is this plan for?',          hint:'',                                                                    type:'pills', opts:['Raedyn','Kaylan','Both'] },
+      { id:'session_type', text:'What kind of session?',          hint:'',                                                                    type:'pills', opts:['Solo drills','Paired drills','Bouting / sparring','Full coach session','Pre-competition sharpener'] },
+      { id:'focus',        text:'#1 thing to improve today?',     hint:'Pick one priority — everything else is secondary.',                   type:'pills', opts:['Footwork & distance','Attack execution','Parry-riposte','Counter-attack timing','Feints & compound actions','Preparation / setup game','Break tactics & adjustments','Mental composure'] },
+      { id:'recent_issue', text:'What went wrong in the last competition?', hint:'This becomes the drill priority.',                          type:'pills', opts:['Kept losing right-of-way','Backed up too much','Attacked without setup','Got countered too easily','Parries failed under pressure','Distance was off','Slow to adjust at breaks','Nothing specific'] },
+      { id:'time',         text:'How long is the session?',       hint:'',                                                                    type:'pills', opts:['20 min','45 min','60 min','90 min','2 hours+'] },
+    ]
+  },
 };
 
-function enterApp(){
-  document.getElementById('page-landing').style.display='none';
-  document.getElementById('topbar').style.display='flex';
-  document.getElementById('bottom-nav').style.display='flex';
-  document.body.style.paddingBottom='80px';
-  showPage('log');
+let aiMode    = '';
+let aiStep    = 0;
+let aiAns     = {};
+let aiHistory = [];
+
+function startAI(mode) {
+  aiMode = mode; aiStep = 0; aiAns = {}; aiHistory = [];
+  document.getElementById('ai-mode-selector').style.display  = 'none';
+  document.getElementById('ai-questionnaire').style.display  = 'block';
+  document.getElementById('ai-result-area').innerHTML = '';
+  document.getElementById('ai-mode-title').textContent = AI_Q[mode].label;
+  renderAIStep();
 }
 
-function setF(n){
-  fencer=n;
-  document.querySelectorAll('[id^="fb-"]').forEach(function(b){b.classList.remove('active')});
-  document.getElementById('fb-'+n).classList.add('active');
+function resetAI() {
+  aiMode = ''; aiStep = 0; aiAns = {}; aiHistory = [];
+  document.getElementById('ai-mode-selector').style.display  = 'block';
+  document.getElementById('ai-questionnaire').style.display  = 'none';
+  document.getElementById('ai-result-area').innerHTML = '';
 }
 
-function sc(el,g){
-  document.querySelectorAll('#chips-'+g+' .chip').forEach(function(c){c.classList.remove('sel')});
-  el.classList.add('sel');
-  C[g]=el.dataset.val;
-}
+function renderAIStep() {
+  const qs    = AI_Q[aiMode].questions;
+  const total = qs.length;
+  const q     = qs[aiStep];
 
-function toggleTourBanner(){
-  var b=document.getElementById('tour-banner');
-  if(C.matchtype==='Tournament') b.classList.add('show');
-  else b.classList.remove('show');
-}
+  // Step bar
+  let stepHtml = '';
+  qs.forEach((_, i) => {
+    const cls = i < aiStep ? 'done' : i === aiStep ? 'active' : '';
+    stepHtml += `<div class="step-pip ${cls}" onclick="aiJump(${i})">${i+1}</div>`;
+    if (i < total-1) stepHtml += `<div class="step-line ${i < aiStep?'done':''}"></div>`;
+  });
+  document.getElementById('ai-step-bar').innerHTML = stepHtml;
 
-function showPage(n){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active')});
-  document.getElementById('page-'+n).classList.add('active');
-  document.getElementById('nav-'+n).classList.add('active');
-  if(n==='history') renderH();
-  if(n==='opponents') renderO();
-}
+  let html = `<div class="q-label">Question ${aiStep+1} of ${total}</div>`;
+  html += `<div class="q-text">${q.text}</div>`;
+  if (q.hint) html += `<div class="q-hint">${q.hint}</div>`;
 
-async function saveMatch(){
-  var opp=document.getElementById('f-opp').value.trim();
-  if(!opp){alert('Enter opponent name');return}
-  if(!C.result){alert('Select Win or Loss');return}
-  var me=document.getElementById('f-me').value;
-  var them=document.getElementById('f-them').value;
-  var btn=document.getElementById('savebtn');
-  btn.disabled=true;
-  btn.textContent='Saving...';
-  var row={
-    fencer:fencer,
-    date:document.getElementById('f-date').value||new Date().toISOString().split('T')[0],
-    opponent:opp,
-    match_type:C.matchtype||'Practice',
-    opp_type:C.opptype||'',
-    control:C.control||'',
-    action:C.action||'',
-    mistake:C.mistake||'',
-    result:C.result,
-    score:me&&them?me+'-'+them:'',
-    notes:document.getElementById('f-notes').value.trim(),
-    coach_notes:document.getElementById('f-coach').value.trim()
-  };
-  try {
-    var res=await sb.from('matches').insert([row]);
-    btn.disabled=false;
-    btn.textContent='Save match';
-    if(res.error){
-      console.error('Save error:',res.error);
-      document.getElementById('errmsg').textContent='Error: '+res.error.message;
-      document.getElementById('errmsg').style.display='block';
-      setTimeout(function(){document.getElementById('errmsg').style.display='none'},5000);
-      return;
-    }
-    document.getElementById('f-opp').value='';
-    document.getElementById('f-me').value='';
-    document.getElementById('f-them').value='';
-    document.getElementById('f-notes').value='';
-    document.getElementById('f-coach').value='';
-    Object.keys(C).forEach(function(k){
-      if(k==='matchtype'){C[k]='Practice';return}
-      C[k]=null;
-      document.querySelectorAll('#chips-'+k+' .chip').forEach(function(c){c.classList.remove('sel')});
+  // ── Question types ──
+  if (q.type === 'pills') {
+    html += `<div class="pill-grid" id="aipg">`;
+    q.opts.forEach(opt => {
+      const s = aiAns[q.id] === opt;
+      html += `<button class="pill${s?' sel':''}" onclick="aiPick('${q.id}',\`${opt}\`)">${opt}</button>`;
     });
-    document.querySelectorAll('#chips-matchtype .chip').forEach(function(c){c.classList.remove('sel')});
-    document.querySelector('#chips-matchtype .chip[data-val="Practice"]').classList.add('sel');
-    document.getElementById('tour-banner').classList.remove('show');
-    document.getElementById('savemsg').style.display='block';
-    setTimeout(function(){document.getElementById('savemsg').style.display='none'},3000);
+    html += `</div>`;
+
+  } else if (q.type === 'score') {
+    const sm = aiAns['score_me']  || '';
+    const so = aiAns['score_opp'] || '';
+    html += `<div style="margin-bottom:.6rem">
+      <div class="score-row">
+        <div><label style="margin-top:0">YOU</label><input type="number" id="ai-sm" min="0" max="15" value="${sm}" placeholder="0" oninput="aiSaveScore()"></div>
+        <div class="score-sep" style="margin-top:1.4rem">—</div>
+        <div><label style="margin-top:0">OPP</label><input type="number" id="ai-so" min="0" max="15" value="${so}" placeholder="0" oninput="aiSaveScore()"></div>
+      </div>
+    </div>`;
+    // Score situation indicator
+    const me = parseInt(sm)||0, opp = parseInt(so)||0;
+    if (sm !== '' || so !== '') {
+      const diff = me - opp;
+      let sitClass = 'sit-tied', sitText = '⚖ Tied';
+      if (diff >= 4)       { sitClass='sit-winning'; sitText=`🟢 Leading +${diff} — protect the lead`; }
+      else if (diff <= -4) { sitClass='sit-losing';  sitText=`🔴 Down ${Math.abs(diff)} — must push now`; }
+      else if (diff > 0)   { sitClass='sit-close';   sitText=`🔵 Slightly ahead +${diff} — stay focused`; }
+      else if (diff < 0)   { sitClass='sit-close';   sitText=`🔵 Slightly behind ${diff} — time to adjust`; }
+      html += `<div class="score-situation ${sitClass}">${sitText}</div>`;
+    }
+
+  } else if (q.type === 'opp_select') {
+    const opps = getOpps();
+    html += `<select id="ai-opp-sel" onchange="aiSelectOpp()" style="margin-bottom:.5rem">
+      <option value="">— Select opponent —</option>
+      ${opps.map(o=>`<option value="${o.id}" ${aiAns['opp_id']===String(o.id)?'selected':''}>${o.name}${o.hand?' · '+o.hand:''}${o.style?' · '+o.style:''}</option>`).join('')}
+      <option value="__unknown__" ${aiAns['opp_id']==='__unknown__'?'selected':''}>Unknown / not in system</option>
+    </select>`;
+    if (aiAns['opp_profile']) {
+      const o = aiAns['opp_profile'];
+      html += renderProfileLoadedBox(o);
+    } else if (!opps.length) {
+      html += `<div style="font-size:.7rem;color:var(--muted)">No profiles yet — add them in 🎯 Opponents for best advice.</div>`;
+    }
+  }
+
+  // Nav
+  html += `<div class="q-nav">`;
+  if (aiStep > 0) html += `<button class="back" onclick="aiPrev()">← Back</button>`;
+  if (aiStep < total-1) {
+    html += `<button class="next" onclick="aiNext()">Next →</button>`;
+  } else {
+    html += `<button class="next go" onclick="runAI()">⚔ Get Advice</button>`;
+  }
+  html += `</div>`;
+
+  // Summary on last step
+  if (aiStep === total-1) html += buildAISummaryHTML();
+
+  document.getElementById('ai-q-body').innerHTML = html;
+}
+
+function renderProfileLoadedBox(o) {
+  const details = [o.hand, o.height, o.style, o.age].filter(Boolean).join(' · ');
+  const hasSWOT = (o.myStrengths||[]).length || (o.myWeaknesses||[]).length || (o.oppWeaknesses||[]).length || (o.oppStrengths||[]).length;
+  return `<div class="profile-loaded">
+    <div class="pl-name">✓ ${o.name}</div>
+    ${details?`<div class="pl-row">${details}</div>`:''}
+    ${(o.prefActions||[]).length?`<div class="pl-row"><strong>Actions:</strong> ${o.prefActions.join(', ')}</div>`:''}
+    ${hasSWOT?`<div style="margin-top:.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.7rem">
+      ${(o.myStrengths||[]).length?`<div><span style="color:var(--green)">💪 My strengths:</span> ${o.myStrengths.join(', ')}</div>`:''}
+      ${(o.myWeaknesses||[]).length?`<div><span style="color:var(--red)">🛡 Hide:</span> ${o.myWeaknesses.join(', ')}</div>`:''}
+      ${(o.oppWeaknesses||[]).length?`<div><span style="color:var(--blue)">🎯 Target:</span> ${o.oppWeaknesses.join(', ')}</div>`:''}
+      ${(o.oppStrengths||[]).length?`<div><span style="color:var(--orange)">⚠ Avoid:</span> ${o.oppStrengths.join(', ')}</div>`:''}
+    </div>`:''}
+    ${o.notes?`<div class="pl-row" style="margin-top:.3rem;font-style:italic">${o.notes}</div>`:''}
+  </div>`;
+}
+
+function aiJump(i)  { if (i <= aiStep) { aiStep=i; renderAIStep(); } }
+function aiPrev()   { aiStep--; renderAIStep(); }
+function aiNext()   { if (document.getElementById('ai-sm')) aiSaveScore(); aiStep++; renderAIStep(); }
+function aiPick(id, val) { aiAns[id]=val; renderAIStep(); }
+function aiSaveScore() {
+  aiAns['score_me']  = document.getElementById('ai-sm')?.value || '0';
+  aiAns['score_opp'] = document.getElementById('ai-so')?.value || '0';
+  aiAns['score']     = `${aiAns['score_me']} – ${aiAns['score_opp']}`;
+  renderAIStep();
+}
+function aiSelectOpp() {
+  const v = document.getElementById('ai-opp-sel').value;
+  if (!v) { aiAns['opp_id']=''; aiAns['opp_profile']=null; aiAns['opp_name']=''; }
+  else if (v==='__unknown__') { aiAns['opp_id']='__unknown__'; aiAns['opp_profile']=null; aiAns['opp_name']='Unknown'; }
+  else {
+    const o = getOpps().find(x => String(x.id)===v);
+    if (o) { aiAns['opp_id']=String(o.id); aiAns['opp_profile']=o; aiAns['opp_name']=o.name; }
+  }
+  renderAIStep();
+}
+
+function buildAISummaryHTML() {
+  const qs = AI_Q[aiMode].questions;
+  const LBL = { fencer:'Fencer', opp:'Opponent', comp_type:'Bout type', my_form:'Feeling', goal:'Goal', break_number:'Break', score:'Score', period_issue:'Problem this period', result:'Result', control:'Who controlled', what_failed:'Main issue', session_type:'Session', focus:'Focus', recent_issue:'Recent problem', time:'Time' };
+  let rows = '';
+  qs.forEach(q => {
+    if (q.type==='opp_select') { if (aiAns['opp_name']) rows+=`<strong>Opponent:</strong> ${aiAns['opp_name']}<br>`; return; }
+    const v = aiAns[q.id];
+    if (!v) return;
+    rows += `<strong>${LBL[q.id]||q.id}:</strong> ${v}<br>`;
+  });
+  return rows ? `<div class="ai-summary">${rows}</div>` : '';
+}
+
+// ══════════════════════════════════════════════════════
+//  BUILD AI PROMPT
+// ══════════════════════════════════════════════════════
+function buildPrompt() {
+  const mode = aiMode;
+  const a    = aiAns;
+  const o    = a['opp_profile'];
+  const fencer = a['fencer'] || 'the fencer';
+
+  let prompt = `You are an elite foil fencing coach. Respond as if you are speaking directly to a youth fencer (or their parent) during a competition. Be direct, specific, and immediately useful. Use numbered steps. Max 350 words.\n\n`;
+
+  // ── PRE-BOUT ──
+  if (mode === 'pre') {
+    prompt += `MODE: Pre-Bout Strategy for ${fencer}\n`;
+    prompt += `Competition type: ${a['comp_type']||'not specified'}\n`;
+    prompt += `Feeling: ${a['my_form']||'not specified'}\n`;
+    prompt += `Goal: ${a['goal']||'not specified'}\n\n`;
+    if (o) prompt += buildOppContext(o, fencer);
+    prompt += `\nTask: Give a specific pre-bout game plan for ${fencer}.\n`;
+    prompt += `1. Based on the SWOT — which of ${fencer}'s strengths to USE vs this opponent's weaknesses.\n`;
+    prompt += `2. Which of ${fencer}'s weaknesses to HIDE from the opponent's strengths.\n`;
+    prompt += `3. The first 3 actions ${fencer} should take at the start of the bout.\n`;
+    prompt += `4. One mental cue to stay focused.`;
+
+  // ── BREAK ──
+  } else if (mode === 'break') {
+    const me  = parseInt(a['score_me']  || 0);
+    const opp = parseInt(a['score_opp'] || 0);
+    const diff = me - opp;
+    const breakNum = a['break_number'] || 'Break 1';
+    const situation =
+      diff >= 4  ? `WINNING COMFORTABLY (+${diff})` :
+      diff <= -4 ? `LOSING BADLY (${diff})` :
+      diff > 0   ? `SLIGHTLY AHEAD (+${diff})` :
+      diff < 0   ? `SLIGHTLY BEHIND (${diff})` : `TIED`;
+
+    prompt += `MODE: 1-Minute Break Advice — ${breakNum}\n`;
+    prompt += `Fencer: ${fencer}\n`;
+    prompt += `Score: ${fencer} ${me} — Opponent ${opp} (${situation})\n`;
+    prompt += `Main problem this period: ${a['period_issue']||'not specified'}\n`;
+    if (o) prompt += buildOppContext(o, fencer);
+    prompt += `\n⚠ This is a 1-MINUTE BREAK. Give URGENT, SPECIFIC advice.\n`;
+    prompt += `The advice MUST be completely different depending on the score situation:\n`;
+    if (diff >= 4) {
+      prompt += `- They are WINNING. Tell them to protect the lead: be conservative, make the opponent come to them, avoid risky attacks.\n`;
+    } else if (diff <= -4) {
+      prompt += `- They are LOSING BADLY. They must take risks NOW: be aggressive, change tactics completely, attack with intent, nothing to lose.\n`;
+    } else if (diff > 0) {
+      prompt += `- Slightly ahead. Stay the course but fix the main problem. Don't get passive.\n`;
+    } else if (diff < 0) {
+      prompt += `- Slightly behind. Adjust tactics now — don't wait. Address the main problem immediately.\n`;
+    } else {
+      prompt += `- Tied. This period decides it. Address the main problem and pick one tactical change.\n`;
+    }
+    prompt += `\nGive:\n1. The ONE tactical change to make right now (based on score situation + problem)\n2. The specific action to execute in the next 3 touches\n3. One mental reset cue for walking back to the line`;
+
+  // ── POST-BOUT ──
+  } else if (mode === 'post') {
+    prompt += `MODE: Post-Bout Review for ${fencer}\n`;
+    prompt += `Result: ${a['result']||'not specified'}\n`;
+    prompt += `Who controlled: ${a['control']||'not specified'}\n`;
+    prompt += `Main issue: ${a['what_failed']||'not specified'}\n`;
+    if (o) prompt += buildOppContext(o, fencer);
+    prompt += `\nGive:\n1. What went right and should be kept\n2. The specific root cause of the main problem\n3. One drill or focus for the next training session to fix it\n4. If there's a next bout today — one tactical adjustment to make immediately`;
+
+  // ── TRAINING ──
+  } else if (mode === 'train') {
+    prompt += `MODE: Training Session Plan for ${a['fencer']||'the fencer'}\n`;
+    prompt += `Session type: ${a['session_type']||'not specified'}\n`;
+    prompt += `Main focus: ${a['focus']||'not specified'}\n`;
+    prompt += `Recent competition issue: ${a['recent_issue']||'not specified'}\n`;
+    prompt += `Time available: ${a['time']||'not specified'}\n`;
+    prompt += `\nGive a structured training session plan with specific drills, timing for each drill, and coaching cues. Connect every drill directly to fixing the recent competition issue.`;
+  }
+
+  return prompt;
+}
+
+function buildOppContext(o, fencer) {
+  let ctx = `\nOPPONENT PROFILE — ${o.name}:\n`;
+  if (o.hand)   ctx += `Handedness: ${o.hand}\n`;
+  if (o.height) ctx += `Height/reach: ${o.height}\n`;
+  if (o.style)  ctx += `Style: ${o.style}\n`;
+  if (o.age)    ctx += `Age group: ${o.age}\n`;
+  if ((o.prefActions||[]).length)  ctx += `Their preferred actions: ${o.prefActions.join(', ')}\n`;
+  if ((o.oppStrengths||[]).length) ctx += `Their strengths (${fencer} should AVOID these): ${o.oppStrengths.join(', ')}\n`;
+  if ((o.oppWeaknesses||[]).length)ctx += `Their weaknesses (${fencer} should EXPLOIT these): ${o.oppWeaknesses.join(', ')}\n`;
+  if ((o.myStrengths||[]).length)  ctx += `${fencer}'s strengths vs this opponent (USE THESE): ${o.myStrengths.join(', ')}\n`;
+  if ((o.myWeaknesses||[]).length) ctx += `${fencer}'s weaknesses vs this opponent (HIDE THESE): ${o.myWeaknesses.join(', ')}\n`;
+  if (o.notes)  ctx += `Scout notes: ${o.notes}\n`;
+  return ctx;
+}
+
+// ══════════════════════════════════════════════════════
+//  RUN AI
+// ══════════════════════════════════════════════════════
+async function runAI() {
+  const s = getSettings();
+  if (!s.key) { showToast('Set API key — tap ⚙ at the top', true); openSettings(); return; }
+  const prompt = buildPrompt();
+  document.getElementById('ai-result-area').innerHTML = `
+    <div class="loading-pulse"><div class="pulse-bar"></div><div class="pulse-text">ANALYZING...</div></div>`;
+  aiHistory = [{ role:'user', content: prompt }];
+  try {
+    const ans = s.provider==='openai' ? await callOpenAI(s.key, aiHistory) : await callClaude(s.key, aiHistory);
+    aiHistory.push({ role:'assistant', content: ans });
+    document.getElementById('ai-result-area').innerHTML = `
+      <div class="ai-response">
+        <div class="ai-resp-header">
+          <span class="ai-resp-mode">${AI_Q[aiMode].label}</span>
+          <span style="font-size:.7rem;color:var(--muted)">${s.provider==='openai'?'GPT-4o':'Claude'}</span>
+        </div>
+        <div class="ai-resp-body">${escHtml(ans)}</div>
+      </div>
+      <div class="followup-row">
+        <input type="text" id="ai-fu" placeholder="Ask a follow-up..." onkeydown="if(event.key==='Enter')sendFollowup()">
+        <button onclick="sendFollowup()">ASK</button>
+      </div>
+      <div style="text-align:center;margin-top:.8rem">
+        <span style="font-size:.72rem;color:var(--muted);cursor:pointer;text-decoration:underline" onclick="resetAI()">↺ New question</span>
+      </div>`;
   } catch(e) {
-    btn.disabled=false;
-    btn.textContent='Save match';
-    console.error('Exception:',e);
-    document.getElementById('errmsg').textContent='Connection error. Try again.';
-    document.getElementById('errmsg').style.display='block';
-    setTimeout(function(){document.getElementById('errmsg').style.display='none'},5000);
+    document.getElementById('ai-result-area').innerHTML = `
+      <div style="background:rgba(224,92,92,.1);border:1px solid var(--red);border-radius:8px;padding:.8rem;color:var(--red);font-size:.82rem">⚠ ${escHtml(e.message)}</div>`;
   }
 }
 
-async function getMatches(){
+async function sendFollowup() {
+  const input = document.getElementById('ai-fu');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  aiHistory.push({ role:'user', content: q });
+  const s = getSettings();
+  const loadEl = document.createElement('div');
+  loadEl.className = 'loading-pulse';
+  loadEl.innerHTML = `<div class="pulse-bar"></div><div class="pulse-text">THINKING...</div>`;
+  document.querySelector('.followup-row').before(loadEl);
   try {
-    var res=await sb.from('matches').select('*').order('created_at',{ascending:false});
-    if(res.error){console.error('Fetch error:',res.error);return []}
-    return res.data||[];
-  } catch(e){console.error('Fetch exception:',e);return []}
+    const ans = s.provider==='openai' ? await callOpenAI(s.key, aiHistory) : await callClaude(s.key, aiHistory);
+    aiHistory.push({ role:'assistant', content: ans });
+    loadEl.remove();
+    const div = document.createElement('div');
+    div.className = 'ai-response';
+    div.innerHTML = `
+      <div class="ai-resp-header"><span class="ai-resp-mode">Follow-up</span><span style="font-size:.7rem;color:var(--muted)">${s.provider==='openai'?'GPT-4o':'Claude'}</span></div>
+      <div class="ai-resp-body">${escHtml(ans)}</div>`;
+    document.querySelector('.followup-row').before(div);
+  } catch(e) {
+    loadEl.remove(); aiHistory.pop(); showToast('Error: '+e.message, true);
+  }
 }
 
-async function renderH(){
-  document.getElementById('hlist').innerHTML='<div class="loading">Loading...</div>';
-  var all=await getMatches();
-  var ms=hf==='All'?all:all.filter(function(m){return m.fencer===hf});
-  if(htf!=='all') ms=ms.filter(function(m){return m.match_type===htf});
-  var wins=ms.filter(function(m){return m.result==='Win'}).length;
-  var ctrl=ms.filter(function(m){return m.control==='I was controlling'}).length;
-  var ctrlPct=ms.length?Math.round(ctrl/ms.length*100):0;
-  document.getElementById('hmetrics').innerHTML=
-    '<div class="mcard"><div class="mv">'+ms.length+'</div><div class="ml">Matches</div></div>'+
-    '<div class="mcard"><div class="mv" style="color:#3B6D11">'+wins+'</div><div class="ml">Wins</div></div>'+
-    '<div class="mcard"><div class="mv" style="color:#A32D2D">'+(ms.length-wins)+'</div><div class="ml">Losses</div></div>'+
-    '<div class="mcard"><div class="mv" style="color:#534AB7">'+ctrlPct+'%</div><div class="ml">Controlled</div></div>';
-  if(!ms.length){document.getElementById('hlist').innerHTML='<div class="empty">No matches yet. Log your first bout!</div>';return}
-  document.getElementById('hlist').innerHTML=ms.map(function(m){
-    return '<div class="mitem">'+
-      '<div><div style="font-size:15px;font-weight:600">'+m.opponent+' <span style="font-size:12px;color:#aaa;font-weight:400">'+m.fencer+'</span></div>'+
-      '<div style="font-size:12px;color:#aaa;margin-top:2px">'+m.date+(m.opp_type?' &middot; '+m.opp_type:'')+(m.control?' &middot; '+m.control:'')+'</div>'+
-      (m.coach_notes?'<div style="font-size:12px;color:#534AB7;margin-top:3px;font-style:italic">&ldquo;'+m.coach_notes.substring(0,60)+(m.coach_notes.length>60?'...':'')+'&rdquo;</div>':'')+
-      '</div>'+
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
-      (m.match_type==='Tournament'?'<span class="bdg bt">Tour</span>':'')+
-      (m.score?'<span style="font-size:13px;color:#aaa">'+m.score+'</span>':'')+
-      '<span class="bdg '+(m.result==='Win'?'bw':'bl')+'">'+m.result+'</span></div></div>';
-  }).join('');
-}
+// ══════════════════════════════════════════════════════
+//  API
+// ══════════════════════════════════════════════════════
+const SYS = `You are an elite foil fencing coach advising youth competitive fencers. Speak directly, use proper fencing terminology, be specific and actionable. Format advice with numbered steps. Never give generic advice — always tie it to the specific situation provided.`;
 
-function setHF(f){hf=f;document.querySelectorAll('[id^="hb-"]').forEach(function(b){b.classList.remove('active')});document.getElementById('hb-'+f).classList.add('active');renderH()}
-function setHType(el){htf=el.dataset.hf;document.querySelectorAll('[id^="hf-"]').forEach(function(c){c.classList.remove('sel')});el.classList.add('sel');renderH()}
-
-async function renderO(){
-  document.getElementById('olist').innerHTML='<div class="loading">Loading...</div>';
-  var matches=await getMatches();
-  var om={};
-  matches.forEach(function(m){
-    if(!m.opponent)return;
-    if(!om[m.opponent])om[m.opponent]={matches:[],types:[],mistakes:[],controls:[]};
-    om[m.opponent].matches.push(m);
-    if(m.opp_type)om[m.opponent].types.push(m.opp_type);
-    if(m.mistake)om[m.opponent].mistakes.push(m.mistake);
-    if(m.control)om[m.opponent].controls.push(m.control);
+async function callClaude(key, messages) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1024, system:SYS, messages }),
   });
-  var names=Object.keys(om);
-  if(!names.length){document.getElementById('olist').innerHTML='<div class="empty">No opponents yet</div>';return}
-  document.getElementById('olist').innerHTML=names.map(function(n){
-    var d=om[n];var wins=d.matches.filter(function(m){return m.result==='Win'}).length;
-    var total=d.matches.length;var pct=Math.round(wins/total*100);
-    var init=n.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
-    var topType=d.types.length?d.types.sort(function(a,b){return d.types.filter(function(x){return x===b}).length-d.types.filter(function(x){return x===a}).length})[0]:'Unknown';
-    var ctrlMe=d.controls.filter(function(c){return c==='I was controlling'}).length;
-    return '<div class="oitem" onclick="showOpp(\''+n.replace(/'/g,"\\'")+'\')">'+
-      '<div class="avatar">'+init+'</div>'+
-      '<div style="flex:1;margin-left:12px"><div style="font-size:15px;font-weight:600">'+n+'</div>'+
-      '<div style="font-size:12px;color:#aaa;margin-top:2px">'+total+' match'+(total>1?'es':'')+' &middot; '+topType+'</div></div>'+
-      '<div style="text-align:right"><div style="font-size:14px;font-weight:600;color:'+(pct>=50?'#3B6D11':'#A32D2D')+'">'+pct+'% WR</div>'+
-      '<div style="font-size:11px;color:#534AB7;margin-top:2px">'+ctrlMe+'/'+total+' ctrl</div></div></div>';
-  }).join('');
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||`HTTP ${res.status}`); }
+  return (await res.json()).content[0].text;
+}
+async function callOpenAI(key, messages) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+    body: JSON.stringify({ model:'gpt-4o', max_tokens:1024, messages:[{role:'system',content:SYS},...messages] }),
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||`HTTP ${res.status}`); }
+  return (await res.json()).choices[0].message.content;
 }
 
-async function showOpp(name){
-  var matches=await getMatches();
-  var opp=matches.filter(function(m){return m.opponent===name});
-  var wins=opp.filter(function(m){return m.result==='Win'}).length;
-  var total=opp.length;var pct=Math.round(wins/total*100);
-  var ctrlMe=opp.filter(function(m){return m.control==='I was controlling'}).length;
-  var ctrlOpp=opp.filter(function(m){return m.control==='Opponent controlling'}).length;
-  var ctrlNs=opp.filter(function(m){return m.control==='Not sure'}).length;
-  var mc={};opp.forEach(function(m){if(m.mistake)mc[m.mistake]=(mc[m.mistake]||0)+1});
-  var types=opp.map(function(m){return m.opp_type}).filter(Boolean);
-  var topType=types.length?types.sort(function(a,b){return types.filter(function(x){return x===b}).length-types.filter(function(x){return x===a}).length})[0]:'Unknown';
-  var recList=RECS[topType]||['Study their patterns','Use Test to probe','Adapt to what they show'];
-  var maxM=Math.max.apply(null,Object.values(mc).concat([1]));
-  var init=name.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
-  var ctrlMsg=ctrlMe>ctrlOpp?'You tend to control this matchup.':ctrlOpp>ctrlMe?'They control this fight — reclaim initiative.':'Control is even — small edge will decide it.';
-  var coachNotes=opp.filter(function(m){return m.coach_notes}).map(function(m){return '<div style="background:#FAEEDA;border-radius:10px;padding:10px 12px;margin-bottom:8px"><div style="font-size:11px;color:#BA7517;font-weight:600;margin-bottom:4px">'+m.date+' &middot; '+m.fencer+'</div><div style="font-size:13px;color:#633806;font-style:italic">&ldquo;'+m.coach_notes+'&rdquo;</div></div>'}).join('');
-  var mistakeBars=Object.entries(mc).sort(function(a,b){return b[1]-a[1]}).map(function(e){return '<div class="mbar"><div class="mbarlbl">'+e[0]+'</div><div class="btrack"><div class="bfill" style="width:'+Math.round(e[1]/maxM*100)+'%"></div></div><div style="font-size:12px;color:#aaa;min-width:16px;text-align:right">'+e[1]+'</div></div>'}).join('');
-  document.getElementById('odetail').innerHTML=
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="avatar" style="width:48px;height:48px;font-size:17px">'+init+'</div><div><div style="font-size:20px;font-weight:700">'+name+'</div><div style="font-size:13px;color:#aaa">'+total+' match'+(total>1?'es':'')+' &middot; '+topType+'</div></div></div>'+
-    '<div class="mgrid"><div class="mcard"><div class="mv">'+total+'</div><div class="ml">Matches</div></div><div class="mcard"><div class="mv" style="color:#3B6D11">'+wins+'</div><div class="ml">Wins</div></div><div class="mcard"><div class="mv" style="color:#A32D2D">'+(total-wins)+'</div><div class="ml">Losses</div></div><div class="mcard"><div class="mv" style="color:'+(pct>=50?'#3B6D11':'#A32D2D')+'">'+pct+'%</div><div class="ml">Win rate</div></div></div>'+
-    '<div class="card ctrl-card"><div class="section-lbl">Control breakdown <span class="key-tag">KEY</span></div><div class="csgrid"><div class="cscard" style="background:#EEEDFE"><div style="font-size:22px;font-weight:700;color:#3C3489">'+ctrlMe+'</div><div style="font-size:10px;color:#534AB7;margin-top:2px">I controlled</div></div><div class="cscard" style="background:#FAECE7"><div style="font-size:22px;font-weight:700;color:#712B13">'+ctrlOpp+'</div><div style="font-size:10px;color:#993C1D;margin-top:2px">They controlled</div></div><div class="cscard" style="background:#f5f5f3"><div style="font-size:22px;font-weight:700;color:#666">'+ctrlNs+'</div><div style="font-size:10px;color:#aaa;margin-top:2px">Not sure</div></div></div><div style="font-size:13px;color:#666">'+ctrlMsg+'</div></div>'+
-    '<div class="card"><div class="section-lbl">Opponent style</div><span class="opill">'+topType+'</span><div class="recbox"><div class="recttl">Recommended strategy</div>'+recList.map(function(r){return '<div class="recrow"><div class="recdot"></div><div style="font-size:13px;color:#0C447C">'+r+'</div></div>'}).join('')+'</div></div>'+
-    (mistakeBars?'<div class="card"><div class="section-lbl">Your patterns vs '+name+'</div>'+mistakeBars+'</div>':'')+
-    (coachNotes?'<div class="card"><div class="section-lbl">Coach notes</div>'+coachNotes+'</div>':'')+
-    '<div class="card"><div class="section-lbl">Match history</div>'+opp.map(function(m){return '<div class="mitem"><div><div style="font-size:14px;font-weight:600">'+m.fencer+' &middot; '+m.date+'</div><div style="font-size:12px;color:#aaa">'+(m.action||'&mdash;')+(m.mistake?' &middot; '+m.mistake:'')+(m.control?' &middot; '+m.control:'')+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">'+(m.match_type==='Tournament'?'<span class="bdg bt">Tour</span>':'')+(m.score?'<span style="font-size:13px;color:#aaa">'+m.score+'</span>':'')+'<span class="bdg '+(m.result==='Win'?'bw':'bl')+'">'+m.result+'</span></div></div>'}).join('')+'</div>';
-  document.getElementById('olist-view').style.display='none';
-  document.getElementById('odetail-view').style.display='block';
+// ══════════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════════
+let provSel = 'claude';
+function providerPick(p) {
+  provSel = p;
+  document.querySelectorAll('#pg-provider .pill').forEach(b =>
+    b.classList.toggle('sel', (b.textContent.includes('Claude')&&p==='claude')||(b.textContent.includes('GPT')&&p==='openai')));
+  document.getElementById('settings-key').placeholder = p==='claude'?'sk-ant-...':'sk-...';
+}
+function openSettings() {
+  const s = getSettings(); provSel = s.provider||'claude';
+  document.getElementById('settings-key').value = s.key||'';
+  document.querySelectorAll('#pg-provider .pill').forEach(b =>
+    b.classList.toggle('sel', (b.textContent.includes('Claude')&&provSel==='claude')||(b.textContent.includes('GPT')&&provSel==='openai')));
+  document.getElementById('settings-key').placeholder = provSel==='claude'?'sk-ant-...':'sk-...';
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+function saveSettings() {
+  const key = document.getElementById('settings-key').value.trim();
+  saveSettingsDB({ provider: provSel, key });
+  updateApiBadge(); closeSettings(); showToast('✓ Settings saved!');
+}
+function updateApiBadge() {
+  const s = getSettings();
+  const b = document.getElementById('api-badge');
+  b.textContent = s.key ? `✓ ${s.provider==='openai'?'GPT-4o':'Claude'}` : '⚙ API: Not set';
+  b.className   = s.key ? 'api-badge connected' : 'api-badge';
 }
 
-function backOpps(){document.getElementById('olist-view').style.display='block';document.getElementById('odetail-view').style.display='none'}
+// ══════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════
+function showToast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast${isErr?' error':''} show`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+document.getElementById('opp-modal').addEventListener('click', e => { if(e.target===document.getElementById('opp-modal')) closeOppModal(); });
+document.getElementById('settings-modal').addEventListener('click', e => { if(e.target===document.getElementById('settings-modal')) closeSettings(); });
 
-document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
-window.addEventListener('load', initSupabase);
+
+// ══════════════════════════════════════════════════════
+//  FENCINGTRACKER SEARCH & IMPORT
+// ══════════════════════════════════════════════════════
+const FT_BASE   = 'https://fencingtracker.com';
+const FT_PROXY  = 'https://api.allorigins.win/raw?url=';
+
+let ftSearchTimer = null;
+let ftCurrentProfile = null;
+
+function ftSearchDebounce(val) {
+  // clear loaded box if user types again
+  document.getElementById('ft-loaded').style.display = 'none';
+  ftCurrentProfile = null;
+  clearTimeout(ftSearchTimer);
+  const q = val.trim();
+  if (q.length < 2) { ftHideResults(); return; }
+  ftSearchTimer = setTimeout(() => ftSearch(q), 400);
+}
+
+async function ftSearch(q) {
+  const box = document.getElementById('ft-results');
+  box.style.display = 'block';
+  box.innerHTML = '<div class="ft-result-item loading">Searching FencingTracker...</div>';
+
+  try {
+    // FencingTracker autocomplete endpoint — works directly from browser
+    const url = `${FT_BASE}/autocomplete?q=${encodeURIComponent(q)}`;
+    const proxyUrl = FT_PROXY + encodeURIComponent(url);
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+
+    // FencingTracker returns array of {id, name, url, ...}
+    // shape: [{id, name, slug, year, club, weapon}, ...]
+    if (!Array.isArray(data) || !data.length) {
+      box.innerHTML = '<div class="ft-result-item loading">No results found</div>';
+      return;
+    }
+
+    box.innerHTML = data.slice(0, 8).map(p => {
+      const meta = [p.year, p.club, p.weapon].filter(Boolean).join(' · ');
+      return `<div class="ft-result-item" onclick="ftSelectProfile(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+        <div>
+          <div class="ft-result-name">${p.name||p.label||''}</div>
+          ${meta ? `<div class="ft-result-meta">${meta}</div>` : ''}
+        </div>
+        <div class="ft-result-meta">→</div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    // Fallback: parse from search page via proxy
+    try {
+      const searchUrl = `${FT_BASE}/search?q=${encodeURIComponent(q)}`;
+      const res = await fetch(FT_PROXY + encodeURIComponent(searchUrl));
+      const html = await res.text();
+      const results = ftParseSearchPage(html, q);
+      if (!results.length) {
+        box.innerHTML = '<div class="ft-result-item loading">No results — try full name</div>';
+        return;
+      }
+      box.innerHTML = results.map(p =>
+        `<div class="ft-result-item" onclick="ftSelectProfile(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+          <div>
+            <div class="ft-result-name">${p.name}</div>
+            <div class="ft-result-meta">${[p.year, p.club].filter(Boolean).join(' · ')}</div>
+          </div>
+          <div class="ft-result-meta">→</div>
+        </div>`
+      ).join('');
+    } catch(e2) {
+      box.innerHTML = `<div class="ft-result-item loading">Search error — check connection</div>`;
+    }
+  }
+}
+
+function ftParseSearchPage(html, query) {
+  // Parse search results from HTML — FencingTracker search page
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const results = [];
+  // Profile links follow pattern /p/{id}/{slug}
+  doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
+    const href = a.getAttribute('href') || '';
+    const match = href.match(/\/p\/(\d+)\/([^/]+)/);
+    if (!match) return;
+    const [, id, slug] = match;
+    const name = a.textContent.trim();
+    if (!name || name.length < 2) return;
+    // deduplicate
+    if (results.find(r => r.id === id)) return;
+    results.push({
+      id,
+      slug,
+      name,
+      url: `${FT_BASE}/p/${id}/${slug}`,
+      year: '',
+      club: '',
+    });
+  });
+  return results.slice(0, 6);
+}
+
+function ftHideResults() {
+  const box = document.getElementById('ft-results');
+  if (box) box.style.display = 'none';
+}
+
+async function ftSelectProfile(profile) {
+  ftHideResults();
+  // Set name field
+  document.getElementById('om-name').value = profile.name || profile.label || '';
+
+  const loaded = document.getElementById('ft-loaded');
+  loaded.style.display = 'block';
+  loaded.innerHTML = `<div class="ft-loaded-box"><div class="ftl-name">⏳ Loading profile for ${profile.name||''}...</div></div>`;
+
+  try {
+    // Build the history URL — use id + slug from profile
+    const slug = profile.slug || (profile.url||'').split('/p/')[1] || '';
+    const histUrl = slug
+      ? `${FT_BASE}/p/${slug}/history`
+      : `${FT_BASE}/p/${profile.id}/${(profile.name||'').replace(/\s+/g,'-')}/history`;
+
+    const res = await fetch(FT_PROXY + encodeURIComponent(histUrl));
+    const html = await res.text();
+    const parsed = ftParseHistory(html, profile.name);
+
+    ftCurrentProfile = { ...profile, ...parsed };
+    ftApplyToModal(ftCurrentProfile);
+
+  } catch(e) {
+    // Even if history fails, at least the name is set
+    ftCurrentProfile = profile;
+    loaded.innerHTML = `<div class="ft-loaded-box">
+      <div class="ftl-name">✓ ${profile.name}</div>
+      <div class="ftl-row" style="color:var(--orange)">Could not load full stats — fill in details manually.</div>
+    </div>`;
+  }
+}
+
+function ftParseHistory(html, name) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Year born & club — from subtitle area
+  const h3s = doc.querySelectorAll('h3');
+  let year = '', club = '';
+  h3s.forEach(h => {
+    const t = h.textContent.trim();
+    if (/^\d{4}$/.test(t)) year = t;
+  });
+  const clubLink = doc.querySelector('a[href*="/club/"]');
+  if (clubLink) club = clubLink.textContent.trim();
+
+  // Win/Loss stats — first table with Victories row
+  let winRatioAll = '', winRatioDE = '', winRatioPool = '';
+  let totalWins = 0, totalLosses = 0;
+  doc.querySelectorAll('table').forEach(t => {
+    const rows = t.querySelectorAll('tr');
+    rows.forEach(r => {
+      const cells = [...r.querySelectorAll('td,th')].map(c => c.textContent.trim());
+      if (cells[0] === 'Victories' && cells.length >= 6) totalWins   = parseInt(cells[6]) || 0;
+      if (cells[0] === 'Losses'    && cells.length >= 6) totalLosses = parseInt(cells[6]) || 0;
+      if (cells[0] === 'Win Ratio' && cells.length >= 6) winRatioAll  = cells[6];
+      if (cells[0] === 'DE Win Ratio')   winRatioDE   = cells[6] || cells[cells.length-1];
+      if (cells[0] === 'Pool Win Ratio') winRatioPool = cells[6] || cells[cells.length-1];
+    });
+  });
+
+  // FT strength — from strength page we'd need another fetch,
+  // but we can grab it from the bout history rows: "Strength" column
+  let ftStrength = '';
+  const boutTable = [...doc.querySelectorAll('table')].find(t =>
+    t.textContent.includes('Strength') && t.textContent.includes('Opponent')
+  );
+  if (boutTable) {
+    const headerCells = [...boutTable.querySelectorAll('th')].map(th => th.textContent.trim());
+    const strengthIdx = headerCells.indexOf('Strength');
+    if (strengthIdx > -1) {
+      const firstBoutRow = boutTable.querySelector('tbody tr');
+      if (firstBoutRow) {
+        const cells = [...firstBoutRow.querySelectorAll('td')];
+        if (cells[strengthIdx]) ftStrength = cells[strengthIdx].textContent.trim();
+      }
+    }
+  }
+
+  // Recent opponents — extract from bout rows (last 10 distinct opponents)
+  const recentOpps = [];
+  doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
+    const href = a.href || '';
+    const n = a.textContent.trim();
+    if (!n || n.length < 2) return;
+    if (n === name) return;
+    if (!recentOpps.find(o => o.name === n)) {
+      recentOpps.push({ name: n, url: href });
+    }
+  });
+
+  // Rating — from h6 near top (e.g. "Rating D25")
+  let rating = '';
+  doc.querySelectorAll('h6').forEach(h => {
+    const m = h.textContent.match(/Rating\s+([A-Z]\d+|U)/);
+    if (m) rating = m[1];
+  });
+
+  return { year, club, winRatioAll, winRatioDE, winRatioPool, totalWins, totalLosses, rating, ftStrength, recentOpps: recentOpps.slice(0, 10) };
+}
+
+function ftApplyToModal(p) {
+  // Apply year-based age group
+  const currentYear = new Date().getFullYear();
+  const age = p.year ? currentYear - parseInt(p.year) : 0;
+  let ageGroup = '';
+  if      (age <= 10) ageGroup = 'Y10';
+  else if (age <= 12) ageGroup = 'Y12';
+  else if (age <= 14) ageGroup = 'Y14';
+  else if (age <= 17) ageGroup = 'Cadet';
+  else if (age <= 20) ageGroup = 'Junior';
+  else                ageGroup = 'Senior';
+
+  if (ageGroup) omSingle('age', ageGroup);
+
+  // Club
+  if (p.club) document.getElementById('om-club').value = p.club;
+
+  // Show loaded summary box
+  const loaded = document.getElementById('ft-loaded');
+  const wr = p.winRatioAll ? `Win rate: <strong>${p.winRatioAll}</strong> (${p.totalWins}W / ${p.totalLosses}L)` : '';
+  const de = p.winRatioDE   ? `DE: <strong>${p.winRatioDE}</strong>` : '';
+  const pool = p.winRatioPool ? `Pool: <strong>${p.winRatioPool}</strong>` : '';
+  const rating = p.rating   ? `Rating: <strong>${p.rating}</strong>` : '';
+  const strength = p.ftStrength ? `FT Strength: <strong>${p.ftStrength}</strong>` : '';
+
+  const rows = [wr, de, pool, rating, strength, p.year ? `Born: <strong>${p.year}</strong>` : '', p.club ? `Club: <strong>${p.club}</strong>` : ''].filter(Boolean);
+
+  // Notes field — pre-fill with FT stats
+  const statsNote = [
+    p.winRatioAll ? `All-time win rate: ${p.winRatioAll}` : '',
+    p.winRatioDE  ? `DE win rate: ${p.winRatioDE}` : '',
+    p.winRatioPool? `Pool win rate: ${p.winRatioPool}` : '',
+    p.rating      ? `FT rating: ${p.rating}` : '',
+    p.ftStrength  ? `FT strength: ${p.ftStrength}` : '',
+  ].filter(Boolean).join(' | ');
+  if (statsNote) document.getElementById('om-notes').value = statsNote;
+
+  loaded.innerHTML = `<div class="ft-loaded-box">
+    <div class="ftl-name">✓ FencingTracker data loaded — ${p.name}</div>
+    ${rows.map(r => `<div class="ftl-row">${r}</div>`).join('')}
+    ${p.recentOpps?.length ? `<div class="ftl-row" style="margin-top:.3rem">Recent opponents: <strong>${p.recentOpps.slice(0,5).map(o=>o.name).join(', ')}</strong></div>` : ''}
+  </div>`;
+}
+
+// clear FT state when modal closes
+const _origCloseOppModal = closeOppModal;
+closeOppModal = function() {
+  ftCurrentProfile = null;
+  const ft = document.getElementById('ft-loaded');
+  const fr = document.getElementById('ft-results');
+  if (ft) ft.style.display = 'none';
+  if (fr) fr.style.display = 'none';
+  _origCloseOppModal();
+};
+
+
+// ── INIT ──
+updateApiBadge();
+refreshDatalist();
 </script>
 </body>
 </html>
