@@ -1308,124 +1308,117 @@ async function ftSearch(q) {
   box.style.display = 'block';
   box.innerHTML = '<div class="ft-result-item loading">Searching FencingTracker...</div>';
 
-  // Try multiple CORS proxies in order
   const proxies = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?',
     'https://api.codetabs.com/v1/proxy?quest=',
   ];
 
-  const searchUrl = `${FT_BASE}/search?q=${encodeURIComponent(q)}`;
-  const qWords = q.toLowerCase().trim().replace(/[^a-z0-9 ]/g,'').split(/\s+/).filter(Boolean);
+  // KEY FIX: FencingTracker uses ?s= not ?q=
+  const searchUrl = `${FT_BASE}/search?s=${encodeURIComponent(q)}`;
+
+  let foundProxy = null;
+  let html = null;
 
   for (const proxy of proxies) {
     try {
-      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(6000) });
+      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(7000) });
       if (!res.ok) continue;
-      const html = await res.text();
-      const results = ftParseSearchPage(html, qWords);
-      if (!results.length) {
-        box.innerHTML = `<div class="ft-result-item loading">No matches for "<strong>${q}</strong>" — try last name only or check spelling</div>`;
-        return;
-      }
-
-      // Show results immediately with names, then enrich with club/year in parallel
-      const renderResults = (items) => {
-        box.innerHTML = items.map(p => {
-          const meta = [p.year, p.club, p.rating].filter(Boolean).join(' · ');
-          return `<div class="ft-result-item" onclick='ftSelectProfile(${JSON.stringify(p).replace(/\\/g,'\\\\').replace(/'/g,"&#39;").replace(/"/g,'&quot;')})'>
-            <div>
-              <div class="ft-result-name">${p.name}</div>
-              <div class="ft-result-meta">${meta || '...'}</div>
-            </div>
-            <div class="ft-result-meta" style="color:var(--gold)">→</div>
-          </div>`;
-        }).join('');
-      };
-
-      renderResults(results); // instant render
-
-      // Enrich up to 8 results with club info in parallel
-      const toEnrich = results.slice(0, 8);
-      Promise.all(toEnrich.map(p => ftFetchClub(p, proxy))).then(enriched => {
-        renderResults(enriched); // re-render with clubs filled in
-      });
-
-      return; // success — stop trying proxies
-    } catch(e) {
-      continue; // try next proxy
-    }
+      html = await res.text();
+      foundProxy = proxy;
+      break;
+    } catch(e) { continue; }
   }
 
-  // All proxies failed
-  box.innerHTML = `<div class="ft-result-item loading" style="flex-direction:column;gap:.3rem;text-align:center">
-    <div>Search unavailable</div>
-    <div style="font-size:.65rem;color:var(--muted)">Enter name manually and save — you can add FT stats later</div>
-  </div>`;
+  if (!html) {
+    box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.4rem;padding:1rem;text-align:center">
+      <div style="font-weight:600;color:var(--text)">Search unavailable</div>
+      <div style="font-size:.65rem;color:var(--muted)">Type name manually and fill in details below</div>
+    </div>`;
+    return;
+  }
+
+  const results = ftParseSearchPage(html);
+
+  if (!results.length) {
+    box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.5rem;padding:1rem">
+      <div style="font-size:.8rem;color:var(--text)">No results for "<strong>${q}</strong>"</div>
+      <div style="font-size:.7rem;color:var(--muted)">Try last name only · check spelling · or type name and save manually</div>
+    </div>`;
+    return;
+  }
+
+  const renderResults = (items) => {
+    box.innerHTML = items.map(p => {
+      const meta = [p.club, p.division, p.year, p.rating].filter(Boolean).join(' · ');
+      return `<div class="ft-result-item" onclick='ftSelectProfile(${JSON.stringify(p).replace(/\\/g,'\\\\').replace(/'/g,"&#39;").replace(/"/g,"&quot;")})'>
+        <div>
+          <div class="ft-result-name">${p.name}</div>
+          <div class="ft-result-meta">${meta || 'Loading...'}</div>
+        </div>
+        <div class="ft-result-meta" style="color:var(--gold)">→</div>
+      </div>`;
+    }).join('');
+  };
+
+  renderResults(results);
+
+  // Enrich with year/rating from their profile page in parallel
+  if (foundProxy) {
+    Promise.all(results.slice(0,8).map(p => ftFetchClub(p, foundProxy))).then(enriched => {
+      renderResults(enriched);
+    });
+  }
 }
 
-function ftParseSearchPage(html, qWords) {
+function ftParseSearchPage(html) {
+  // FencingTracker search results are in a TABLE:
+  // <table>
+  //   <tr><th>Name</th><th>Nickname</th><th>Club</th><th>Division</th></tr>
+  //   <tr><td><a href="/p/123/Jerry-Ye">YE, Jerry</a></td><td></td><td>Golubitsky...</td><td>Orange Coast</td></tr>
+  // </table>
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const results = [];
   const seen = new Set();
 
-  // FencingTracker search results appear as links with pattern /p/{numericId}/{name-slug}
-  // We ONLY want links where the slug/text matches the search query
-  doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
-    const href = a.getAttribute('href') || '';
-    // Must match /p/{digits}/{slug} — slug must start with letter (not another number)
-    const match = href.match(/\/p\/(\d+)\/([A-Za-z][^/?#]*)/);
+  // Find the results table — look for rows containing /p/ links
+  doc.querySelectorAll('table tr').forEach(row => {
+    const link = row.querySelector('a[href*="/p/"]');
+    if (!link) return;
+
+    const href = link.getAttribute('href') || '';
+    const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
     if (!match) return;
-    const [, id, slug] = match;
+
+    const [, id, rawSlug] = match;
     if (seen.has(id)) return;
-
-    // Decode the slug to get the name
-    let nameFromSlug = '';
-    try {
-      nameFromSlug = decodeURIComponent(slug)
-        .replace(/[-_]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    } catch(e) { nameFromSlug = slug.replace(/[-_]/g,' ').trim(); }
-
-    // Also check the link text
-    const linkText = a.textContent.replace(/\s+/g,' ').trim();
-
-    // Pick the better name (prefer one with a space = has first+last)
-    let name = (nameFromSlug.includes(' ') ? nameFromSlug : '') ||
-               (linkText.includes(' ') ? linkText : '') ||
-               nameFromSlug || linkText;
-
-    if (!name || name.length < 2 || name.length > 80) return;
-
-    // Skip UI/nav text
-    const skipList = ['History','Strength','Summary','Log in','Sign up','Epee','Foil',
-                      'Saber','Search','Largest Clubs','Top Clubs','National Circuit',
-                      'Recruiting','Men','Women','Light','Dark','Auto','Discord'];
-    if (skipList.some(s => name === s)) return;
-
-    // ── STRICT NAME MATCH: slug must contain the search words ──
-    const slugLower = nameFromSlug.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-    const slugWords = slugLower.split(/\s+/);
-    const matchCount = qWords.filter(qw =>
-      slugWords.some(sw => sw.startsWith(qw) || qw.startsWith(sw))
-    ).length;
-
-    // Need to match at least 1 word (for single-word queries) or half for multi-word
-    const minMatch = qWords.length === 1 ? 1 : Math.ceil(qWords.length * 0.5);
-    if (matchCount < minMatch) return;
-
     seen.add(id);
+
+    // Name from link text — FT format is "LASTNAME, Firstname"
+    let name = link.textContent.replace(/\s+/g,' ').trim();
+    // Convert "YE, Jerry" → "Jerry Ye" for display
+    const commaMatch = name.match(/^([^,]+),\s*(.+)$/);
+    if (commaMatch) {
+      name = `${commaMatch[2].trim()} ${commaMatch[1].trim()}`;
+    }
+
+    // Club and Division from table cells
+    const cells = [...row.querySelectorAll('td')];
+    const club     = cells[2]?.textContent?.trim() || '';
+    const division = cells[3]?.textContent?.trim() || '';
+
     results.push({
-      id, slug, name,
-      url: `${FT_BASE}/p/${id}/${slug}`,
-      year: '', club: '', rating: ''
+      id, slug: rawSlug, name,
+      url: `${FT_BASE}/p/${id}/${rawSlug}`,
+      club, division, year: '', rating: ''
     });
   });
 
-  return results.slice(0, 8);
+  return results.slice(0, 10);
 }
+
 
 async function ftFetchClub(result, proxy) {
   // Fetch the fencer's summary page to get club and year
