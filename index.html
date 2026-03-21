@@ -1403,6 +1403,68 @@ async function ftSearch(q) {
   }
 }
 
+function ftParseSearchPage(html) {
+  // FencingTracker search results page has a table:
+  // Name col has <a href="/p/{id}/{slug}">LASTNAME, Firstname</a>
+  // Club col is the 3rd <td>, Division is 4th <td>
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const results = [];
+  const seen = new Set();
+
+  // Method 1: parse table rows (structured search results page)
+  doc.querySelectorAll('table tr').forEach(row => {
+    const link = row.querySelector('a[href*="/p/"]');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
+    if (!match) return;
+    const [, id, rawSlug] = match;
+    if (seen.has(id)) return;
+    seen.add(id);
+
+    // Name — FT format "LASTNAME, Firstname" → convert to "Firstname Lastname"
+    let name = link.textContent.replace(/\s+/g,' ').trim();
+    const commaMatch = name.match(/^([^,]+),\s*(.+)$/);
+    if (commaMatch) name = `${commaMatch[2].trim()} ${commaMatch[1].trim()}`;
+
+    // Club = 3rd td, Division = 4th td
+    const cells = [...row.querySelectorAll('td')];
+    const club     = cells[2]?.textContent?.trim() || '';
+    const division = cells[3]?.textContent?.trim() || '';
+
+    results.push({ id, slug: rawSlug, name,
+      url: `https://fencingtracker.com/p/${id}/${rawSlug}`,
+      club, division, year: '', rating: '' });
+  });
+
+  // Method 2: fallback — grab any /p/ link if table method found nothing
+  if (!results.length) {
+    doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
+      if (!match) return;
+      const [, id, rawSlug] = match;
+      if (seen.has(id)) return;
+
+      let name = '';
+      try { name = decodeURIComponent(rawSlug).replace(/[-_]/g,' ').trim(); } catch(e) {}
+      if (!name || name.length < 2 || name.length > 60) return;
+
+      const skip = ['History','Strength','Summary','Log in','Sign up','Epee','Foil',
+                    'Saber','Search','Privacy','Contact','About','FAQ','Discord'];
+      if (skip.includes(name)) return;
+
+      seen.add(id);
+      results.push({ id, slug: rawSlug, name,
+        url: `https://fencingtracker.com/p/${id}/${rawSlug}`,
+        club: '', division: '', year: '', rating: '' });
+    });
+  }
+
+  return results.slice(0, 10);
+}
+
 function ftRenderACResults(box, data, q) {
   // Render autocomplete JSON results
   // FT autocomplete likely returns [{name, url, club} or {label, value, ...}]
