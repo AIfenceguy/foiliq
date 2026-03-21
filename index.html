@@ -188,7 +188,7 @@ select option{background:var(--surface2);}
 
 /* FT SEARCH */
 .ft-search-wrap { position:relative; }
-.ft-results { position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--gold); border-top:none; border-radius:0 0 8px 8px; z-index:50; max-height:220px; overflow-y:auto; }
+.ft-results { position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--gold); border-top:none; border-radius:0 0 8px 8px; z-index:9999; max-height:260px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.5); }
 .ft-result-item { padding:.6rem .9rem; cursor:pointer; font-size:.82rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
 .ft-result-item:last-child { border-bottom:none; }
 .ft-result-item:hover { background:var(--surface2); }
@@ -438,7 +438,7 @@ select option{background:var(--surface2);}
 
     <label>Full name * <span style="color:var(--gold);font-weight:400;font-size:.68rem">— type to search FencingTracker</span></label>
     <div class="ft-search-wrap">
-      <input type="text" id="om-name" placeholder="e.g. Tristan Chong" autocomplete="off"
+      <input type="text" id="om-name" placeholder="e.g. Tristan Chong (min 3 characters)" autocomplete="off"
         oninput="ftSearchDebounce(this.value)" onblur="setTimeout(()=>ftHideResults(),200)">
       <div class="ft-results" id="ft-results" style="display:none"></div>
     </div>
@@ -1301,6 +1301,7 @@ function ftSearchDebounce(val) {
 async function ftSearch(q) {
   const box = document.getElementById('ft-results');
   box.style.display = 'block';
+  box.style.zIndex = '9999';
   box.innerHTML = '<div class="ft-result-item loading">Searching FencingTracker...</div>';
 
   const proxies = [
@@ -1315,14 +1316,20 @@ async function ftSearch(q) {
   let foundProxy = null;
   let html = null;
 
-  for (const proxy of proxies) {
+  for (let i = 0; i < proxies.length; i++) {
+    const proxy = proxies[i];
+    box.innerHTML = `<div class="ft-result-item loading">Searching... (${i+1}/3)</div>`;
     try {
-      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(7000) });
-      if (!res.ok) continue;
+      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) { continue; }
       html = await res.text();
       foundProxy = proxy;
       break;
-    } catch(e) { continue; }
+    } catch(e) {
+      box.innerHTML = `<div class="ft-result-item loading">Proxy ${i+1} timed out, trying next...</div>`;
+      await new Promise(r => setTimeout(r, 300));
+      continue;
+    }
   }
 
   if (!html) {
@@ -1333,12 +1340,19 @@ async function ftSearch(q) {
     return;
   }
 
+  // Check if we got a real search results page
+  const isSearchPage = html.includes('Search Results') || html.includes('fencers that match');
+  box.innerHTML = '<div class="ft-result-item loading">Found response — parsing...</div>';
   const results = ftParseSearchPage(html);
 
   if (!results.length) {
+    // Show diagnostic info to help debug
+    const hint = isSearchPage
+      ? `No fencers found for "<strong>${q}</strong>" on FencingTracker`
+      : `Search page didn't load correctly — try again or type name manually`;
     box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.5rem;padding:1rem">
-      <div style="font-size:.8rem;color:var(--text)">No results for "<strong>${q}</strong>"</div>
-      <div style="font-size:.7rem;color:var(--muted)">Try last name only · check spelling · or type name and save manually</div>
+      <div style="font-size:.8rem;color:var(--text)">${hint}</div>
+      <div style="font-size:.7rem;color:var(--muted)">Try: last name only · full name · check spelling</div>
     </div>`;
     return;
   }
