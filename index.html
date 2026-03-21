@@ -1308,83 +1308,137 @@ async function ftSearch(q) {
   box.style.display = 'block';
   box.innerHTML = '<div class="ft-result-item loading">Searching FencingTracker...</div>';
 
-  try {
-    // FencingTracker autocomplete endpoint — works directly from browser
-    const url = `${FT_BASE}/autocomplete?q=${encodeURIComponent(q)}`;
-    const proxyUrl = FT_PROXY + encodeURIComponent(url);
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error('fetch failed');
-    const data = await res.json();
+  // Try multiple CORS proxies in order
+  const proxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://api.codetabs.com/v1/proxy?quest=',
+  ];
 
-    // FencingTracker returns array of {id, name, url, ...}
-    // shape: [{id, name, slug, year, club, weapon}, ...]
-    if (!Array.isArray(data) || !data.length) {
-      box.innerHTML = '<div class="ft-result-item loading">No results found</div>';
-      return;
-    }
+  const searchUrl = `${FT_BASE}/search?q=${encodeURIComponent(q)}`;
 
-    box.innerHTML = data.slice(0, 8).map(p => {
-      const meta = [p.year, p.club, p.weapon].filter(Boolean).join(' · ');
-      return `<div class="ft-result-item" onclick="ftSelectProfile(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-        <div>
-          <div class="ft-result-name">${p.name||p.label||''}</div>
-          ${meta ? `<div class="ft-result-meta">${meta}</div>` : ''}
-        </div>
-        <div class="ft-result-meta">→</div>
-      </div>`;
-    }).join('');
-
-  } catch(e) {
-    // Fallback: parse from search page via proxy
+  for (const proxy of proxies) {
     try {
-      const searchUrl = `${FT_BASE}/search?q=${encodeURIComponent(q)}`;
-      const res = await fetch(FT_PROXY + encodeURIComponent(searchUrl));
+      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) continue;
       const html = await res.text();
-      const results = ftParseSearchPage(html, q);
+      const results = ftParseSearchPage(html);
       if (!results.length) {
-        box.innerHTML = '<div class="ft-result-item loading">No results — try full name</div>';
+        box.innerHTML = '<div class="ft-result-item loading">No results found — try full name (e.g. "Tristan Chong")</div>';
         return;
       }
-      box.innerHTML = results.map(p =>
-        `<div class="ft-result-item" onclick="ftSelectProfile(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-          <div>
-            <div class="ft-result-name">${p.name}</div>
-            <div class="ft-result-meta">${[p.year, p.club].filter(Boolean).join(' · ')}</div>
-          </div>
-          <div class="ft-result-meta">→</div>
-        </div>`
-      ).join('');
-    } catch(e2) {
-      box.innerHTML = `<div class="ft-result-item loading">Search error — check connection</div>`;
+      if (!results.length) {
+        box.innerHTML = '<div class="ft-result-item loading">No results found — try full name</div>';
+        return;
+      }
+
+      // Show results immediately with names, then enrich with club/year in parallel
+      const renderResults = (items) => {
+        box.innerHTML = items.map(p => {
+          const meta = [p.year, p.club, p.rating].filter(Boolean).join(' · ');
+          return `<div class="ft-result-item" onclick='ftSelectProfile(${JSON.stringify(p).replace(/\\/g,'\\\\').replace(/'/g,"&#39;").replace(/"/g,'&quot;')})'>
+            <div>
+              <div class="ft-result-name">${p.name}</div>
+              <div class="ft-result-meta">${meta || '...'}</div>
+            </div>
+            <div class="ft-result-meta" style="color:var(--gold)">→</div>
+          </div>`;
+        }).join('');
+      };
+
+      renderResults(results); // instant render
+
+      // Enrich up to 8 results with club info in parallel
+      const toEnrich = results.slice(0, 8);
+      Promise.all(toEnrich.map(p => ftFetchClub(p, proxy))).then(enriched => {
+        renderResults(enriched); // re-render with clubs filled in
+      });
+
+      return; // success — stop trying proxies
+    } catch(e) {
+      continue; // try next proxy
     }
   }
+
+  // All proxies failed
+  box.innerHTML = `<div class="ft-result-item loading" style="flex-direction:column;gap:.3rem;text-align:center">
+    <div>Search unavailable</div>
+    <div style="font-size:.65rem;color:var(--muted)">Enter name manually and save — you can add FT stats later</div>
+  </div>`;
 }
 
-function ftParseSearchPage(html, query) {
-  // Parse search results from HTML — FencingTracker search page
+function ftParseSearchPage(html) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const results = [];
-  // Profile links follow pattern /p/{id}/{slug}
+  const seen = new Set();
+
   doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
     const href = a.getAttribute('href') || '';
-    const match = href.match(/\/p\/(\d+)\/([^/]+)/);
+    const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
     if (!match) return;
     const [, id, slug] = match;
-    const name = a.textContent.trim();
+    if (seen.has(id)) return;
+    seen.add(id);
+
+    let name = a.textContent.replace(/\s+/g,' ').trim();
     if (!name || name.length < 2) return;
-    // deduplicate
-    if (results.find(r => r.id === id)) return;
-    results.push({
-      id,
-      slug,
-      name,
-      url: `${FT_BASE}/p/${id}/${slug}`,
-      year: '',
-      club: '',
-    });
+    if (['History','Strength','Summary','Log in','Sign up','Epee','Foil','Saber'].includes(name)) return;
+    if (name.length > 60) return; // skip long nav items
+
+    // Try to extract year from nearby row/cell
+    let year = '', club = '';
+    const row = a.closest('tr') || a.closest('li') || a.parentElement;
+    if (row) {
+      const txt = row.textContent;
+      const ym = txt.match(/\b(20\d{2}|19\d{2})\b/);
+      if (ym) year = ym[1];
+      // Club often in next sibling cell
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 3) club = cells[2]?.textContent?.trim() || '';
+    }
+
+    // Decode slug as fallback name
+    if (name.split(' ').length < 2) {
+      try { name = decodeURIComponent(slug).replace(/-/g,' ').replace(/\s+/g,' ').trim(); } catch(e) {}
+    }
+
+    results.push({ id, slug, name, url: `${FT_BASE}/p/${id}/${slug}`, year, club });
   });
-  return results.slice(0, 6);
+
+  return results.slice(0, 12); // get more raw results before enrichment
+}
+
+async function ftFetchClub(result, proxy) {
+  // Fetch the fencer's summary page to get club and year
+  try {
+    const url = `${FT_BASE}/p/${result.id}/${result.slug}`;
+    const r = await fetch(proxy + encodeURIComponent(url), { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return result;
+    const html = await r.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Year — <h3> containing 4-digit year
+    doc.querySelectorAll('h3').forEach(h => {
+      if (/^\d{4}$/.test(h.textContent.trim())) result.year = h.textContent.trim();
+    });
+    // Club — link to /club/
+    const clubLink = doc.querySelector('a[href*="/club/"]');
+    if (clubLink) result.club = clubLink.textContent.trim();
+    // Rating — from Rating History table first row
+    doc.querySelectorAll('table').forEach(t => {
+      const ths = [...t.querySelectorAll('th')].map(th => th.textContent.trim());
+      if (ths.includes('Rating') && ths.includes('Weapon')) {
+        const firstRow = t.querySelector('tbody tr');
+        if (firstRow) {
+          const cells = [...firstRow.querySelectorAll('td')].map(td => td.textContent.trim());
+          if (cells[1]) result.rating = cells[1];
+        }
+      }
+    });
+  } catch(e) {}
+  return result;
 }
 
 function ftHideResults() {
@@ -1402,14 +1456,26 @@ async function ftSelectProfile(profile) {
   loaded.innerHTML = `<div class="ft-loaded-box"><div class="ftl-name">⏳ Loading profile for ${profile.name||''}...</div></div>`;
 
   try {
-    // Build the history URL — use id + slug from profile
-    const slug = profile.slug || (profile.url||'').split('/p/')[1] || '';
-    const histUrl = slug
-      ? `${FT_BASE}/p/${slug}/history`
-      : `${FT_BASE}/p/${profile.id}/${(profile.name||'').replace(/\s+/g,'-')}/history`;
+    // Build the history URL from the profile URL or id+slug
+    let histUrl;
+    if (profile.url && profile.url.includes('/p/')) {
+      // Use the exact URL from search results + /history
+      histUrl = profile.url.replace(/\/$/, '') + '/history';
+    } else if (profile.slug) {
+      histUrl = `${FT_BASE}/p/${profile.slug}/history`;
+    } else {
+      histUrl = `${FT_BASE}/p/${profile.id}/${(profile.name||'').replace(/\s+/g,'-')}/history`;
+    }
 
-    const res = await fetch(FT_PROXY + encodeURIComponent(histUrl));
-    const html = await res.text();
+    // Try proxies in order
+    let html = null;
+    for (const proxy of ['https://api.allorigins.win/raw?url=','https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest=']) {
+      try {
+        const r = await fetch(proxy + encodeURIComponent(histUrl), { signal: AbortSignal.timeout(6000) });
+        if (r.ok) { html = await r.text(); break; }
+      } catch(e) { continue; }
+    }
+    if (!html) throw new Error('Could not fetch profile');
     const parsed = ftParseHistory(html, profile.name);
 
     ftCurrentProfile = { ...profile, ...parsed };
