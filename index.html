@@ -1367,13 +1367,17 @@ async function ftSearch(q) {
     return;
   }
 
-  box.innerHTML = '<div class="ft-result-item loading">Parsing results...</div>';
   const results = ftParseSearchPage(html);
 
   if (!results.length) {
-    box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.5rem;padding:1rem">
-      <div style="font-size:.82rem;color:var(--text)">No results for "<strong>${q}</strong>"</div>
-      <div style="font-size:.7rem;color:var(--muted)">Try full name · last name only · or type and save manually</div>
+    // Debug: show what page we actually got
+    const isSearchPage = html.includes('Search Results') || html.includes('fencers that match') || html.includes('search?s=');
+    const hasTable = html.includes('<table');
+    const linkCount = (html.match(/\/p\/\d+/g) || []).length;
+    box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.4rem;padding:1rem">
+      <div style="font-size:.8rem;color:var(--text)">No results parsed for "<strong>${q}</strong>"</div>
+      <div style="font-size:.65rem;color:var(--muted)">isSearchPage:${isSearchPage} · hasTable:${hasTable} · links:${linkCount}</div>
+      <div style="font-size:.65rem;color:var(--muted)">Try last name only or type name manually</div>
     </div>`;
     return;
   }
