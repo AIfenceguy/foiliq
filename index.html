@@ -233,7 +233,6 @@ select option{background:var(--surface2);}
   <button class="nav-btn" onclick="showPage('opponents')">🎯 Opponents</button>
   <button class="nav-btn" onclick="showPage('ai')">🤖 AI Advice</button>
   <button class="nav-btn" onclick="showPage('guide')">📖 Guide</button>
-  <button class="nav-btn" onclick="showPage('import')">⬇ Import</button>
 </div>
 
 <!-- ══════════════════════════ LOG ══════════════════════════ -->
@@ -410,10 +409,6 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- ══════════════════════════ IMPORT PAGE ══════════════════════════ -->
-<div class="page" id="page-import">
-  <div class="card">
-    <div class="card-title">Import from FencingTracker</div>
     <p style="font-size:.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">Paste a FencingTracker profile URL to auto-import the fencer's stats and their recent opponents into FoilIQ.</p>
 
     <label>FencingTracker Profile URL</label>
@@ -602,7 +597,7 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  const idx = ['log','history','opponents','ai','guide','import'].indexOf(id);
+  const idx = ['log','history','opponents','ai','guide'].indexOf(id);
   document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
   if (id === 'history')   renderHistory();
   if (id === 'opponents') renderOpponents();
