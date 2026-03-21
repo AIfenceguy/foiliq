@@ -187,8 +187,6 @@ select option{background:var(--surface2);}
 .profile-loaded .pl-row strong{color:var(--text);}
 
 /* FT SEARCH */
-.ft-search-wrap { position:relative; }
-.ft-results { position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--gold); border-top:none; border-radius:0 0 8px 8px; z-index:9999; max-height:260px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.5); }
 .ft-result-item { padding:.6rem .9rem; cursor:pointer; font-size:.82rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
 .ft-result-item:last-child { border-bottom:none; }
 .ft-result-item:hover { background:var(--surface2); }
@@ -417,13 +415,17 @@ select option{background:var(--surface2);}
       <button class="modal-close" onclick="closeOppModal()">✕</button>
     </div>
 
-    <label>Full name * <span style="color:var(--gold);font-weight:400;font-size:.68rem">— type to search FencingTracker</span></label>
-    <div class="ft-search-wrap">
-      <input type="text" id="om-name" placeholder="e.g. Tristan Chong" autocomplete="off"
-        oninput="ftSearchDebounce(this.value)">
-      <div class="ft-results" id="ft-results" style="display:none"></div>
+    <label>Full name *</label>
+    <input type="text" id="om-name" placeholder="e.g. Tristan Chong">
+
+    <label>FencingTracker URL <span style="color:var(--gold);font-weight:400;font-size:.68rem">— paste to auto-fill</span></label>
+    <div style="display:flex;gap:.4rem">
+      <input type="text" id="ft-url-input" placeholder="https://fencingtracker.com/p/100280844/..." 
+        style="flex:1" oninput="ftUrlDebounce(this.value)">
+      <button class="btn btn-outline" style="width:auto;padding:.55rem .9rem;font-size:.75rem;white-space:nowrap" 
+        onclick="ftLoadFromUrl()">Load ↓</button>
     </div>
-    <div id="ft-loaded" style="display:none"></div>
+    <div id="ft-loaded" style="display:none;margin-top:.4rem"></div>
     <label>Club / Team</label>
     <input type="text" id="om-club" placeholder="e.g. NY Fencers Club">
     <label>Country / Region</label>
@@ -1261,241 +1263,34 @@ document.getElementById('settings-modal').addEventListener('click', e => { if(e.
 
 
 // ══════════════════════════════════════════════════════
-//  FENCINGTRACKER SEARCH & IMPORT
+//  FENCINGTRACKER — LOAD FROM URL
 // ══════════════════════════════════════════════════════
-const FT_BASE   = 'https://fencingtracker.com';
-const FT_PROXY  = 'https://api.allorigins.win/raw?url=';
+const FT_BASE  = 'https://fencingtracker.com';
 
-let ftSearchTimer = null;
+let ftUrlTimer = null;
 let ftCurrentProfile = null;
 
-function ftHideResults() {
-  // Only called explicitly — never on blur
-  const box = document.getElementById('ft-results');
-  if (box) box.style.display = 'none';
+function ftUrlDebounce(val) {
+  clearTimeout(ftUrlTimer);
+  const v = val.trim();
+  if (!v.includes('fencingtracker.com/p/')) return;
+  ftUrlTimer = setTimeout(() => ftLoadFromUrl(), 600);
 }
 
-let ftSearchSuppressed = false;
+async function ftLoadFromUrl() {
+  const rawUrl = document.getElementById('ft-url-input').value.trim();
+  if (!rawUrl) { showToast('Paste a FencingTracker profile URL', true); return; }
 
-function ftSearchDebounce(val) {
-  if (ftSearchSuppressed) return; // Don't re-search when we just set the name after selection
-  // Clear loaded box if user types again (meaning they want a different person)
-  document.getElementById('ft-loaded').style.display = 'none';
-  ftCurrentProfile = null;
-  clearTimeout(ftSearchTimer);
-  const q = val.trim();
-  if (q.length < 2) { ftHideResults(); return; }
-  ftSearchTimer = setTimeout(() => ftSearch(q), 400);
-}
+  // Accept both /p/ID/Name and full URLs
+  // Normalise: strip trailing slash, add /history
+  const baseUrl = rawUrl.replace(/\/history.*$/, '').replace(/\/$/, '');
+  if (!baseUrl.includes('/p/')) { showToast('URL must be a fencingtracker.com/p/... profile link', true); return; }
 
-async function ftSearch(q) {
-  const box = document.getElementById('ft-results');
-  box.style.display = 'block';
-  box.style.zIndex = '9999';
-  box.innerHTML = '<div class="ft-result-item loading">Searching...</div>';
-
-  // Strategy 1: FencingTracker autocomplete API — called directly from browser (no proxy needed)
-  // This is the same endpoint used by their search box autocomplete
-  const acEndpoints = [
-    `https://fencingtracker.com/autocomplete?q=${encodeURIComponent(q)}`,
-    `https://fencingtracker.com/ac?q=${encodeURIComponent(q)}`,
-    `https://fencingtracker.com/api/search?q=${encodeURIComponent(q)}`,
-    `https://fencingtracker.com/search/autocomplete?q=${encodeURIComponent(q)}`,
-  ];
-
-  for (const url of acEndpoints) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
-      if (!res.ok) continue;
-      const ct = res.headers.get('content-type') || '';
-      if (!ct.includes('json')) continue;
-      const data = await res.json();
-      if (Array.isArray(data) && data.length) {
-        ftRenderACResults(box, data, q);
-        return;
-      }
-    } catch(e) { continue; }
-  }
-
-  // Strategy 2: Search page via CORS proxy
-  const proxies = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-    'https://api.codetabs.com/v1/proxy?quest=',
-  ];
-  const searchUrl = `https://fencingtracker.com/search?s=${encodeURIComponent(q)}`;
-
-  let html = null, foundProxy = null;
-  for (let i = 0; i < proxies.length; i++) {
-    box.innerHTML = `<div class="ft-result-item loading">Searching... (${i+1}/3)</div>`;
-    try {
-      const res = await fetch(proxies[i] + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) continue;
-      html = await res.text();
-      foundProxy = proxies[i];
-      break;
-    } catch(e) {
-      await new Promise(r => setTimeout(r, 200));
-      continue;
-    }
-  }
-
-  if (!html) {
-    box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.4rem;padding:1rem;text-align:center">
-      <div style="font-weight:600;color:var(--red)">Search failed</div>
-      <div style="font-size:.68rem;color:var(--muted)">Type the full name manually below and save the profile</div>
-    </div>`;
-    return;
-  }
-
-  const results = ftParseSearchPage(html);
-
-  if (!results.length) {
-    // Debug: show what page we actually got
-    const isSearchPage = html.includes('Search Results') || html.includes('fencers that match') || html.includes('search?s=');
-    const hasTable = html.includes('<table');
-    const linkCount = (html.match(/\/p\/\d+/g) || []).length;
-    box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.4rem;padding:1rem">
-      <div style="font-size:.8rem;color:var(--text)">No results parsed for "<strong>${q}</strong>"</div>
-      <div style="font-size:.65rem;color:var(--muted)">isSearchPage:${isSearchPage} · hasTable:${hasTable} · links:${linkCount}</div>
-      <div style="font-size:.65rem;color:var(--muted)">Try last name only or type name manually</div>
-    </div>`;
-    return;
-  }
-
-  const renderResults = (items) => {
-    box.innerHTML = items.map(p => {
-      const meta = [p.club, p.division, p.year, p.rating].filter(Boolean).join(' · ');
-      return `<div class="ft-result-item" onclick='ftSelectProfile(${JSON.stringify(p).replace(/\\/g,'\\\\').replace(/'/g,"&#39;").replace(/"/g,"&quot;")})'>
-        <div>
-          <div class="ft-result-name">${p.name}</div>
-          <div class="ft-result-meta">${meta || 'Loading...'}</div>
-        </div>
-        <div class="ft-result-meta" style="color:var(--gold)">→</div>
-      </div>`;
-    }).join('');
-  };
-
-  renderResults(results);
-  if (foundProxy) {
-    Promise.all(results.slice(0,8).map(p => ftFetchClub(p, foundProxy))).then(enriched => {
-      renderResults(enriched);
-    });
-  }
-}
-
-function ftParseSearchPage(html) {
-  // FencingTracker search results page has a table:
-  // Name col has <a href="/p/{id}/{slug}">LASTNAME, Firstname</a>
-  // Club col is the 3rd <td>, Division is 4th <td>
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const results = [];
-  const seen = new Set();
-
-  // Method 1: parse table rows (structured search results page)
-  doc.querySelectorAll('table tr').forEach(row => {
-    const link = row.querySelector('a[href*="/p/"]');
-    if (!link) return;
-    const href = link.getAttribute('href') || '';
-    const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
-    if (!match) return;
-    const [, id, rawSlug] = match;
-    if (seen.has(id)) return;
-    seen.add(id);
-
-    // Name — FT format "LASTNAME, Firstname" → convert to "Firstname Lastname"
-    let name = link.textContent.replace(/\s+/g,' ').trim();
-    const commaMatch = name.match(/^([^,]+),\s*(.+)$/);
-    if (commaMatch) name = `${commaMatch[2].trim()} ${commaMatch[1].trim()}`;
-
-    // Club = 3rd td, Division = 4th td
-    const cells = [...row.querySelectorAll('td')];
-    const club     = cells[2]?.textContent?.trim() || '';
-    const division = cells[3]?.textContent?.trim() || '';
-
-    results.push({ id, slug: rawSlug, name,
-      url: `https://fencingtracker.com/p/${id}/${rawSlug}`,
-      club, division, year: '', rating: '' });
-  });
-
-  // Method 2: fallback — grab any /p/ link if table method found nothing
-  if (!results.length) {
-    doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
-      const href = a.getAttribute('href') || '';
-      const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
-      if (!match) return;
-      const [, id, rawSlug] = match;
-      if (seen.has(id)) return;
-
-      let name = '';
-      try { name = decodeURIComponent(rawSlug).replace(/[-_]/g,' ').trim(); } catch(e) {}
-      if (!name || name.length < 2 || name.length > 60) return;
-
-      const skip = ['History','Strength','Summary','Log in','Sign up','Epee','Foil',
-                    'Saber','Search','Privacy','Contact','About','FAQ','Discord'];
-      if (skip.includes(name)) return;
-
-      seen.add(id);
-      results.push({ id, slug: rawSlug, name,
-        url: `https://fencingtracker.com/p/${id}/${rawSlug}`,
-        club: '', division: '', year: '', rating: '' });
-    });
-  }
-
-  return results.slice(0, 10);
-}
-
-function ftRenderACResults(box, data, q) {
-  // Render autocomplete JSON results
-  // FT autocomplete likely returns [{name, url, club} or {label, value, ...}]
-  const items = data.slice(0, 8).map(item => {
-    const name  = item.name || item.label || item.value || '';
-    const club  = item.club || item.organization || '';
-    const url   = item.url  || item.href || item.link || '';
-    const id    = (url.match(/\/p\/(\d+)/) || [])[1] || '';
-    const slug  = (url.match(/\/p\/\d+\/([^/?#]+)/) || [])[1] || '';
-    return { name, club, url: url.startsWith('http') ? url : `https://fencingtracker.com${url}`, id, slug, year:'', rating:'' };
-  }).filter(p => p.name);
-
-  if (!items.length) {
-    // Autocomplete returned data but nothing useful — fall through would be ideal
-    // but just show no results
-    box.innerHTML = `<div class="ft-result-item loading">No matches found for "${q}"</div>`;
-    return;
-  }
-
-  box.innerHTML = items.map(p => {
-    const meta = [p.club, p.year].filter(Boolean).join(' · ');
-    return `<div class="ft-result-item" onclick='ftSelectProfile(${JSON.stringify(p).replace(/\\/g,'\\\\').replace(/'/g,"&#39;").replace(/"/g,"&quot;")})'>
-      <div>
-        <div class="ft-result-name">${p.name}</div>
-        <div class="ft-result-meta">${meta || ''}</div>
-      </div>
-      <div class="ft-result-meta" style="color:var(--gold)">→</div>
-    </div>`;
-  }).join('');
-}
-
-
-async function ftSelectProfile(profile) {
-  ftHideResults();
-  // Suppress re-search when we set the name value
-  ftSearchSuppressed = true;
-  document.getElementById('om-name').value = profile.name || '';
-  setTimeout(() => ftSearchSuppressed = false, 1000);
+  const histUrl = baseUrl + '/history';
 
   const loaded = document.getElementById('ft-loaded');
   loaded.style.display = 'block';
-
-  // Apply what we already have from search results immediately
-  // club and division came from the search table — use them right away
-  if (profile.club) document.getElementById('om-club').value = profile.club;
-
-  // Build history URL
-  const histUrl = profile.url
-    ? profile.url.replace(/\/$/, '') + '/history'
-    : `${FT_BASE}/p/${profile.id}/${profile.slug}/history`;
+  loaded.innerHTML = '<div class="ft-loaded-box"><div class="ftl-name">⏳ Loading from FencingTracker...</div></div>';
 
   const proxies = [
     'https://api.allorigins.win/raw?url=',
@@ -1504,154 +1299,127 @@ async function ftSelectProfile(profile) {
   ];
 
   let html = null;
-  let usedProxy = null;
   for (const proxy of proxies) {
     try {
       const r = await fetch(proxy + encodeURIComponent(histUrl), { signal: AbortSignal.timeout(10000) });
-      if (r.ok) { html = await r.text(); usedProxy = proxy; break; }
+      if (r.ok) { html = await r.text(); break; }
     } catch(e) { continue; }
   }
 
   if (!html) {
-    // Couldn't get history — but apply what we have from search + let user fill rest
-    ftCurrentProfile = profile;
-    ftApplyBasicToModal(profile);
-    loaded.innerHTML = `<div class="ft-loaded-box">
-      <div class="ftl-name">✓ ${profile.name}</div>
-      ${profile.club ? `<div class="ftl-row"><strong>Club:</strong> ${profile.club}</div>` : ''}
-      ${profile.division ? `<div class="ftl-row"><strong>Division:</strong> ${profile.division}</div>` : ''}
-      <div class="ftl-row" style="color:var(--orange);margin-top:.3rem">⚠ Could not load full stats — fill in SWOT manually</div>
-    </div>`;
+    loaded.innerHTML = '<div class="ft-loaded-box"><div class="ftl-name" style="color:var(--red)">✗ Could not load — check URL and connection</div></div>';
     return;
   }
 
-  const parsed = ftParseHistory(html, profile.name);
-  ftCurrentProfile = { ...profile, ...parsed };
-  ftApplyToModal(ftCurrentProfile);
-}
-
-function ftApplyBasicToModal(p) {
-  // Apply just the basics we got from search results
-  if (p.club) document.getElementById('om-club').value = p.club;
-  // Try to guess age group from year if we have it
-  if (p.year) {
-    const age = new Date().getFullYear() - parseInt(p.year);
-    const ag = age<=10?'Y10':age<=12?'Y12':age<=14?'Y14':age<=17?'Cadet':age<=20?'Junior':'Senior';
-    omSingle('age', ag);
+  // Extract name from URL  e.g. /p/100280844/Raedyn%20Ho%20Hin-Tsui
+  const urlMatch = baseUrl.match(/\/p\/\d+\/([^/?#]+)/);
+  let nameFromUrl = '';
+  if (urlMatch) {
+    try { nameFromUrl = decodeURIComponent(urlMatch[1]).replace(/[-_]/g,' ').replace(/\s+/g,' ').trim(); }
+    catch(e) { nameFromUrl = urlMatch[1].replace(/[-_]/g,' ').trim(); }
   }
+
+  const parsed = ftParseHistory(html, nameFromUrl);
+
+  // Use parsed club name if available, else from URL
+  const profile = { name: nameFromUrl, url: baseUrl, ...parsed };
+  ftCurrentProfile = profile;
+
+  // Auto-fill name if empty
+  const nameField = document.getElementById('om-name');
+  if (!nameField.value.trim()) nameField.value = profile.name || '';
+
+  ftApplyToModal(profile);
 }
 
 function ftParseHistory(html, name) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
 
-  // Year born & club — from subtitle area
-  const h3s = doc.querySelectorAll('h3');
+  // Year born
   let year = '', club = '';
-  h3s.forEach(h => {
-    const t = h.textContent.trim();
-    if (/^\d{4}$/.test(t)) year = t;
+  doc.querySelectorAll('h3').forEach(h => {
+    if (/^\d{4}$/.test(h.textContent.trim())) year = h.textContent.trim();
   });
+  // Club
   const clubLink = doc.querySelector('a[href*="/club/"]');
   if (clubLink) club = clubLink.textContent.trim();
 
-  // Win/Loss stats — first table with Victories row
+  // Win/Loss stats
   let winRatioAll = '', winRatioDE = '', winRatioPool = '';
   let totalWins = 0, totalLosses = 0;
   doc.querySelectorAll('table').forEach(t => {
-    const rows = t.querySelectorAll('tr');
-    rows.forEach(r => {
+    t.querySelectorAll('tr').forEach(r => {
       const cells = [...r.querySelectorAll('td,th')].map(c => c.textContent.trim());
-      if (cells[0] === 'Victories' && cells.length >= 6) totalWins   = parseInt(cells[6]) || 0;
-      if (cells[0] === 'Losses'    && cells.length >= 6) totalLosses = parseInt(cells[6]) || 0;
-      if (cells[0] === 'Win Ratio' && cells.length >= 6) winRatioAll  = cells[6];
-      if (cells[0] === 'DE Win Ratio')   winRatioDE   = cells[6] || cells[cells.length-1];
-      if (cells[0] === 'Pool Win Ratio') winRatioPool = cells[6] || cells[cells.length-1];
+      if (cells[0]==='Victories'    && cells.length>=6) totalWins   = parseInt(cells[6])||0;
+      if (cells[0]==='Losses'       && cells.length>=6) totalLosses = parseInt(cells[6])||0;
+      if (cells[0]==='Win Ratio'    && cells.length>=6) winRatioAll  = cells[6];
+      if (cells[0]==='DE Win Ratio')   winRatioDE   = cells[cells.length-1];
+      if (cells[0]==='Pool Win Ratio') winRatioPool = cells[cells.length-1];
     });
   });
 
-  // FT strength — from strength page we'd need another fetch,
-  // but we can grab it from the bout history rows: "Strength" column
-  let ftStrength = '';
-  const boutTable = [...doc.querySelectorAll('table')].find(t =>
-    t.textContent.includes('Strength') && t.textContent.includes('Opponent')
-  );
-  if (boutTable) {
-    const headerCells = [...boutTable.querySelectorAll('th')].map(th => th.textContent.trim());
-    const strengthIdx = headerCells.indexOf('Strength');
-    if (strengthIdx > -1) {
-      const firstBoutRow = boutTable.querySelector('tbody tr');
-      if (firstBoutRow) {
-        const cells = [...firstBoutRow.querySelectorAll('td')];
-        if (cells[strengthIdx]) ftStrength = cells[strengthIdx].textContent.trim();
-      }
-    }
-  }
-
-  // Recent opponents — extract from bout rows (last 10 distinct opponents)
-  const recentOpps = [];
-  doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
-    const href = a.href || '';
-    const n = a.textContent.trim();
-    if (!n || n.length < 2) return;
-    if (n === name) return;
-    if (!recentOpps.find(o => o.name === n)) {
-      recentOpps.push({ name: n, url: href });
-    }
-  });
-
-  // Rating — from h6 near top (e.g. "Rating D25")
+  // Rating from h6
   let rating = '';
   doc.querySelectorAll('h6').forEach(h => {
     const m = h.textContent.match(/Rating\s+([A-Z]\d+|U)/);
     if (m) rating = m[1];
   });
 
-  return { year, club, winRatioAll, winRatioDE, winRatioPool, totalWins, totalLosses, rating, ftStrength, recentOpps: recentOpps.slice(0, 10) };
+  // FT Strength
+  let ftStrength = '';
+  const boutTable = [...doc.querySelectorAll('table')].find(t =>
+    t.textContent.includes('Strength') && t.textContent.includes('Opponent'));
+  if (boutTable) {
+    const ths = [...boutTable.querySelectorAll('th')].map(th => th.textContent.trim());
+    const si = ths.indexOf('Strength');
+    if (si > -1) {
+      const firstRow = boutTable.querySelector('tbody tr');
+      if (firstRow) {
+        const cells = [...firstRow.querySelectorAll('td')];
+        if (cells[si]) ftStrength = cells[si].textContent.trim();
+      }
+    }
+  }
+
+  return { year, club, winRatioAll, winRatioDE, winRatioPool, totalWins, totalLosses, rating, ftStrength };
 }
 
 function ftApplyToModal(p) {
-  // Apply year-based age group
-  const currentYear = new Date().getFullYear();
-  const age = p.year ? currentYear - parseInt(p.year) : 0;
-  let ageGroup = '';
-  if      (age <= 10) ageGroup = 'Y10';
-  else if (age <= 12) ageGroup = 'Y12';
-  else if (age <= 14) ageGroup = 'Y14';
-  else if (age <= 17) ageGroup = 'Cadet';
-  else if (age <= 20) ageGroup = 'Junior';
-  else                ageGroup = 'Senior';
-
-  if (ageGroup) omSingle('age', ageGroup);
-
+  // Age group from year
+  if (p.year) {
+    const age = new Date().getFullYear() - parseInt(p.year);
+    const ag = age<=10?'Y10':age<=12?'Y12':age<=14?'Y14':age<=17?'Cadet':age<=20?'Junior':'Senior';
+    omSingle('age', ag);
+  }
   // Club
   if (p.club) document.getElementById('om-club').value = p.club;
 
-  // Show loaded summary box
-  const loaded = document.getElementById('ft-loaded');
-  const wr = p.winRatioAll ? `Win rate: <strong>${p.winRatioAll}</strong> (${p.totalWins}W / ${p.totalLosses}L)` : '';
-  const de = p.winRatioDE   ? `DE: <strong>${p.winRatioDE}</strong>` : '';
-  const pool = p.winRatioPool ? `Pool: <strong>${p.winRatioPool}</strong>` : '';
-  const rating = p.rating   ? `Rating: <strong>${p.rating}</strong>` : '';
-  const strength = p.ftStrength ? `FT Strength: <strong>${p.ftStrength}</strong>` : '';
-
-  const rows = [wr, de, pool, rating, strength, p.year ? `Born: <strong>${p.year}</strong>` : '', p.club ? `Club: <strong>${p.club}</strong>` : ''].filter(Boolean);
-
-  // Notes field — pre-fill with FT stats
+  // Notes — pre-fill with FT stats
   const statsNote = [
-    p.winRatioAll ? `All-time win rate: ${p.winRatioAll}` : '',
-    p.winRatioDE  ? `DE win rate: ${p.winRatioDE}` : '',
-    p.winRatioPool? `Pool win rate: ${p.winRatioPool}` : '',
-    p.rating      ? `FT rating: ${p.rating}` : '',
-    p.ftStrength  ? `FT strength: ${p.ftStrength}` : '',
-    p.division    ? `Division: ${p.division}` : '',
+    p.winRatioAll ? `Win rate: ${p.winRatioAll} (${p.totalWins}W/${p.totalLosses}L)` : '',
+    p.winRatioDE  ? `DE: ${p.winRatioDE}` : '',
+    p.winRatioPool? `Pool: ${p.winRatioPool}` : '',
+    p.rating      ? `Rating: ${p.rating}` : '',
+    p.ftStrength  ? `FT Strength: ${p.ftStrength}` : '',
   ].filter(Boolean).join(' | ');
   if (statsNote) document.getElementById('om-notes').value = statsNote;
 
+  // Show summary
+  const loaded = document.getElementById('ft-loaded');
+  const rows = [
+    p.winRatioAll ? `Win rate: <strong>${p.winRatioAll}</strong> (${p.totalWins}W / ${p.totalLosses}L)` : '',
+    p.winRatioDE  ? `DE win rate: <strong>${p.winRatioDE}</strong>` : '',
+    p.winRatioPool? `Pool win rate: <strong>${p.winRatioPool}</strong>` : '',
+    p.rating      ? `Rating: <strong>${p.rating}</strong>` : '',
+    p.ftStrength  ? `FT Strength: <strong>${p.ftStrength}</strong>` : '',
+    p.year        ? `Born: <strong>${p.year}</strong>` : '',
+    p.club        ? `Club: <strong>${p.club}</strong>` : '',
+  ].filter(Boolean);
+
   loaded.innerHTML = `<div class="ft-loaded-box">
-    <div class="ftl-name">✓ FencingTracker data loaded — ${p.name}</div>
+    <div class="ftl-name">✓ Loaded — ${p.name||'Profile'}</div>
     ${rows.map(r => `<div class="ftl-row">${r}</div>`).join('')}
-    ${p.recentOpps?.length ? `<div class="ftl-row" style="margin-top:.3rem">Recent opponents: <strong>${p.recentOpps.slice(0,5).map(o=>o.name).join(', ')}</strong></div>` : ''}
   </div>`;
 }
 
@@ -1660,12 +1428,11 @@ const _origCloseOppModal = closeOppModal;
 closeOppModal = function() {
   ftCurrentProfile = null;
   const ft = document.getElementById('ft-loaded');
-  const fr = document.getElementById('ft-results');
   if (ft) ft.style.display = 'none';
-  if (fr) fr.style.display = 'none';
+  const fu = document.getElementById('ft-url-input');
+  if (fu) fu.value = '';
   _origCloseOppModal();
 };
-
 
 // ── INIT ──
 updateApiBadge();
