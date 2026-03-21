@@ -1302,57 +1302,69 @@ async function ftSearch(q) {
   const box = document.getElementById('ft-results');
   box.style.display = 'block';
   box.style.zIndex = '9999';
-  box.innerHTML = '<div class="ft-result-item loading">Searching FencingTracker...</div>';
+  box.innerHTML = '<div class="ft-result-item loading">Searching...</div>';
 
+  // Strategy 1: FencingTracker autocomplete API — called directly from browser (no proxy needed)
+  // This is the same endpoint used by their search box autocomplete
+  const acEndpoints = [
+    `https://fencingtracker.com/autocomplete?q=${encodeURIComponent(q)}`,
+    `https://fencingtracker.com/ac?q=${encodeURIComponent(q)}`,
+    `https://fencingtracker.com/api/search?q=${encodeURIComponent(q)}`,
+    `https://fencingtracker.com/search/autocomplete?q=${encodeURIComponent(q)}`,
+  ];
+
+  for (const url of acEndpoints) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      if (!res.ok) continue;
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('json')) continue;
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        ftRenderACResults(box, data, q);
+        return;
+      }
+    } catch(e) { continue; }
+  }
+
+  // Strategy 2: Search page via CORS proxy
   const proxies = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?',
     'https://api.codetabs.com/v1/proxy?quest=',
   ];
+  const searchUrl = `https://fencingtracker.com/search?s=${encodeURIComponent(q)}`;
 
-  // KEY FIX: FencingTracker uses ?s= not ?q=
-  const searchUrl = `${FT_BASE}/search?s=${encodeURIComponent(q)}`;
-
-  let foundProxy = null;
-  let html = null;
-
+  let html = null, foundProxy = null;
   for (let i = 0; i < proxies.length; i++) {
-    const proxy = proxies[i];
     box.innerHTML = `<div class="ft-result-item loading">Searching... (${i+1}/3)</div>`;
     try {
-      const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) { continue; }
+      const res = await fetch(proxies[i] + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) continue;
       html = await res.text();
-      foundProxy = proxy;
+      foundProxy = proxies[i];
       break;
     } catch(e) {
-      box.innerHTML = `<div class="ft-result-item loading">Proxy ${i+1} timed out, trying next...</div>`;
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 200));
       continue;
     }
   }
 
   if (!html) {
     box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.4rem;padding:1rem;text-align:center">
-      <div style="font-weight:600;color:var(--text)">Search unavailable</div>
-      <div style="font-size:.65rem;color:var(--muted)">Type name manually and fill in details below</div>
+      <div style="font-weight:600;color:var(--red)">Search failed</div>
+      <div style="font-size:.68rem;color:var(--muted)">Type the full name manually below and save the profile</div>
     </div>`;
     return;
   }
 
-  // Check if we got a real search results page
-  const isSearchPage = html.includes('Search Results') || html.includes('fencers that match');
-  box.innerHTML = '<div class="ft-result-item loading">Found response — parsing...</div>';
+  box.innerHTML = '<div class="ft-result-item loading">Parsing results...</div>';
   const results = ftParseSearchPage(html);
 
   if (!results.length) {
-    // Show diagnostic info to help debug
-    const hint = isSearchPage
-      ? `No fencers found for "<strong>${q}</strong>" on FencingTracker`
-      : `Search page didn't load correctly — try again or type name manually`;
     box.innerHTML = `<div class="ft-result-item" style="flex-direction:column;gap:.5rem;padding:1rem">
-      <div style="font-size:.8rem;color:var(--text)">${hint}</div>
-      <div style="font-size:.7rem;color:var(--muted)">Try: last name only · full name · check spelling</div>
+      <div style="font-size:.82rem;color:var(--text)">No results for "<strong>${q}</strong>"</div>
+      <div style="font-size:.7rem;color:var(--muted)">Try full name · last name only · or type and save manually</div>
     </div>`;
     return;
   }
@@ -1371,8 +1383,6 @@ async function ftSearch(q) {
   };
 
   renderResults(results);
-
-  // Enrich with year/rating from their profile page in parallel
   if (foundProxy) {
     Promise.all(results.slice(0,8).map(p => ftFetchClub(p, foundProxy))).then(enriched => {
       renderResults(enriched);
@@ -1380,91 +1390,37 @@ async function ftSearch(q) {
   }
 }
 
-function ftParseSearchPage(html) {
-  // FencingTracker search results are in a TABLE:
-  // <table>
-  //   <tr><th>Name</th><th>Nickname</th><th>Club</th><th>Division</th></tr>
-  //   <tr><td><a href="/p/123/Jerry-Ye">YE, Jerry</a></td><td></td><td>Golubitsky...</td><td>Orange Coast</td></tr>
-  // </table>
+function ftRenderACResults(box, data, q) {
+  // Render autocomplete JSON results
+  // FT autocomplete likely returns [{name, url, club} or {label, value, ...}]
+  const items = data.slice(0, 8).map(item => {
+    const name  = item.name || item.label || item.value || '';
+    const club  = item.club || item.organization || '';
+    const url   = item.url  || item.href || item.link || '';
+    const id    = (url.match(/\/p\/(\d+)/) || [])[1] || '';
+    const slug  = (url.match(/\/p\/\d+\/([^/?#]+)/) || [])[1] || '';
+    return { name, club, url: url.startsWith('http') ? url : `https://fencingtracker.com${url}`, id, slug, year:'', rating:'' };
+  }).filter(p => p.name);
 
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const results = [];
-  const seen = new Set();
+  if (!items.length) {
+    // Autocomplete returned data but nothing useful — fall through would be ideal
+    // but just show no results
+    box.innerHTML = `<div class="ft-result-item loading">No matches found for "${q}"</div>`;
+    return;
+  }
 
-  // Find the results table — look for rows containing /p/ links
-  doc.querySelectorAll('table tr').forEach(row => {
-    const link = row.querySelector('a[href*="/p/"]');
-    if (!link) return;
-
-    const href = link.getAttribute('href') || '';
-    const match = href.match(/\/p\/(\d+)\/([^/?#]+)/);
-    if (!match) return;
-
-    const [, id, rawSlug] = match;
-    if (seen.has(id)) return;
-    seen.add(id);
-
-    // Name from link text — FT format is "LASTNAME, Firstname"
-    let name = link.textContent.replace(/\s+/g,' ').trim();
-    // Convert "YE, Jerry" → "Jerry Ye" for display
-    const commaMatch = name.match(/^([^,]+),\s*(.+)$/);
-    if (commaMatch) {
-      name = `${commaMatch[2].trim()} ${commaMatch[1].trim()}`;
-    }
-
-    // Club and Division from table cells
-    const cells = [...row.querySelectorAll('td')];
-    const club     = cells[2]?.textContent?.trim() || '';
-    const division = cells[3]?.textContent?.trim() || '';
-
-    results.push({
-      id, slug: rawSlug, name,
-      url: `${FT_BASE}/p/${id}/${rawSlug}`,
-      club, division, year: '', rating: ''
-    });
-  });
-
-  return results.slice(0, 10);
+  box.innerHTML = items.map(p => {
+    const meta = [p.club, p.year].filter(Boolean).join(' · ');
+    return `<div class="ft-result-item" onclick='ftSelectProfile(${JSON.stringify(p).replace(/\\/g,'\\\\').replace(/'/g,"&#39;").replace(/"/g,"&quot;")})'>
+      <div>
+        <div class="ft-result-name">${p.name}</div>
+        <div class="ft-result-meta">${meta || ''}</div>
+      </div>
+      <div class="ft-result-meta" style="color:var(--gold)">→</div>
+    </div>`;
+  }).join('');
 }
 
-
-async function ftFetchClub(result, proxy) {
-  // Fetch the fencer's summary page to get club and year
-  try {
-    const url = `${FT_BASE}/p/${result.id}/${result.slug}`;
-    const r = await fetch(proxy + encodeURIComponent(url), { signal: AbortSignal.timeout(4000) });
-    if (!r.ok) return result;
-    const html = await r.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    // Year — <h3> containing 4-digit year
-    doc.querySelectorAll('h3').forEach(h => {
-      if (/^\d{4}$/.test(h.textContent.trim())) result.year = h.textContent.trim();
-    });
-    // Club — link to /club/
-    const clubLink = doc.querySelector('a[href*="/club/"]');
-    if (clubLink) result.club = clubLink.textContent.trim();
-    // Rating — from Rating History table first row
-    doc.querySelectorAll('table').forEach(t => {
-      const ths = [...t.querySelectorAll('th')].map(th => th.textContent.trim());
-      if (ths.includes('Rating') && ths.includes('Weapon')) {
-        const firstRow = t.querySelector('tbody tr');
-        if (firstRow) {
-          const cells = [...firstRow.querySelectorAll('td')].map(td => td.textContent.trim());
-          if (cells[1]) result.rating = cells[1];
-        }
-      }
-    });
-  } catch(e) {}
-  return result;
-}
-
-function ftHideResults() {
-  const box = document.getElementById('ft-results');
-  if (box) box.style.display = 'none';
-}
 
 async function ftSelectProfile(profile) {
   ftHideResults();
