@@ -1322,7 +1322,7 @@ async function ftSearch(q) {
       const res = await fetch(proxy + encodeURIComponent(searchUrl), { signal: AbortSignal.timeout(5000) });
       if (!res.ok) continue;
       const html = await res.text();
-      const results = ftParseSearchPage(html);
+      const results = ftParseSearchPage(html, q);
       if (!results.length) {
         box.innerHTML = '<div class="ft-result-item loading">No results found — try full name (e.g. "Tristan Chong")</div>';
         return;
@@ -1367,11 +1367,14 @@ async function ftSearch(q) {
   </div>`;
 }
 
-function ftParseSearchPage(html) {
+function ftParseSearchPage(html, query) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const results = [];
   const seen = new Set();
+
+  // Normalize query for matching — split into words
+  const queryWords = query.toLowerCase().replace(/[^a-z0-9 ]/g,'').split(/\s+/).filter(Boolean);
 
   doc.querySelectorAll('a[href*="/p/"]').forEach(a => {
     const href = a.getAttribute('href') || '';
@@ -1383,30 +1386,40 @@ function ftParseSearchPage(html) {
 
     let name = a.textContent.replace(/\s+/g,' ').trim();
     if (!name || name.length < 2) return;
-    if (['History','Strength','Summary','Log in','Sign up','Epee','Foil','Saber'].includes(name)) return;
-    if (name.length > 60) return; // skip long nav items
+    // Skip nav/UI links
+    if (['History','Strength','Summary','Log in','Sign up','Epee','Foil','Saber',
+         'Largest Clubs','Top Clubs','National Circuit','Recruiting'].includes(name)) return;
+    if (name.length > 60) return;
 
-    // Try to extract year from nearby row/cell
+    // Decode slug to get the real name
+    let slugName = '';
+    try { slugName = decodeURIComponent(slug).replace(/-/g,' ').replace(/\s+/g,' ').trim(); } catch(e) {}
+
+    // Use whichever is more name-like (has a space = first+last name)
+    const candidateName = name.includes(' ') ? name : (slugName.includes(' ') ? slugName : name);
+
+    // ── KEY FIX: only include if name matches the search query ──
+    const nameLower = candidateName.toLowerCase().replace(/[^a-z0-9 ]/g,'');
+    const nameWords = nameLower.split(/\s+/);
+    const matchScore = queryWords.filter(qw =>
+      nameWords.some(nw => nw.startsWith(qw) || qw.startsWith(nw))
+    ).length;
+    // Must match at least half the query words
+    if (matchScore < Math.max(1, Math.ceil(queryWords.length * 0.5))) return;
+
     let year = '', club = '';
     const row = a.closest('tr') || a.closest('li') || a.parentElement;
     if (row) {
-      const txt = row.textContent;
-      const ym = txt.match(/\b(20\d{2}|19\d{2})\b/);
+      const ym = row.textContent.match(/\b(20\d{2}|19\d{2})\b/);
       if (ym) year = ym[1];
-      // Club often in next sibling cell
       const cells = row.querySelectorAll('td');
       if (cells.length >= 3) club = cells[2]?.textContent?.trim() || '';
     }
 
-    // Decode slug as fallback name
-    if (name.split(' ').length < 2) {
-      try { name = decodeURIComponent(slug).replace(/-/g,' ').replace(/\s+/g,' ').trim(); } catch(e) {}
-    }
-
-    results.push({ id, slug, name, url: `${FT_BASE}/p/${id}/${slug}`, year, club });
+    results.push({ id, slug, name: candidateName, url: `${FT_BASE}/p/${id}/${slug}`, year, club });
   });
 
-  return results.slice(0, 12); // get more raw results before enrichment
+  return results.slice(0, 10);
 }
 
 async function ftFetchClub(result, proxy) {
