@@ -439,8 +439,8 @@ select option{background:var(--surface2);}
     <label>Full name * <span style="color:var(--gold);font-weight:400;font-size:.68rem">— type to search FencingTracker</span></label>
     <div class="ft-search-wrap">
       <input type="text" id="om-name" placeholder="e.g. Tristan Chong" autocomplete="off"
-        oninput="ftSearchDebounce(this.value)" onblur="ftOnBlur()">
-      <div class="ft-results" id="ft-results" style="display:none" onmousedown="ftResultsMouseDown(event)"></div>
+        oninput="ftSearchDebounce(this.value)">
+      <div class="ft-results" id="ft-results" style="display:none"></div>
     </div>
     <div id="ft-loaded" style="display:none"></div>
     <label>Club / Team</label>
@@ -1288,24 +1288,8 @@ const FT_PROXY  = 'https://api.allorigins.win/raw?url=';
 let ftSearchTimer = null;
 let ftCurrentProfile = null;
 
-let ftMouseDownOnResults = false;
-
-function ftResultsMouseDown(e) {
-  // Prevent input blur from hiding dropdown before click fires
-  ftMouseDownOnResults = true;
-  e.preventDefault();
-}
-
-function ftOnBlur() {
-  if (ftMouseDownOnResults) {
-    ftMouseDownOnResults = false;
-    setTimeout(() => document.getElementById('om-name')?.focus(), 50);
-    return;
-  }
-  setTimeout(() => ftHideResults(), 300);
-}
-
 function ftHideResults() {
+  // Only called explicitly — never on blur
   const box = document.getElementById('ft-results');
   if (box) box.style.display = 'none';
 }
@@ -1449,7 +1433,6 @@ function ftRenderACResults(box, data, q) {
 
 async function ftSelectProfile(profile) {
   ftHideResults();
-  ftMouseDownOnResults = false;
   // Suppress re-search when we set the name value
   ftSearchSuppressed = true;
   document.getElementById('om-name').value = profile.name || '';
