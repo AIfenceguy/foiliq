@@ -858,7 +858,7 @@ const AI_Q = {
       { id:'opp',          text:'Who is the opponent?',                   hint:'Load their profile for smarter advice.',                             type:'opp_select' },
       { id:'period',       text:'Which period just ended?',               hint:'Foil has 3 periods — pick which one just finished.',                  type:'pills', opts:['Period 1','Period 2'] },
       { id:'score',        text:'What is the score right now?',           hint:'Your touches first. This completely changes the advice.',             type:'score' },
-      { id:'period_issue', text:'What was the main problem that period?', hint:'Be honest — this is the most important question.',                    type:'pills', opts:['I kept backing up','Attacked without setup','Got hit on my preparation','Lost right-of-way repeatedly','Bad distance control','Felt rushed / panicked','Opponent was faster than expected','Parries failed','Going well — just need next plan'] },
+      { id:'period_issue', text:'What problems happened that period?', hint:'Select ALL that apply — problems are usually connected.',  type:'pills_multi', opts:['Kept backing up','Attacked without setup','Got hit on preparation','Lost right-of-way repeatedly','Bad distance control','Felt rushed / panicked','Opponent faster than expected','Parries failed','Blade being beaten','Couldn't finish the touch','Hesitated at key moments','Going well — just need next plan'] },
       { id:'opp_change',   text:'Did your opponent change anything?',     hint:'Did you notice any new pattern or tactic from them?',                 type:'pills', opts:['No — same as before','Started attacking more','Started retreating more','Changed to counter-attacks','Attacking my blade more','Hard to tell'] },
     ]
   },
@@ -870,7 +870,7 @@ const AI_Q = {
       { id:'opp',         text:'Opponent?',                     hint:'',                                                                       type:'opp_select' },
       { id:'result',      text:'How did the bout go?',          hint:'',                                                                       type:'pills', opts:['Won clearly','Won narrowly','Lost narrowly','Lost clearly','Draw / tie'] },
       { id:'control',     text:'Who controlled the bout?',      hint:'The most important question.',                                           type:'pills', opts:['I controlled most of it','They controlled most of it','Went back and forth','Hard to tell'] },
-      { id:'what_failed', text:'What cost you the most touches?', hint:'',                                                                     type:'pills', opts:['Attacked without setup','Backed up too much','Got countered repeatedly','Parries were off','Lost right-of-way','Poor distance','Hesitated at key moments','Nothing major — good bout'] },
+      { id:'what_failed', text:'What cost you touches?', hint:'Select all that apply.',                                                       type:'pills_multi', opts:['Attacked without setup','Backed up too much','Got countered repeatedly','Parries were off','Lost right-of-way','Poor distance','Hesitated at key moments','Blade being beaten','Couldn't close the touch','Nothing major — good bout'] },
     ]
   },
 
@@ -933,6 +933,16 @@ function renderAIStep() {
       html += `<button class="pill${s?' sel':''}" onclick="aiPick('${q.id}',\`${opt}\`)">${opt}</button>`;
     });
     html += `</div>`;
+
+  } else if (q.type === 'pills_multi') {
+    const selected = aiAns[q.id] || [];
+    html += `<div class="pill-grid" id="aipg">`;
+    q.opts.forEach(opt => {
+      const s = selected.includes(opt);
+      html += `<button class="pill${s?' sel-multi':''}" onclick="aiPickMulti('${q.id}',\`${opt}\`)">${opt}</button>`;
+    });
+    html += `</div>`;
+    html += `<div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Select all that apply</div>`;
 
   } else if (q.type === 'score') {
     const sm = aiAns['score_me']  || '';
@@ -1008,6 +1018,12 @@ function aiJump(i)  { if (i <= aiStep) { aiStep=i; renderAIStep(); } }
 function aiPrev()   { aiStep--; renderAIStep(); }
 function aiNext()   { if (document.getElementById('ai-sm')) aiSaveScore(); aiStep++; renderAIStep(); }
 function aiPick(id, val) { aiAns[id]=val; renderAIStep(); }
+function aiPickMulti(id, val) {
+  if (!aiAns[id]) aiAns[id] = [];
+  const i = aiAns[id].indexOf(val);
+  if (i > -1) aiAns[id].splice(i,1); else aiAns[id].push(val);
+  renderAIStep();
+}
 function aiSaveScore() {
   aiAns['score_me']  = document.getElementById('ai-sm')?.value || '0';
   aiAns['score_opp'] = document.getElementById('ai-so')?.value || '0';
@@ -1032,8 +1048,9 @@ function buildAISummaryHTML() {
   qs.forEach(q => {
     if (q.type==='opp_select') { if (aiAns['opp_name']) rows+=`<strong>Opponent:</strong> ${aiAns['opp_name']}<br>`; return; }
     const v = aiAns[q.id];
-    if (!v) return;
-    rows += `<strong>${LBL[q.id]||q.id}:</strong> ${v}<br>`;
+    if (!v || (Array.isArray(v) && !v.length)) return;
+    const display = Array.isArray(v) ? v.join(', ') : v;
+    rows += `<strong>${LBL[q.id]||q.id}:</strong> ${display}<br>`;
   });
   return rows ? `<div class="ai-summary">${rows}</div>` : '';
 }
@@ -1077,9 +1094,15 @@ function buildPrompt() {
     prompt += `MODE: 1-Minute Break Advice — ${breakNum}\n`;
     prompt += `Fencer: ${fencer}\n`;
     prompt += `Score: ${fencer} ${me} — Opponent ${opp} (${situation})\n`;
-    prompt += `Main problem this period: ${a['period_issue']||'not specified'}\n`;
+    const problems = Array.isArray(a['period_issue']) ? a['period_issue'].join(', ') : (a['period_issue']||'not specified');
+    prompt += `Problems this period (multiple): ${problems}\n`;
+    prompt += `Opponent change noticed: ${a['opp_change']||'none'}\n`;
     if (o) prompt += buildOppContext(o, fencer);
     prompt += `\n⚠ This is a 1-MINUTE BREAK. Give URGENT, SPECIFIC advice.\n`;
+    prompt += `CRITICAL — Use SWOT thinking:\n`;
+    prompt += `- Address the problems above in context of the score\n`;
+    prompt += `- Tell ${fencer} which of THEIR strengths to deploy NOW against opponent weaknesses\n`;
+    prompt += `- Tell ${fencer} which of THEIR weaknesses are being exposed and how to hide them\n`;
     prompt += `The advice MUST be completely different depending on the score situation:\n`;
     if (diff >= 4) {
       prompt += `- They are WINNING. Tell them to protect the lead: be conservative, make the opponent come to them, avoid risky attacks.\n`;
@@ -1099,7 +1122,8 @@ function buildPrompt() {
     prompt += `MODE: Post-Bout Review for ${fencer}\n`;
     prompt += `Result: ${a['result']||'not specified'}\n`;
     prompt += `Who controlled: ${a['control']||'not specified'}\n`;
-    prompt += `Main issue: ${a['what_failed']||'not specified'}\n`;
+    const issues = Array.isArray(a['what_failed']) ? a['what_failed'].join(', ') : (a['what_failed']||'not specified');
+    prompt += `Issues that cost touches: ${issues}\n`;
     if (o) prompt += buildOppContext(o, fencer);
     prompt += `\nGive:\n1. What went right and should be kept\n2. The specific root cause of the main problem\n3. One drill or focus for the next training session to fix it\n4. If there's a next bout today — one tactical adjustment to make immediately`;
 
@@ -1194,7 +1218,24 @@ async function sendFollowup() {
 // ══════════════════════════════════════════════════════
 //  API
 // ══════════════════════════════════════════════════════
-const SYS = `You are an elite foil fencing coach advising youth competitive fencers. Speak directly, use proper fencing terminology, be specific and actionable. Format advice with numbered steps. Never give generic advice — always tie it to the specific situation provided.`;
+const SYS = `You are an elite foil fencing coach AND strategic advisor for youth competitive fencers (Y14 level).
+
+STRATEGIC FRAMEWORK — Sun Tzu's Art of War applied to foil fencing:
+1. "Know yourself, know your enemy" — always use the SWOT data provided. Never ignore it.
+2. "Attack where they are weak" — deploy the fencer's STRENGTHS directly against the OPPONENT'S WEAKNESSES
+3. "Protect what is vulnerable" — hide the fencer's WEAKNESSES from the OPPONENT'S STRENGTHS
+4. "Supreme excellence is subduing without fighting" — control distance and tempo, make the opponent make the mistake
+5. "All warfare is deception" — use feints, second-intention, preparation actions to disguise true intent
+6. "In chaos, find opportunity" — when losing, the score is information not defeat. Adapt the strategy.
+7. "Speed is the essence" — in a 1-minute break, give ONE clear tactical change, not five
+
+SWOT PRINCIPLE: Every piece of advice must connect:
+MY strength → THEIR weakness = how to score
+THEIR strength → MY weakness = what to avoid and how to hide it
+
+Speak directly to the fencer or parent. Use fencing terminology correctly.
+Format with numbered steps. Be specific — always reference the actual SWOT, problems, and score provided.
+Never give generic advice that ignores the situation.`;
 
 async function callClaude(key, messages) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
