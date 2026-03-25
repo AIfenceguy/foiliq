@@ -13,34 +13,22 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
-
-/* TOP BAR */
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.2rem;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100;}
 .logo{font-weight:800;font-size:1.1rem;color:var(--gold);letter-spacing:.04em;}
 .logo span{color:var(--muted);font-weight:400;font-size:.75rem;margin-left:.5rem;}
 .api-badge{font-size:.65rem;padding:.2rem .6rem;border-radius:99px;background:rgba(240,192,64,.12);color:var(--gold);border:1px solid var(--gold2);cursor:pointer;}
 .api-badge.connected{background:rgba(62,207,142,.12);color:var(--green);border-color:var(--green);}
-
-/* NAV */
 .nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;}
 .nav-btn{padding:.75rem 1rem;font-size:.78rem;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
 .nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
 .nav-btn:hover:not(.active){color:var(--text);}
-
-/* PAGES */
 .page{display:none;padding:1rem;max-width:700px;margin:0 auto;}
 .page.active{display:block;}
-
-/* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;}
 .card-title{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem;}
-
-/* FENCER TOGGLE */
 .fencer-toggle{display:flex;gap:.5rem;margin-bottom:1rem;}
 .ftog{flex:1;padding:.55rem;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-weight:600;cursor:pointer;transition:all .2s;font-size:.85rem;}
 .ftog.active{border-color:var(--gold);background:rgba(240,192,64,.1);color:var(--gold);}
-
-/* FORM */
 label{font-size:.72rem;font-weight:600;color:var(--muted);display:block;margin-bottom:.3rem;margin-top:.8rem;text-transform:uppercase;letter-spacing:.06em;}
 label:first-child{margin-top:0;}
 input[type=text],input[type=number],input[type=date],input[type=password],select,textarea{
@@ -49,35 +37,23 @@ input[type=text],input[type=number],input[type=date],input[type=password],select
 input:focus,select:focus,textarea:focus{border-color:var(--gold);}
 textarea{resize:vertical;min-height:60px;}
 select option{background:var(--surface2);}
-
-/* PILLS */
 .pill-grid{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem;}
 .pill{padding:.35rem .8rem;border-radius:99px;border:1.5px solid var(--border);background:var(--pill-bg);color:var(--muted);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .pill:hover{border-color:var(--muted);color:var(--text);}
 .pill.sel{border-color:var(--gold);background:rgba(240,192,64,.12);color:var(--gold);}
 .pill.sel-multi{border-color:var(--blue);background:rgba(74,144,226,.12);color:var(--blue);}
-.pill.sel-bad{border-color:var(--red);background:rgba(224,92,92,.12);color:var(--red);}
-
-/* SCORE ROW */
 .score-row{display:grid;grid-template-columns:1fr 20px 1fr;gap:.4rem;align-items:center;max-width:200px;}
 .score-sep{text-align:center;color:var(--muted);}
-
-/* BUTTONS */
 .btn{display:block;width:100%;padding:.75rem;border-radius:8px;border:none;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;text-align:center;}
 .btn-gold{background:var(--gold);color:#0f1117;}
 .btn-gold:hover{background:#f7d060;}
-.btn-gold:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
 .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
 .btn-outline:hover{border-color:var(--gold);color:var(--gold);}
 .btn-sm{padding:.35rem .8rem;font-size:.75rem;border-radius:6px;display:inline-block;width:auto;}
 .btn-danger{background:rgba(224,92,92,.15);border:1px solid var(--red);color:var(--red);}
-
-/* TOAST */
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--green);color:#0f1117;padding:.6rem 1.2rem;border-radius:99px;font-weight:700;font-size:.82rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
 .toast.show{opacity:1;}
 .toast.error{background:var(--red);color:#fff;}
-
-/* MATCH CARDS */
 .match-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.8rem;margin-bottom:.6rem;}
 .match-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;}
 .match-name{font-weight:700;font-size:.9rem;}
@@ -86,8 +62,6 @@ select option{background:var(--surface2);}
 .loss{background:rgba(224,92,92,.15);color:var(--red);}
 .match-meta{font-size:.72rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.4rem;}
 .tag{background:var(--pill-bg);border:1px solid var(--border);border-radius:4px;padding:.15rem .45rem;font-size:.67rem;color:var(--muted);}
-
-/* OPPONENT CARDS */
 .opp-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.8rem;cursor:pointer;transition:border-color .2s;}
 .opp-card:hover{border-color:var(--gold);}
 .opp-name{font-weight:700;font-size:1rem;margin-bottom:.2rem;}
@@ -99,8 +73,6 @@ select option{background:var(--surface2);}
 .t-age{background:rgba(62,207,142,.12);color:var(--green);}
 .t-action{background:rgba(155,111,240,.12);color:var(--purple);}
 .t-weak{background:rgba(224,92,92,.12);color:var(--red);}
-
-/* SWOT GRID */
 .swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.4rem;}
 .swot-box{border-radius:8px;padding:.7rem;border:1px solid var(--border);}
 .swot-box.s{background:rgba(62,207,142,.05);border-color:rgba(62,207,142,.3);}
@@ -112,119 +84,78 @@ select option{background:var(--surface2);}
 .swot-box.w .swot-label{color:var(--red);}
 .swot-box.o .swot-label{color:var(--blue);}
 .swot-box.t .swot-label{color:var(--orange);}
-.swot-item{font-size:.7rem;color:var(--text);padding:.2rem 0;border-bottom:1px solid rgba(255,255,255,.05);}
-.swot-item:last-child{border-bottom:none;}
-.swot-empty{font-size:.7rem;color:var(--muted);font-style:italic;}
-
-/* PERIOD BAR */
-.period-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;margin:.6rem 0;}
-.period-btn{padding:.5rem .2rem;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.68rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
-.period-btn.active{border-color:var(--gold);background:rgba(240,192,64,.12);color:var(--gold);}
-.period-btn.break-btn.active{border-color:var(--orange);background:rgba(240,131,76,.15);color:var(--orange);}
-
-/* SCORE SITUATION */
-.score-situation{border-radius:8px;padding:.7rem 1rem;margin:.6rem 0;font-size:.8rem;font-weight:600;text-align:center;}
-.sit-winning{background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.4);color:var(--green);}
-.sit-losing{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.4);color:var(--red);}
-.sit-tied{background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.4);color:var(--gold);}
-.sit-close{background:rgba(74,144,226,.1);border:1px solid rgba(74,144,226,.4);color:var(--blue);}
-
-/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:560px;padding:1.2rem;margin:auto;}
 .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
 .modal-title{font-weight:800;font-size:1rem;}
 .modal-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;}
-
-/* AI ADVICE */
 .ai-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
 .ai-mode-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:1rem;cursor:pointer;transition:all .2s;text-align:center;}
 .ai-mode-card:hover{border-color:var(--gold);}
 .ai-mode-card .mode-icon{font-size:1.8rem;margin-bottom:.4rem;}
 .ai-mode-card .mode-label{font-size:.8rem;font-weight:700;color:var(--text);}
 .ai-mode-card .mode-desc{font-size:.68rem;color:var(--muted);margin-top:.2rem;line-height:1.4;}
-
 .step-bar{display:flex;gap:.3rem;align-items:center;margin-bottom:1.2rem;}
 .step-pip{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:var(--muted);flex-shrink:0;cursor:pointer;transition:all .2s;}
 .step-pip.done{border-color:var(--gold2);background:rgba(240,192,64,.15);color:var(--gold);}
 .step-pip.active{border-color:var(--gold);background:rgba(240,192,64,.2);color:var(--gold);}
 .step-line{flex:1;height:1px;background:var(--border);}
 .step-line.done{background:var(--gold2);}
-
 .q-label{font-size:.68rem;font-weight:700;color:var(--gold2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;}
 .q-text{font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:.25rem;line-height:1.45;}
 .q-hint{font-size:.7rem;color:var(--muted);margin-bottom:.8rem;}
-
 .q-nav{display:flex;gap:.5rem;margin-top:1rem;}
 .q-nav .back{flex:0 0 auto;padding:.65rem 1rem;border-radius:8px;background:transparent;border:1.5px solid var(--border);color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;}
 .q-nav .next{flex:1;padding:.65rem;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);color:var(--gold);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;}
 .q-nav .next:hover,.q-nav .next.go{background:var(--gold);color:#0f1117;border-color:var(--gold);}
-
 .ai-summary{background:rgba(240,192,64,.06);border:1px solid var(--gold2);border-radius:8px;padding:.8rem 1rem;margin-top:.8rem;font-size:.75rem;line-height:1.8;color:var(--muted);}
 .ai-summary strong{color:var(--text);}
-
 .ai-response{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem;animation:fadeUp .3s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .ai-resp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
 .ai-resp-mode{font-weight:700;color:var(--gold);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;}
 .ai-resp-body{font-size:.82rem;line-height:1.85;color:var(--text);white-space:pre-wrap;}
-
 .loading-pulse{display:flex;align-items:center;gap:.8rem;padding:1rem;background:var(--surface2);border-radius:8px;margin-top:1rem;}
 .pulse-bar{flex:1;height:3px;background:linear-gradient(90deg,var(--gold),transparent,var(--gold));background-size:200%;animation:pulse 1.2s infinite linear;border-radius:2px;}
 @keyframes pulse{0%{background-position:200%}100%{background-position:-200%}}
 .pulse-text{font-size:.68rem;color:var(--gold2);white-space:nowrap;font-weight:600;}
-
 .followup-row{display:flex;gap:.4rem;margin-top:.8rem;}
 .followup-row input{flex:1;border-radius:8px 0 0 8px;}
 .followup-row button{padding:0 1rem;border-radius:0 8px 8px 0;background:var(--gold2);border:1px solid var(--gold2);color:#0f1117;font-weight:700;font-size:.8rem;cursor:pointer;}
 .followup-row button:hover{background:var(--gold);}
-
-/* PROFILE LOADED BOX */
 .profile-loaded{background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.3);border-radius:8px;padding:.7rem .9rem;font-size:.72rem;line-height:1.75;color:var(--text);}
 .profile-loaded .pl-name{color:var(--green);font-weight:700;margin-bottom:.3rem;font-size:.8rem;}
 .profile-loaded .pl-row{color:var(--muted);}
 .profile-loaded .pl-row strong{color:var(--text);}
-
-/* FT SEARCH */
-.ft-result-item { padding:.6rem .9rem; cursor:pointer; font-size:.82rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
-.ft-result-item:last-child { border-bottom:none; }
-.ft-result-item:hover { background:var(--surface2); }
-.ft-result-name { font-weight:600; color:var(--text); }
-.ft-result-meta { font-size:.68rem; color:var(--muted); }
-.ft-result-item.loading { color:var(--muted); font-size:.75rem; padding:.8rem; justify-content:center; }
-.ft-loaded-box { background:rgba(62,207,142,.07); border:1px solid rgba(62,207,142,.3); border-radius:8px; padding:.65rem .9rem; margin-top:.5rem; font-size:.72rem; line-height:1.7; }
-.ft-loaded-box .ftl-name { color:var(--green); font-weight:700; margin-bottom:.2rem; font-size:.8rem; }
-.ft-loaded-box .ftl-row { color:var(--muted); }
-.ft-loaded-box .ftl-row strong { color:var(--text); }
-
-/* GUIDE */
+.ft-loaded-box{background:rgba(62,207,142,.07);border:1px solid rgba(62,207,142,.3);border-radius:8px;padding:.65rem .9rem;margin-top:.5rem;font-size:.72rem;line-height:1.7;}
+.ft-loaded-box .ftl-name{color:var(--green);font-weight:700;margin-bottom:.2rem;font-size:.8rem;}
+.ft-loaded-box .ftl-row{color:var(--muted);}
+.ft-loaded-box .ftl-row strong{color:var(--text);}
+.score-situation{border-radius:8px;padding:.7rem 1rem;margin:.6rem 0;font-size:.8rem;font-weight:600;text-align:center;}
+.sit-winning{background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.4);color:var(--green);}
+.sit-losing{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.4);color:var(--red);}
+.sit-tied{background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.4);color:var(--gold);}
+.sit-close{background:rgba(74,144,226,.1);border:1px solid rgba(74,144,226,.4);color:var(--blue);}
 .guide-block{background:var(--surface2);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:.8rem 1rem;margin-bottom:.8rem;}
 .guide-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem;}
 .guide-action{color:var(--gold);font-size:.8rem;font-weight:700;margin-bottom:.15rem;}
 .guide-desc{font-size:.75rem;color:var(--muted);line-height:1.5;}
-
-/* STAT */
 .stat-row{display:flex;justify-content:space-between;font-size:.78rem;padding:.35rem 0;border-bottom:1px solid var(--border);}
 .stat-row:last-child{border-bottom:none;}
 .stat-val{font-weight:700;}
 .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.82rem;}
 .empty-icon{font-size:2rem;margin-bottom:.5rem;}
-
-/* section divider */
 .section-sep{height:1px;background:var(--border);margin:1rem 0;}
-.section-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:.8rem 0 .4rem;}
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">FoilIQ <span>Smart Fencing Analytics</span></div>
   <span class="api-badge" id="api-badge" onclick="openSettings()">⚙ API: Not set</span>
 </div>
 
-<!-- NAV -->
 <div class="nav">
   <button class="nav-btn active" onclick="showPage('log')">📋 Log</button>
   <button class="nav-btn" onclick="showPage('history')">📊 History</button>
@@ -233,7 +164,7 @@ select option{background:var(--surface2);}
   <button class="nav-btn" onclick="showPage('guide')">📖 Guide</button>
 </div>
 
-<!-- ══════════════════════════ LOG ══════════════════════════ -->
+<!-- LOG -->
 <div class="page active" id="page-log">
   <div class="fencer-toggle">
     <button class="ftog active" id="tog-R" onclick="setFencer('R')">⚔ Raedyn</button>
@@ -242,10 +173,8 @@ select option{background:var(--surface2);}
   <div class="card">
     <div class="card-title">Match details</div>
     <label>Opponent</label>
-    <div style="display:flex;gap:.4rem">
-      <input type="text" id="log-opp" placeholder="Name..." list="opp-datalist">
-      <datalist id="opp-datalist"></datalist>
-    </div>
+    <input type="text" id="log-opp" placeholder="Name..." list="opp-datalist">
+    <datalist id="opp-datalist"></datalist>
     <label>Date</label>
     <input type="date" id="log-date">
     <label>Match type</label>
@@ -303,7 +232,7 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- ══════════════════════════ HISTORY ══════════════════════════ -->
+<!-- HISTORY -->
 <div class="page" id="page-history">
   <div class="fencer-toggle">
     <button class="ftog active" id="htog-R" onclick="setHistFencer('R')">Raedyn</button>
@@ -323,15 +252,14 @@ select option{background:var(--surface2);}
   <div id="history-list"></div>
 </div>
 
-<!-- ══════════════════════════ OPPONENTS ══════════════════════════ -->
+<!-- OPPONENTS -->
 <div class="page" id="page-opponents">
   <button class="btn btn-gold" style="margin-bottom:1rem" onclick="openOppModal(null)">+ Add Opponent Profile</button>
   <div id="opp-list"></div>
 </div>
 
-<!-- ══════════════════════════ AI ADVICE ══════════════════════════ -->
+<!-- AI ADVICE -->
 <div class="page" id="page-ai">
-  <!-- Mode selector -->
   <div id="ai-mode-selector">
     <div class="card-title" style="margin-bottom:.8rem">What do you need right now?</div>
     <div class="ai-mode-grid">
@@ -357,8 +285,6 @@ select option{background:var(--surface2);}
       </div>
     </div>
   </div>
-
-  <!-- Questionnaire -->
   <div id="ai-questionnaire" style="display:none">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
@@ -369,11 +295,10 @@ select option{background:var(--surface2);}
       <div id="ai-q-body"></div>
     </div>
   </div>
-
   <div id="ai-result-area"></div>
 </div>
 
-<!-- ══════════════════════════ GUIDE ══════════════════════════ -->
+<!-- GUIDE -->
 <div class="page" id="page-guide">
   <div class="card-title" style="margin-bottom:.8rem">Foil Decision Guide</div>
   <div class="guide-block">
@@ -407,30 +332,25 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- ══════════════ OPPONENT MODAL ══════════════ -->
+<!-- OPPONENT MODAL -->
 <div class="modal-overlay" id="opp-modal">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="opp-modal-title">Add Opponent</div>
       <button class="modal-close" onclick="closeOppModal()">✕</button>
     </div>
-
     <label>Full name *</label>
     <input type="text" id="om-name" placeholder="e.g. Tristan Chong">
-
     <label>FencingTracker URL <span style="color:var(--gold);font-weight:400;font-size:.68rem">— paste to auto-fill</span></label>
     <div style="display:flex;gap:.4rem">
-      <input type="text" id="ft-url-input" placeholder="https://fencingtracker.com/p/100280844/..." 
-        style="flex:1" oninput="ftUrlDebounce(this.value)">
-      <button class="btn btn-outline" style="width:auto;padding:.55rem .9rem;font-size:.75rem;white-space:nowrap" 
-        onclick="ftLoadFromUrl()">Load ↓</button>
+      <input type="text" id="ft-url-input" placeholder="https://fencingtracker.com/p/100280844/..." style="flex:1" oninput="ftUrlDebounce(this.value)">
+      <button class="btn btn-outline" style="width:auto;padding:.55rem .9rem;font-size:.75rem;white-space:nowrap" onclick="ftLoadFromUrl()">Load ↓</button>
     </div>
     <div id="ft-loaded" style="display:none;margin-top:.4rem"></div>
     <label>Club / Team</label>
     <input type="text" id="om-club" placeholder="e.g. NY Fencers Club">
     <label>Country / Region</label>
     <input type="text" id="om-country" placeholder="e.g. USA / California">
-
     <label>Age group</label>
     <div class="pill-grid" id="pg-age">
       <button class="pill" onclick="omSingle('age','Y10')">Y10</button>
@@ -471,12 +391,9 @@ select option{background:var(--surface2);}
       <button class="pill" onclick="omMulti('prefActions','Parry 4 dominant')">Parry 4 dominant</button>
       <button class="pill" onclick="omMulti('prefActions','Strong preparation')">Strong preparation</button>
     </div>
-
-    <!-- ── SWOT ── -->
     <div class="section-sep"></div>
     <div style="font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.5rem">⚡ SWOT Analysis</div>
     <div style="font-size:.72rem;color:var(--muted);margin-bottom:.8rem;line-height:1.5">Use our strengths to hit their weaknesses. Hide our weaknesses from their strengths.</div>
-
     <div class="swot-grid">
       <div class="swot-box s">
         <div class="swot-label">MY Strengths vs Them</div>
@@ -526,10 +443,8 @@ select option{background:var(--surface2);}
         </div>
       </div>
     </div>
-
     <label>Additional coach / scout notes</label>
     <textarea id="om-notes" placeholder="Anything else worth remembering..."></textarea>
-
     <div style="display:flex;gap:.5rem;margin-top:1rem">
       <button class="btn btn-gold" onclick="saveOppProfile()">Save profile</button>
       <button class="btn btn-danger btn-sm" id="om-delete-btn" onclick="deleteOppProfile()" style="display:none">Delete</button>
@@ -537,7 +452,7 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- ══════════════ API SETTINGS MODAL ══════════════ -->
+<!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-modal">
   <div class="modal">
     <div class="modal-header">
@@ -559,220 +474,220 @@ select option{background:var(--surface2);}
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════════
-//  STORAGE
-// ══════════════════════════════════════════════════════
-const DB = {
-  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+// ── STORAGE ──
+var DB = {
+  get: function(k) { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } },
+  set: function(k,v) { localStorage.setItem(k, JSON.stringify(v)); }
 };
-const getMatches  = () => DB.get('foiliq_matches')   || [];
-const getOpps     = () => DB.get('foiliq_opponents') || [];
-const getSettings = () => DB.get('foiliq_settings')  || { provider:'claude', key:'' };
-const saveMatches = m => DB.set('foiliq_matches', m);
-const saveOpps    = o => DB.set('foiliq_opponents', o);
-const saveSettingsDB = s => DB.set('foiliq_settings', s);
+function getMatches()  { return DB.get('foiliq_matches')   || []; }
+function getOpps()     { return DB.get('foiliq_opponents') || []; }
+function getSettings() { return DB.get('foiliq_settings')  || { provider:'claude', key:'' }; }
+function saveMatches(m)    { DB.set('foiliq_matches', m); }
+function saveOpps(o)       { DB.set('foiliq_opponents', o); }
+function saveSettingsDB(s) { DB.set('foiliq_settings', s); }
 
-// ══════════════════════════════════════════════════════
-//  NAV
-// ══════════════════════════════════════════════════════
+// ── NAV ──
 function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
   document.getElementById('page-'+id).classList.add('active');
-  const idx = ['log','history','opponents','ai','guide'].indexOf(id);
-  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  var idx = ['log','history','opponents','ai','guide'].indexOf(id);
+  var btns = document.querySelectorAll('.nav-btn');
+  if (btns[idx]) btns[idx].classList.add('active');
   if (id === 'history')   renderHistory();
   if (id === 'opponents') renderOpponents();
 }
 
-// ══════════════════════════════════════════════════════
-//  PILL HELPERS (log page)
-// ══════════════════════════════════════════════════════
-const sel = {};
+// ── PILL HELPERS ──
+var sel = {};
 function pickPill(group, val) {
   sel[group] = val;
-  document.querySelectorAll(`#pg-${group} .pill`).forEach(b =>
-    b.classList.toggle('sel', b.textContent.trim() === val));
+  document.querySelectorAll('#pg-'+group+' .pill').forEach(function(b) {
+    b.classList.toggle('sel', b.textContent.trim() === val);
+  });
 }
-const getPill = g => sel[g] || '';
+function getPill(g) { return sel[g] || ''; }
 
-// ══════════════════════════════════════════════════════
-//  FENCER TOGGLE
-// ══════════════════════════════════════════════════════
-let curFencer = 'R';
+// ── FENCER TOGGLE ──
+var curFencer = 'R';
 function setFencer(f) {
   curFencer = f;
-  ['R','K'].forEach(x => document.getElementById('tog-'+x).classList.toggle('active', x===f));
+  ['R','K'].forEach(function(x) {
+    document.getElementById('tog-'+x).classList.toggle('active', x===f);
+  });
   refreshDatalist();
 }
 
-// ══════════════════════════════════════════════════════
-//  LOG
-// ══════════════════════════════════════════════════════
+// ── LOG ──
 document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
 
 function refreshDatalist() {
   document.getElementById('opp-datalist').innerHTML =
-    getOpps().map(o => `<option value="${o.name}">`).join('');
+    getOpps().map(function(o) { return '<option value="'+o.name+'">'; }).join('');
 }
 
 function saveMatch() {
-  const opp  = document.getElementById('log-opp').value.trim();
-  const date = document.getElementById('log-date').value;
+  var opp  = document.getElementById('log-opp').value.trim();
+  var date = document.getElementById('log-date').value;
   if (!opp)  { showToast('Enter opponent name', true); return; }
   if (!date) { showToast('Pick a date', true); return; }
-  const match = {
-    id: Date.now(), fencer: curFencer, opp, date,
+  var match = {
+    id: Date.now(), fencer: curFencer, opp: opp, date: date,
     type: getPill('type'), oppType: getPill('opptype'), control: getPill('control'),
     action: getPill('action'), what: getPill('what'), result: getPill('result'),
     scoreMe:  document.getElementById('log-score-me').value  || '',
     scoreOpp: document.getElementById('log-score-opp').value || '',
     notes: document.getElementById('log-notes').value.trim(),
-    coach: document.getElementById('log-coach').value.trim(),
+    coach: document.getElementById('log-coach').value.trim()
   };
-  const matches = getMatches();
+  var matches = getMatches();
   matches.unshift(match);
   saveMatches(matches);
-  // auto-stub opponent
-  const opps = getOpps();
-  if (!opps.find(o => o.name.toLowerCase() === opp.toLowerCase())) {
+  var opps = getOpps();
+  if (!opps.find(function(o) { return o.name.toLowerCase() === opp.toLowerCase(); })) {
     opps.push({ id: Date.now()+1, name: opp, club:'', country:'', age:'', hand:'', height:'', style:'', prefActions:[], myStrengths:[], myWeaknesses:[], oppWeaknesses:[], oppStrengths:[], notes:'' });
-    saveOpps(opps); refreshDatalist();
+    saveOpps(opps);
+    refreshDatalist();
   }
-  // reset
-  ['type','opptype','control','action','what','result'].forEach(g => {
+  ['type','opptype','control','action','what','result'].forEach(function(g) {
     delete sel[g];
-    document.querySelectorAll(`#pg-${g} .pill`).forEach(b => b.classList.remove('sel'));
+    document.querySelectorAll('#pg-'+g+' .pill').forEach(function(b) { b.classList.remove('sel'); });
   });
-  ['log-opp','log-notes','log-coach'].forEach(i => document.getElementById(i).value = '');
+  ['log-opp','log-notes','log-coach'].forEach(function(i) { document.getElementById(i).value = ''; });
   document.getElementById('log-score-me').value = '';
   document.getElementById('log-score-opp').value = '';
   document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
   showToast('✓ Match saved!');
 }
 
-// ══════════════════════════════════════════════════════
-//  HISTORY
-// ══════════════════════════════════════════════════════
-let histFencer = 'R';
+// ── HISTORY ──
+var histFencer = 'R';
 function setHistFencer(f) {
   histFencer = f;
-  ['R','K','A'].forEach(x => document.getElementById('htog-'+x).classList.toggle('active', x===f));
+  ['R','K','A'].forEach(function(x) {
+    document.getElementById('htog-'+x).classList.toggle('active', x===f);
+  });
   renderHistory();
 }
 
 function renderHistory() {
-  let matches = getMatches();
-  if (histFencer !== 'A') matches = matches.filter(m => m.fencer === histFencer);
-  const tf = document.getElementById('hist-filter-type')?.value;
-  const of2 = document.getElementById('hist-filter-opp')?.value;
-  if (tf) matches = matches.filter(m => m.type === tf);
-  if (of2) matches = matches.filter(m => m.opp === of2);
-  const oppSel = document.getElementById('hist-filter-opp');
+  var matches = getMatches();
+  if (histFencer !== 'A') matches = matches.filter(function(m) { return m.fencer === histFencer; });
+  var tf  = document.getElementById('hist-filter-type') ? document.getElementById('hist-filter-type').value : '';
+  var of2 = document.getElementById('hist-filter-opp')  ? document.getElementById('hist-filter-opp').value  : '';
+  if (tf)  matches = matches.filter(function(m) { return m.type === tf; });
+  if (of2) matches = matches.filter(function(m) { return m.opp === of2; });
+  var oppSel = document.getElementById('hist-filter-opp');
   if (oppSel) {
-    const all = [...new Set(getMatches().map(m => m.opp))].sort();
-    const cur = oppSel.value;
-    oppSel.innerHTML = `<option value="">All opponents</option>` + all.map(o => `<option ${o===cur?'selected':''}>${o}</option>`).join('');
+    var all = [];
+    getMatches().forEach(function(m) { if (all.indexOf(m.opp) === -1) all.push(m.opp); });
+    all.sort();
+    var cur = oppSel.value;
+    oppSel.innerHTML = '<option value="">All opponents</option>' +
+      all.map(function(o) { return '<option'+(o===cur?' selected':'')+'>'+o+'</option>'; }).join('');
   }
-  const wins  = matches.filter(m => m.result==='Win').length;
-  const losses= matches.filter(m => m.result==='Loss').length;
-  const total = wins+losses;
-  const iCtrl = matches.filter(m => m.control==='I was controlling').length;
-  document.getElementById('hist-stats').innerHTML = `
-    <div class="card-title">Summary — ${total} bouts</div>
-    <div class="stat-row"><span>Win rate</span><span class="stat-val">${total?Math.round(wins/total*100):0}% (${wins}W/${losses}L)</span></div>
-    <div class="stat-row"><span>I controlled</span><span class="stat-val">${total?Math.round(iCtrl/total*100):0}% of bouts</span></div>
-    <div class="stat-row"><span>Total bouts</span><span class="stat-val">${total}</span></div>`;
-  const list = document.getElementById('history-list');
-  if (!matches.length) { list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>No matches found.</div>`; return; }
-  list.innerHTML = matches.map(m => `
-    <div class="match-card">
-      <div class="match-header">
-        <div class="match-name">${m.opp}</div>
-        <span class="badge ${m.result==='Win'?'win':'loss'}">${m.result||'—'}</span>
-      </div>
-      <div class="match-meta">
-        <span>${m.fencer==='R'?'Raedyn':'Kaylan'}</span><span>${m.date}</span>
-        ${m.scoreMe!==''?`<span>${m.scoreMe}—${m.scoreOpp}</span>`:''}
-        ${m.type?`<span class="tag">${m.type}</span>`:''}
-        ${m.oppType?`<span class="tag">${m.oppType}</span>`:''}
-        ${m.control?`<span class="tag">${m.control}</span>`:''}
-        ${m.action?`<span class="tag">${m.action}</span>`:''}
-      </div>
-      ${m.notes?`<div style="font-size:.72rem;color:var(--muted);margin-top:.4rem">${m.notes}</div>`:''}
-    </div>`).join('');
+  var wins   = matches.filter(function(m) { return m.result==='Win'; }).length;
+  var losses = matches.filter(function(m) { return m.result==='Loss'; }).length;
+  var total  = wins + losses;
+  var iCtrl  = matches.filter(function(m) { return m.control==='I was controlling'; }).length;
+  document.getElementById('hist-stats').innerHTML =
+    '<div class="card-title">Summary — '+total+' bouts</div>'+
+    '<div class="stat-row"><span>Win rate</span><span class="stat-val">'+(total?Math.round(wins/total*100):0)+'% ('+wins+'W/'+losses+'L)</span></div>'+
+    '<div class="stat-row"><span>I controlled</span><span class="stat-val">'+(total?Math.round(iCtrl/total*100):0)+'% of bouts</span></div>'+
+    '<div class="stat-row"><span>Total bouts</span><span class="stat-val">'+total+'</span></div>';
+  var list = document.getElementById('history-list');
+  if (!matches.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No matches found.</div>';
+    return;
+  }
+  list.innerHTML = matches.map(function(m) {
+    return '<div class="match-card">'+
+      '<div class="match-header">'+
+        '<div class="match-name">'+m.opp+'</div>'+
+        '<span class="badge '+(m.result==='Win'?'win':'loss')+'">'+(m.result||'—')+'</span>'+
+      '</div>'+
+      '<div class="match-meta">'+
+        '<span>'+(m.fencer==='R'?'Raedyn':'Kaylan')+'</span><span>'+m.date+'</span>'+
+        (m.scoreMe!==''?'<span>'+m.scoreMe+'—'+m.scoreOpp+'</span>':'')+
+        (m.type?'<span class="tag">'+m.type+'</span>':'')+
+        (m.oppType?'<span class="tag">'+m.oppType+'</span>':'')+
+        (m.control?'<span class="tag">'+m.control+'</span>':'')+
+        (m.action?'<span class="tag">'+m.action+'</span>':'')+
+      '</div>'+
+      (m.notes?'<div style="font-size:.72rem;color:var(--muted);margin-top:.4rem">'+m.notes+'</div>':'')+
+    '</div>';
+  }).join('');
 }
 
-// ══════════════════════════════════════════════════════
-//  OPPONENT PROFILES
-// ══════════════════════════════════════════════════════
-let editingOppId = null;
-const omS = {};   // single picks
-const omM = {};   // multi picks
+// ── OPPONENTS ──
+var editingOppId = null;
+var omS = {};
+var omM = {};
 
 function omSingle(group, val) {
   omS[group] = val;
-  document.querySelectorAll(`#pg-${group} .pill`).forEach(b =>
-    b.classList.toggle('sel', b.textContent.trim() === val));
+  document.querySelectorAll('#pg-'+group+' .pill').forEach(function(b) {
+    b.classList.toggle('sel', b.textContent.trim() === val);
+  });
 }
 function omMulti(group, val) {
   if (!omM[group]) omM[group] = [];
-  const i = omM[group].indexOf(val);
+  var i = omM[group].indexOf(val);
   if (i > -1) omM[group].splice(i,1); else omM[group].push(val);
-  document.querySelectorAll(`#pg-${group} .pill`).forEach(b => {
+  document.querySelectorAll('#pg-'+group+' .pill').forEach(function(b) {
     if (b.textContent.trim() === val)
-      b.classList.toggle('sel-multi', omM[group].includes(val));
+      b.classList.toggle('sel-multi', omM[group].indexOf(val) > -1);
   });
 }
 
 function renderOpponents() {
-  const opps    = getOpps();
-  const matches = getMatches();
-  const list    = document.getElementById('opp-list');
+  var opps    = getOpps();
+  var matches = getMatches();
+  var list    = document.getElementById('opp-list');
   if (!opps.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-icon">🎯</div>No opponents saved yet.<br>Add one above, or it auto-creates when you log a match.</div>`;
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🎯</div>No opponents saved yet.<br>Add one above, or it auto-creates when you log a match.</div>';
     return;
   }
-  list.innerHTML = opps.map(o => {
-    const om     = matches.filter(m => m.opp.toLowerCase()===o.name.toLowerCase());
-    const wins   = om.filter(m => m.result==='Win').length;
-    const total  = om.filter(m => m.result).length;
-    const wr     = total ? `${Math.round(wins/total*100)}% W (${wins}/${total} bouts)` : 'No bouts logged';
-    const tags = [
-      o.hand   ? `<span class="otag t-hand">${o.hand}</span>` : '',
-      o.style  ? `<span class="otag t-style">${o.style}</span>` : '',
-      o.age    ? `<span class="otag t-age">${o.age}</span>` : '',
-      o.height ? `<span class="otag t-age">${o.height}</span>` : '',
-      ...(o.prefActions||[]).map(a=>`<span class="otag t-action">${a}</span>`),
-      ...(o.oppWeaknesses||[]).slice(0,2).map(a=>`<span class="otag t-weak">${a}</span>`),
+  list.innerHTML = opps.map(function(o) {
+    var om    = matches.filter(function(m) { return m.opp.toLowerCase()===o.name.toLowerCase(); });
+    var wins  = om.filter(function(m) { return m.result==='Win'; }).length;
+    var total = om.filter(function(m) { return m.result; }).length;
+    var wr    = total ? Math.round(wins/total*100)+'% W ('+wins+'/'+total+' bouts)' : 'No bouts logged';
+    var tags  = [
+      o.hand   ? '<span class="otag t-hand">'+o.hand+'</span>' : '',
+      o.style  ? '<span class="otag t-style">'+o.style+'</span>' : '',
+      o.age    ? '<span class="otag t-age">'+o.age+'</span>' : '',
+      o.height ? '<span class="otag t-age">'+o.height+'</span>' : ''
     ].join('');
-    // mini SWOT preview
-    const hasSWOT = (o.myStrengths||[]).length || (o.oppWeaknesses||[]).length;
-    const swotPreview = hasSWOT ? `
-      <div style="margin-top:.6rem;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.68rem">
-        ${(o.myStrengths||[]).length?`<div style="color:var(--green)">💪 ${o.myStrengths.join(', ')}</div>`:''}
-        ${(o.oppWeaknesses||[]).length?`<div style="color:var(--blue)">🎯 ${o.oppWeaknesses.join(', ')}</div>`:''}
-      </div>` : '';
-    return `<div class="opp-card" onclick="openOppModal('${o.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div><div class="opp-name">${o.name}</div><div class="opp-record">${o.club?o.club+' · ':''}${wr}</div></div>
-        <span style="color:var(--muted);font-size:.72rem">edit ›</span>
-      </div>
-      ${tags?`<div class="opp-tags">${tags}</div>`:''}
-      ${swotPreview}
-    </div>`;
+    var hasSWOT = (o.myStrengths||[]).length || (o.oppWeaknesses||[]).length;
+    var swotPreview = hasSWOT ?
+      '<div style="margin-top:.6rem;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.68rem">'+
+        ((o.myStrengths||[]).length?'<div style="color:var(--green)">💪 '+o.myStrengths.join(', ')+'</div>':'')+
+        ((o.oppWeaknesses||[]).length?'<div style="color:var(--blue)">🎯 '+o.oppWeaknesses.join(', ')+'</div>':'')+
+      '</div>' : '';
+    return '<div class="opp-card" onclick="openOppModal(\''+o.id+'\')">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+        '<div><div class="opp-name">'+o.name+'</div><div class="opp-record">'+(o.club?o.club+' · ':'')+wr+'</div></div>'+
+        '<span style="color:var(--muted);font-size:.72rem">edit ›</span>'+
+      '</div>'+
+      (tags?'<div class="opp-tags">'+tags+'</div>':'')+
+      swotPreview+
+    '</div>';
   }).join('');
 }
 
 function openOppModal(id) {
   editingOppId = id;
-  Object.keys(omS).forEach(k => delete omS[k]);
-  Object.keys(omM).forEach(k => delete omM[k]);
-  ['om-name','om-club','om-country','om-notes'].forEach(i => document.getElementById(i).value = '');
-  document.querySelectorAll('.modal .pill').forEach(b => b.classList.remove('sel','sel-multi'));
+  Object.keys(omS).forEach(function(k) { delete omS[k]; });
+  Object.keys(omM).forEach(function(k) { delete omM[k]; });
+  ['om-name','om-club','om-country','om-notes'].forEach(function(i) {
+    document.getElementById(i).value = '';
+  });
+  document.querySelectorAll('#opp-modal .pill').forEach(function(b) {
+    b.classList.remove('sel','sel-multi');
+  });
   if (id) {
-    const o = getOpps().find(x => String(x.id)===String(id));
+    var o = getOpps().find(function(x) { return String(x.id)===String(id); });
     if (!o) return;
     document.getElementById('opp-modal-title').textContent = 'Edit Opponent';
     document.getElementById('om-delete-btn').style.display = 'inline-block';
@@ -784,25 +699,33 @@ function openOppModal(id) {
     if (o.hand)   omSingle('hand',   o.hand);
     if (o.height) omSingle('height', o.height);
     if (o.style)  omSingle('style',  o.style);
-    (o.prefActions||[]).forEach(a => omMulti('prefActions', a));
-    (o.myStrengths||[]).forEach(a => omMulti('myStrengths', a));
-    (o.myWeaknesses||[]).forEach(a => omMulti('myWeaknesses', a));
-    (o.oppWeaknesses||[]).forEach(a => omMulti('oppWeaknesses', a));
-    (o.oppStrengths||[]).forEach(a => omMulti('oppStrengths', a));
+    (o.prefActions||[]).forEach(function(a) { omMulti('prefActions', a); });
+    (o.myStrengths||[]).forEach(function(a) { omMulti('myStrengths', a); });
+    (o.myWeaknesses||[]).forEach(function(a) { omMulti('myWeaknesses', a); });
+    (o.oppWeaknesses||[]).forEach(function(a) { omMulti('oppWeaknesses', a); });
+    (o.oppStrengths||[]).forEach(function(a) { omMulti('oppStrengths', a); });
   } else {
     document.getElementById('opp-modal-title').textContent = 'Add Opponent';
     document.getElementById('om-delete-btn').style.display = 'none';
   }
   document.getElementById('opp-modal').classList.add('open');
 }
-function closeOppModal() { document.getElementById('opp-modal').classList.remove('open'); }
+
+function closeOppModal() {
+  ftCurrentProfile = null;
+  var ft = document.getElementById('ft-loaded');
+  if (ft) ft.style.display = 'none';
+  var fu = document.getElementById('ft-url-input');
+  if (fu) fu.value = '';
+  document.getElementById('opp-modal').classList.remove('open');
+}
 
 function saveOppProfile() {
-  const name = document.getElementById('om-name').value.trim();
+  var name = document.getElementById('om-name').value.trim();
   if (!name) { showToast('Name is required', true); return; }
-  const profile = {
-    id: editingOppId || Date.now(),
-    name,
+  var profile = {
+    id:           editingOppId || Date.now(),
+    name:         name,
     club:         document.getElementById('om-club').value.trim(),
     country:      document.getElementById('om-country').value.trim(),
     notes:        document.getElementById('om-notes').value.trim(),
@@ -814,11 +737,11 @@ function saveOppProfile() {
     myStrengths:  omM['myStrengths']  || [],
     myWeaknesses: omM['myWeaknesses'] || [],
     oppWeaknesses:omM['oppWeaknesses']|| [],
-    oppStrengths: omM['oppStrengths'] || [],
+    oppStrengths: omM['oppStrengths'] || []
   };
-  const opps = getOpps();
+  var opps = getOpps();
   if (editingOppId) {
-    const i = opps.findIndex(o => String(o.id)===String(editingOppId));
+    var i = opps.findIndex(function(o) { return String(o.id)===String(editingOppId); });
     if (i > -1) opps[i] = profile; else opps.push(profile);
   } else {
     opps.push(profile);
@@ -829,67 +752,64 @@ function saveOppProfile() {
   renderOpponents();
   showToast('✓ Profile saved!');
 }
+
 function deleteOppProfile() {
   if (!editingOppId) return;
-  saveOpps(getOpps().filter(o => String(o.id)!==String(editingOppId)));
-  closeOppModal(); renderOpponents(); showToast('Profile deleted');
+  saveOpps(getOpps().filter(function(o) { return String(o.id)!==String(editingOppId); }));
+  closeOppModal();
+  renderOpponents();
+  showToast('Profile deleted');
 }
 
-// ══════════════════════════════════════════════════════
-//  AI ADVICE — QUESTIONNAIRES
-// ══════════════════════════════════════════════════════
-const AI_Q = {
-
+// ── AI ──
+var AI_Q = {
   pre: {
     label: '📍 Pre-Bout Strategy',
     questions: [
-      { id:'fencer',    text:'Who is fencing?',              hint:'',                                                                  type:'pills', opts:['Raedyn','Kaylan'] },
-      { id:'opp',       text:'Who is the opponent?',         hint:'Select their profile — SWOT loads automatically.',                 type:'opp_select' },
-      { id:'comp_type', text:'What type of competition?',    hint:'',                                                                  type:'pills', opts:['Practice','Pool round','Direct Elimination (DE)','Team bout','Qualifier'] },
-      { id:'my_form',   text:'How are you feeling?',         hint:'Be honest — this shapes the mental side of the plan.',             type:'pills', opts:['Sharp & confident','Bit nervous but ready','Anxious','Tired / low energy','Coming back from a loss'] },
-      { id:'goal',      text:'What is the #1 goal today?',   hint:'One focus only.',                                                   type:'pills', opts:['Win — no excuses','Test a new tactic','Apply the SWOT plan','Stay controlled — no panic touches','Build confidence'] },
+      { id:'fencer',    text:'Who is fencing?',            hint:'',                                                               type:'pills', opts:['Raedyn','Kaylan'] },
+      { id:'opp',       text:'Who is the opponent?',       hint:'Select their profile — SWOT loads automatically.',              type:'opp_select' },
+      { id:'comp_type', text:'What type of competition?',  hint:'',                                                               type:'pills', opts:['Practice','Pool round','Direct Elimination (DE)','Team bout','Qualifier'] },
+      { id:'my_form',   text:'How are you feeling?',       hint:'Be honest — this shapes the mental side of the plan.',          type:'pills', opts:['Sharp & confident','Bit nervous but ready','Anxious','Tired / low energy','Coming back from a loss'] },
+      { id:'goal',      text:'What is the #1 goal today?', hint:'One focus only.',                                                type:'pills', opts:['Win — no excuses','Test a new tactic','Apply the SWOT plan','Stay controlled — no panic touches','Build confidence'] }
     ]
   },
-
   break: {
     label: '⏱ Break Advice',
     questions: [
-      { id:'fencer',       text:'Who is fencing?',                        hint:'',                                                                   type:'pills', opts:['Raedyn','Kaylan'] },
-      { id:'opp',          text:'Who is the opponent?',                   hint:'Load their profile for smarter advice.',                             type:'opp_select' },
-      { id:'period',       text:'Which period just ended?',               hint:'Foil has 3 periods — pick which one just finished.',                  type:'pills', opts:['Period 1','Period 2'] },
-      { id:'score',        text:'What is the score right now?',           hint:'Your touches first. This completely changes the advice.',             type:'score' },
-      { id:'period_issue', text:'What problems happened that period?', hint:'Select ALL that apply — problems are usually connected.',  type:'pills_multi', opts:['Kept backing up','Attacked without setup','Got hit on preparation','Lost right-of-way repeatedly','Bad distance control','Felt rushed / panicked','Opponent faster than expected','Parries failed','Blade being beaten','Couldn't finish the touch','Hesitated at key moments','Going well — just need next plan'] },
-      { id:'opp_change',   text:'Did your opponent change anything?',     hint:'Did you notice any new pattern or tactic from them?',                 type:'pills', opts:['No — same as before','Started attacking more','Started retreating more','Changed to counter-attacks','Attacking my blade more','Hard to tell'] },
+      { id:'fencer',       text:'Who is fencing?',                     hint:'',                                                               type:'pills', opts:['Raedyn','Kaylan'] },
+      { id:'opp',          text:'Who is the opponent?',                hint:'Load their profile for smarter advice.',                         type:'opp_select' },
+      { id:'period',       text:'Which period just ended?',            hint:'Foil has 3 periods — pick which one just finished.',              type:'pills', opts:['Period 1','Period 2'] },
+      { id:'score',        text:'What is the score right now?',        hint:'Your touches first. This completely changes the advice.',         type:'score' },
+      { id:'period_issue', text:'What problems happened that period?', hint:'Select ALL that apply.',                                          type:'pills_multi', opts:['Kept backing up','Attacked without setup','Got hit on preparation','Lost right-of-way repeatedly','Bad distance control','Felt rushed / panicked','Opponent faster than expected','Parries failed','Blade being beaten','Couldn\'t finish the touch','Hesitated at key moments','Going well — just need next plan'] },
+      { id:'opp_change',   text:'Did your opponent change anything?',  hint:'Did you notice any new pattern?',                                type:'pills', opts:['No — same as before','Started attacking more','Started retreating more','Changed to counter-attacks','Attacking my blade more','Hard to tell'] }
     ]
   },
-
   post: {
     label: '📋 Post-Bout Review',
     questions: [
-      { id:'fencer',      text:'Who just fenced?',              hint:'',                                                                       type:'pills', opts:['Raedyn','Kaylan'] },
-      { id:'opp',         text:'Opponent?',                     hint:'',                                                                       type:'opp_select' },
-      { id:'result',      text:'How did the bout go?',          hint:'',                                                                       type:'pills', opts:['Won clearly','Won narrowly','Lost narrowly','Lost clearly','Draw / tie'] },
-      { id:'control',     text:'Who controlled the bout?',      hint:'The most important question.',                                           type:'pills', opts:['I controlled most of it','They controlled most of it','Went back and forth','Hard to tell'] },
-      { id:'what_failed', text:'What cost you touches?', hint:'Select all that apply.',                                                       type:'pills_multi', opts:['Attacked without setup','Backed up too much','Got countered repeatedly','Parries were off','Lost right-of-way','Poor distance','Hesitated at key moments','Blade being beaten','Couldn't close the touch','Nothing major — good bout'] },
+      { id:'fencer',      text:'Who just fenced?',         hint:'',                                                    type:'pills', opts:['Raedyn','Kaylan'] },
+      { id:'opp',         text:'Opponent?',                hint:'',                                                    type:'opp_select' },
+      { id:'result',      text:'How did the bout go?',     hint:'',                                                    type:'pills', opts:['Won clearly','Won narrowly','Lost narrowly','Lost clearly','Draw / tie'] },
+      { id:'control',     text:'Who controlled the bout?', hint:'The most important question.',                        type:'pills', opts:['I controlled most of it','They controlled most of it','Went back and forth','Hard to tell'] },
+      { id:'what_failed', text:'What cost you touches?',   hint:'Select all that apply.',                              type:'pills_multi', opts:['Attacked without setup','Backed up too much','Got countered repeatedly','Parries were off','Lost right-of-way','Poor distance','Hesitated at key moments','Blade being beaten','Couldn\'t close the touch','Nothing major — good bout'] }
     ]
   },
-
   train: {
     label: '🎯 Training Focus',
     questions: [
-      { id:'fencer',       text:'Who is this plan for?',          hint:'',                                                                    type:'pills', opts:['Raedyn','Kaylan','Both'] },
-      { id:'session_type', text:'What kind of session?',          hint:'',                                                                    type:'pills', opts:['Solo drills','Paired drills','Bouting / sparring','Full coach session','Pre-competition sharpener'] },
-      { id:'focus',        text:'#1 thing to improve today?',     hint:'Pick one priority — everything else is secondary.',                   type:'pills', opts:['Footwork & distance','Attack execution','Parry-riposte','Counter-attack timing','Feints & compound actions','Preparation / setup game','Break tactics & adjustments','Mental composure'] },
-      { id:'recent_issue', text:'What went wrong in the last competition?', hint:'This becomes the drill priority.',                          type:'pills', opts:['Kept losing right-of-way','Backed up too much','Attacked without setup','Got countered too easily','Parries failed under pressure','Distance was off','Slow to adjust at breaks','Nothing specific'] },
-      { id:'time',         text:'How long is the session?',       hint:'',                                                                    type:'pills', opts:['20 min','45 min','60 min','90 min','2 hours+'] },
+      { id:'fencer',       text:'Who is this plan for?',                    hint:'',                                                                    type:'pills', opts:['Raedyn','Kaylan','Both'] },
+      { id:'session_type', text:'What kind of session?',                    hint:'',                                                                    type:'pills', opts:['Solo drills','Paired drills','Bouting / sparring','Full coach session','Pre-competition sharpener'] },
+      { id:'focus',        text:'#1 thing to improve today?',               hint:'Pick one priority.',                                                  type:'pills', opts:['Footwork & distance','Attack execution','Parry-riposte','Counter-attack timing','Feints & compound actions','Preparation / setup game','Break tactics & adjustments','Mental composure'] },
+      { id:'recent_issue', text:'What went wrong in the last competition?', hint:'This becomes the drill priority.',                                    type:'pills', opts:['Kept losing right-of-way','Backed up too much','Attacked without setup','Got countered too easily','Parries failed under pressure','Distance was off','Slow to adjust at breaks','Nothing specific'] },
+      { id:'time',         text:'How long is the session?',                 hint:'',                                                                    type:'pills', opts:['20 min','45 min','60 min','90 min','2 hours+'] }
     ]
-  },
+  }
 };
 
-let aiMode    = '';
-let aiStep    = 0;
-let aiAns     = {};
-let aiHistory = [];
+var aiMode    = '';
+var aiStep    = 0;
+var aiAns     = {};
+var aiHistory = [];
 
 function startAI(mode) {
   aiMode = mode; aiStep = 0; aiAns = {}; aiHistory = [];
@@ -908,572 +828,446 @@ function resetAI() {
 }
 
 function renderAIStep() {
-  const qs    = AI_Q[aiMode].questions;
-  const total = qs.length;
-  const q     = qs[aiStep];
-
-  // Step bar
-  let stepHtml = '';
-  qs.forEach((_, i) => {
-    const cls = i < aiStep ? 'done' : i === aiStep ? 'active' : '';
-    stepHtml += `<div class="step-pip ${cls}" onclick="aiJump(${i})">${i+1}</div>`;
-    if (i < total-1) stepHtml += `<div class="step-line ${i < aiStep?'done':''}"></div>`;
+  var qs    = AI_Q[aiMode].questions;
+  var total = qs.length;
+  var q     = qs[aiStep];
+  var stepHtml = '';
+  qs.forEach(function(_, i) {
+    var cls = i < aiStep ? 'done' : i === aiStep ? 'active' : '';
+    stepHtml += '<div class="step-pip '+cls+'" onclick="aiJump('+i+')">'+(i+1)+'</div>';
+    if (i < total-1) stepHtml += '<div class="step-line '+(i < aiStep?'done':'')+'"></div>';
   });
   document.getElementById('ai-step-bar').innerHTML = stepHtml;
 
-  let html = `<div class="q-label">Question ${aiStep+1} of ${total}</div>`;
-  html += `<div class="q-text">${q.text}</div>`;
-  if (q.hint) html += `<div class="q-hint">${q.hint}</div>`;
+  var html = '<div class="q-label">Question '+(aiStep+1)+' of '+total+'</div>';
+  html += '<div class="q-text">'+q.text+'</div>';
+  if (q.hint) html += '<div class="q-hint">'+q.hint+'</div>';
 
-  // ── Question types ──
   if (q.type === 'pills') {
-    html += `<div class="pill-grid" id="aipg">`;
-    q.opts.forEach(opt => {
-      const s = aiAns[q.id] === opt;
-      html += `<button class="pill${s?' sel':''}" onclick="aiPick('${q.id}',\`${opt}\`)">${opt}</button>`;
+    html += '<div class="pill-grid" id="aipg">';
+    q.opts.forEach(function(opt) {
+      var s = aiAns[q.id] === opt;
+      html += '<button class="pill'+(s?' sel':'')+'" onclick="aiPick(\''+q.id+'\',\''+opt.replace(/'/g,"\\'")+'\')">' + opt + '</button>';
     });
-    html += `</div>`;
-
+    html += '</div>';
   } else if (q.type === 'pills_multi') {
-    const selected = aiAns[q.id] || [];
-    html += `<div class="pill-grid" id="aipg">`;
-    q.opts.forEach(opt => {
-      const s = selected.includes(opt);
-      html += `<button class="pill${s?' sel-multi':''}" onclick="aiPickMulti('${q.id}',\`${opt}\`)">${opt}</button>`;
+    var selected = aiAns[q.id] || [];
+    html += '<div class="pill-grid" id="aipg">';
+    q.opts.forEach(function(opt) {
+      var s = selected.indexOf(opt) > -1;
+      html += '<button class="pill'+(s?' sel-multi':'')+'" onclick="aiPickMulti(\''+q.id+'\',\''+opt.replace(/'/g,"\\'")+'\')">' + opt + '</button>';
     });
-    html += `</div>`;
-    html += `<div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Select all that apply</div>`;
-
+    html += '</div><div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Select all that apply</div>';
   } else if (q.type === 'score') {
-    const sm = aiAns['score_me']  || '';
-    const so = aiAns['score_opp'] || '';
-    html += `<div style="margin-bottom:.6rem">
-      <div class="score-row">
-        <div><label style="margin-top:0">YOU</label><input type="number" id="ai-sm" min="0" max="15" value="${sm}" placeholder="0" oninput="aiSaveScore()"></div>
-        <div class="score-sep" style="margin-top:1.4rem">—</div>
-        <div><label style="margin-top:0">OPP</label><input type="number" id="ai-so" min="0" max="15" value="${so}" placeholder="0" oninput="aiSaveScore()"></div>
-      </div>
-    </div>`;
-    // Score situation indicator
-    const me = parseInt(sm)||0, opp = parseInt(so)||0;
+    var sm = aiAns['score_me']  || '';
+    var so = aiAns['score_opp'] || '';
+    html += '<div style="margin-bottom:.6rem"><div class="score-row">'+
+      '<div><label style="margin-top:0">YOU</label><input type="number" id="ai-sm" min="0" max="15" value="'+sm+'" placeholder="0" oninput="aiSaveScore()"></div>'+
+      '<div class="score-sep" style="margin-top:1.4rem">—</div>'+
+      '<div><label style="margin-top:0">OPP</label><input type="number" id="ai-so" min="0" max="15" value="'+so+'" placeholder="0" oninput="aiSaveScore()"></div>'+
+    '</div></div>';
+    var me = parseInt(sm)||0, opp = parseInt(so)||0;
     if (sm !== '' || so !== '') {
-      const diff = me - opp;
-      let sitClass = 'sit-tied', sitText = '⚖ Tied';
-      if (diff >= 4)       { sitClass='sit-winning'; sitText=`🟢 Leading +${diff} — protect the lead`; }
-      else if (diff <= -4) { sitClass='sit-losing';  sitText=`🔴 Down ${Math.abs(diff)} — must push now`; }
-      else if (diff > 0)   { sitClass='sit-close';   sitText=`🔵 Slightly ahead +${diff} — stay focused`; }
-      else if (diff < 0)   { sitClass='sit-close';   sitText=`🔵 Slightly behind ${diff} — time to adjust`; }
-      html += `<div class="score-situation ${sitClass}">${sitText}</div>`;
+      var diff = me - opp;
+      var sitClass = 'sit-tied', sitText = '⚖ Tied';
+      if (diff >= 4)       { sitClass='sit-winning'; sitText='🟢 Leading +'+diff+' — protect the lead'; }
+      else if (diff <= -4) { sitClass='sit-losing';  sitText='🔴 Down '+Math.abs(diff)+' — must push now'; }
+      else if (diff > 0)   { sitClass='sit-close';   sitText='🔵 Slightly ahead +'+diff+' — stay focused'; }
+      else if (diff < 0)   { sitClass='sit-close';   sitText='🔵 Slightly behind '+diff+' — time to adjust'; }
+      html += '<div class="score-situation '+sitClass+'">'+sitText+'</div>';
     }
-
   } else if (q.type === 'opp_select') {
-    const opps = getOpps();
-    html += `<select id="ai-opp-sel" onchange="aiSelectOpp()" style="margin-bottom:.5rem">
-      <option value="">— Select opponent —</option>
-      ${opps.map(o=>`<option value="${o.id}" ${aiAns['opp_id']===String(o.id)?'selected':''}>${o.name}${o.hand?' · '+o.hand:''}${o.style?' · '+o.style:''}</option>`).join('')}
-      <option value="__unknown__" ${aiAns['opp_id']==='__unknown__'?'selected':''}>Unknown / not in system</option>
-    </select>`;
+    var opps = getOpps();
+    html += '<select id="ai-opp-sel" onchange="aiSelectOpp()" style="margin-bottom:.5rem">'+
+      '<option value="">— Select opponent —</option>'+
+      opps.map(function(o) {
+        return '<option value="'+o.id+'"'+(aiAns['opp_id']===String(o.id)?' selected':'')+'>'+
+          o.name+(o.hand?' · '+o.hand:'')+(o.style?' · '+o.style:'')+'</option>';
+      }).join('')+
+      '<option value="__unknown__"'+(aiAns['opp_id']==='__unknown__'?' selected':'')+'>Unknown / not in system</option>'+
+    '</select>';
     if (aiAns['opp_profile']) {
-      const o = aiAns['opp_profile'];
-      html += renderProfileLoadedBox(o);
+      html += renderProfileLoadedBox(aiAns['opp_profile']);
     } else if (!opps.length) {
-      html += `<div style="font-size:.7rem;color:var(--muted)">No profiles yet — add them in 🎯 Opponents for best advice.</div>`;
+      html += '<div style="font-size:.7rem;color:var(--muted)">No profiles yet — add them in 🎯 Opponents for best advice.</div>';
     }
   }
 
-  // Nav
-  html += `<div class="q-nav">`;
-  if (aiStep > 0) html += `<button class="back" onclick="aiPrev()">← Back</button>`;
+  html += '<div class="q-nav">';
+  if (aiStep > 0) html += '<button class="back" onclick="aiPrev()">← Back</button>';
   if (aiStep < total-1) {
-    html += `<button class="next" onclick="aiNext()">Next →</button>`;
+    html += '<button class="next" onclick="aiNext()">Next →</button>';
   } else {
-    html += `<button class="next go" onclick="runAI()">⚔ Get Advice</button>`;
+    html += '<button class="next go" onclick="runAI()">⚔ Get Advice</button>';
   }
-  html += `</div>`;
-
-  // Summary on last step
+  html += '</div>';
   if (aiStep === total-1) html += buildAISummaryHTML();
-
   document.getElementById('ai-q-body').innerHTML = html;
 }
 
 function renderProfileLoadedBox(o) {
-  const details = [o.hand, o.height, o.style, o.age].filter(Boolean).join(' · ');
-  const hasSWOT = (o.myStrengths||[]).length || (o.myWeaknesses||[]).length || (o.oppWeaknesses||[]).length || (o.oppStrengths||[]).length;
-  return `<div class="profile-loaded">
-    <div class="pl-name">✓ ${o.name}</div>
-    ${details?`<div class="pl-row">${details}</div>`:''}
-    ${(o.prefActions||[]).length?`<div class="pl-row"><strong>Actions:</strong> ${o.prefActions.join(', ')}</div>`:''}
-    ${hasSWOT?`<div style="margin-top:.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.7rem">
-      ${(o.myStrengths||[]).length?`<div><span style="color:var(--green)">💪 My strengths:</span> ${o.myStrengths.join(', ')}</div>`:''}
-      ${(o.myWeaknesses||[]).length?`<div><span style="color:var(--red)">🛡 Hide:</span> ${o.myWeaknesses.join(', ')}</div>`:''}
-      ${(o.oppWeaknesses||[]).length?`<div><span style="color:var(--blue)">🎯 Target:</span> ${o.oppWeaknesses.join(', ')}</div>`:''}
-      ${(o.oppStrengths||[]).length?`<div><span style="color:var(--orange)">⚠ Avoid:</span> ${o.oppStrengths.join(', ')}</div>`:''}
-    </div>`:''}
-    ${o.notes?`<div class="pl-row" style="margin-top:.3rem;font-style:italic">${o.notes}</div>`:''}
-  </div>`;
+  var details = [o.hand, o.height, o.style, o.age].filter(Boolean).join(' · ');
+  var hasSWOT = (o.myStrengths||[]).length || (o.myWeaknesses||[]).length || (o.oppWeaknesses||[]).length || (o.oppStrengths||[]).length;
+  return '<div class="profile-loaded">'+
+    '<div class="pl-name">✓ '+o.name+'</div>'+
+    (details?'<div class="pl-row">'+details+'</div>':'')+
+    ((o.prefActions||[]).length?'<div class="pl-row"><strong>Actions:</strong> '+o.prefActions.join(', ')+'</div>':'')+
+    (hasSWOT?'<div style="margin-top:.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.7rem">'+
+      ((o.myStrengths||[]).length?'<div><span style="color:var(--green)">💪 My strengths:</span> '+o.myStrengths.join(', ')+'</div>':'')+
+      ((o.myWeaknesses||[]).length?'<div><span style="color:var(--red)">🛡 Hide:</span> '+o.myWeaknesses.join(', ')+'</div>':'')+
+      ((o.oppWeaknesses||[]).length?'<div><span style="color:var(--blue)">🎯 Target:</span> '+o.oppWeaknesses.join(', ')+'</div>':'')+
+      ((o.oppStrengths||[]).length?'<div><span style="color:var(--orange)">⚠ Avoid:</span> '+o.oppStrengths.join(', ')+'</div>':'')+
+    '</div>':'')+
+    (o.notes?'<div class="pl-row" style="margin-top:.3rem;font-style:italic">'+o.notes+'</div>':'')+
+  '</div>';
 }
 
 function aiJump(i)  { if (i <= aiStep) { aiStep=i; renderAIStep(); } }
 function aiPrev()   { aiStep--; renderAIStep(); }
 function aiNext()   { if (document.getElementById('ai-sm')) aiSaveScore(); aiStep++; renderAIStep(); }
-function aiPick(id, val) { aiAns[id]=val; renderAIStep(); }
+function aiPick(id, val)      { aiAns[id]=val; renderAIStep(); }
 function aiPickMulti(id, val) {
   if (!aiAns[id]) aiAns[id] = [];
-  const i = aiAns[id].indexOf(val);
+  var i = aiAns[id].indexOf(val);
   if (i > -1) aiAns[id].splice(i,1); else aiAns[id].push(val);
   renderAIStep();
 }
 function aiSaveScore() {
-  aiAns['score_me']  = document.getElementById('ai-sm')?.value || '0';
-  aiAns['score_opp'] = document.getElementById('ai-so')?.value || '0';
-  aiAns['score']     = `${aiAns['score_me']} – ${aiAns['score_opp']}`;
+  aiAns['score_me']  = document.getElementById('ai-sm') ? document.getElementById('ai-sm').value  : '0';
+  aiAns['score_opp'] = document.getElementById('ai-so') ? document.getElementById('ai-so').value  : '0';
+  aiAns['score']     = aiAns['score_me']+' – '+aiAns['score_opp'];
   renderAIStep();
 }
 function aiSelectOpp() {
-  const v = document.getElementById('ai-opp-sel').value;
+  var v = document.getElementById('ai-opp-sel').value;
   if (!v) { aiAns['opp_id']=''; aiAns['opp_profile']=null; aiAns['opp_name']=''; }
   else if (v==='__unknown__') { aiAns['opp_id']='__unknown__'; aiAns['opp_profile']=null; aiAns['opp_name']='Unknown'; }
   else {
-    const o = getOpps().find(x => String(x.id)===v);
+    var o = getOpps().find(function(x) { return String(x.id)===v; });
     if (o) { aiAns['opp_id']=String(o.id); aiAns['opp_profile']=o; aiAns['opp_name']=o.name; }
   }
   renderAIStep();
 }
 
 function buildAISummaryHTML() {
-  const qs = AI_Q[aiMode].questions;
-  const LBL = { fencer:'Fencer', opp:'Opponent', comp_type:'Bout type', my_form:'Feeling', goal:'Goal', break_number:'Break', score:'Score', period_issue:'Problem this period', result:'Result', control:'Who controlled', what_failed:'Main issue', session_type:'Session', focus:'Focus', recent_issue:'Recent problem', time:'Time' };
-  let rows = '';
-  qs.forEach(q => {
-    if (q.type==='opp_select') { if (aiAns['opp_name']) rows+=`<strong>Opponent:</strong> ${aiAns['opp_name']}<br>`; return; }
-    const v = aiAns[q.id];
+  var qs = AI_Q[aiMode].questions;
+  var LBL = { fencer:'Fencer', opp:'Opponent', comp_type:'Bout type', my_form:'Feeling', goal:'Goal', period:'Period', score:'Score', period_issue:'Problem this period', opp_change:'Opp change', result:'Result', control:'Who controlled', what_failed:'Main issue', session_type:'Session', focus:'Focus', recent_issue:'Recent problem', time:'Time' };
+  var rows = '';
+  qs.forEach(function(q) {
+    if (q.type==='opp_select') { if (aiAns['opp_name']) rows+='<strong>Opponent:</strong> '+aiAns['opp_name']+'<br>'; return; }
+    var v = aiAns[q.id];
     if (!v || (Array.isArray(v) && !v.length)) return;
-    const display = Array.isArray(v) ? v.join(', ') : v;
-    rows += `<strong>${LBL[q.id]||q.id}:</strong> ${display}<br>`;
+    var display = Array.isArray(v) ? v.join(', ') : v;
+    rows += '<strong>'+(LBL[q.id]||q.id)+':</strong> '+display+'<br>';
   });
-  return rows ? `<div class="ai-summary">${rows}</div>` : '';
+  return rows ? '<div class="ai-summary">'+rows+'</div>' : '';
 }
 
-// ══════════════════════════════════════════════════════
-//  BUILD AI PROMPT
-// ══════════════════════════════════════════════════════
 function buildPrompt() {
-  const mode = aiMode;
-  const a    = aiAns;
-  const o    = a['opp_profile'];
-  const fencer = a['fencer'] || 'the fencer';
+  var mode = aiMode;
+  var a    = aiAns;
+  var o    = a['opp_profile'];
+  var fencer = a['fencer'] || 'the fencer';
+  var prompt = 'You are an elite foil fencing coach. Respond directly to a youth fencer or their parent. Be direct, specific, immediately useful. Use numbered steps. Max 350 words.\n\n';
 
-  let prompt = `You are an elite foil fencing coach. Respond as if you are speaking directly to a youth fencer (or their parent) during a competition. Be direct, specific, and immediately useful. Use numbered steps. Max 350 words.\n\n`;
-
-  // ── PRE-BOUT ──
   if (mode === 'pre') {
-    prompt += `MODE: Pre-Bout Strategy for ${fencer}\n`;
-    prompt += `Competition type: ${a['comp_type']||'not specified'}\n`;
-    prompt += `Feeling: ${a['my_form']||'not specified'}\n`;
-    prompt += `Goal: ${a['goal']||'not specified'}\n\n`;
+    prompt += 'MODE: Pre-Bout Strategy for '+fencer+'\n';
+    prompt += 'Competition type: '+(a['comp_type']||'not specified')+'\n';
+    prompt += 'Feeling: '+(a['my_form']||'not specified')+'\n';
+    prompt += 'Goal: '+(a['goal']||'not specified')+'\n\n';
     if (o) prompt += buildOppContext(o, fencer);
-    prompt += `\nTask: Give a specific pre-bout game plan for ${fencer}.\n`;
-    prompt += `1. Based on the SWOT — which of ${fencer}'s strengths to USE vs this opponent's weaknesses.\n`;
-    prompt += `2. Which of ${fencer}'s weaknesses to HIDE from the opponent's strengths.\n`;
-    prompt += `3. The first 3 actions ${fencer} should take at the start of the bout.\n`;
-    prompt += `4. One mental cue to stay focused.`;
-
-  // ── BREAK ──
+    prompt += '\nTask: Give a specific pre-bout game plan for '+fencer+'.\n1. Which strengths to USE vs opponent weaknesses.\n2. Which weaknesses to HIDE.\n3. First 3 actions at start of bout.\n4. One mental cue.';
   } else if (mode === 'break') {
-    const me  = parseInt(a['score_me']  || 0);
-    const opp = parseInt(a['score_opp'] || 0);
-    const diff = me - opp;
-    const breakNum = a['break_number'] || 'Break 1';
-    const situation =
-      diff >= 4  ? `WINNING COMFORTABLY (+${diff})` :
-      diff <= -4 ? `LOSING BADLY (${diff})` :
-      diff > 0   ? `SLIGHTLY AHEAD (+${diff})` :
-      diff < 0   ? `SLIGHTLY BEHIND (${diff})` : `TIED`;
-
-    prompt += `MODE: 1-Minute Break Advice — ${breakNum}\n`;
-    prompt += `Fencer: ${fencer}\n`;
-    prompt += `Score: ${fencer} ${me} — Opponent ${opp} (${situation})\n`;
-    const problems = Array.isArray(a['period_issue']) ? a['period_issue'].join(', ') : (a['period_issue']||'not specified');
-    prompt += `Problems this period (multiple): ${problems}\n`;
-    prompt += `Opponent change noticed: ${a['opp_change']||'none'}\n`;
+    var me  = parseInt(a['score_me']  || 0);
+    var opp_score = parseInt(a['score_opp'] || 0);
+    var diff = me - opp_score;
+    var situation = diff >= 4 ? 'WINNING COMFORTABLY (+'+diff+')' : diff <= -4 ? 'LOSING BADLY ('+diff+')' : diff > 0 ? 'SLIGHTLY AHEAD (+'+diff+')' : diff < 0 ? 'SLIGHTLY BEHIND ('+diff+')' : 'TIED';
+    prompt += 'MODE: 1-Minute Break Advice\nFencer: '+fencer+'\nScore: '+fencer+' '+me+' — Opponent '+opp_score+' ('+situation+')\n';
+    var problems = Array.isArray(a['period_issue']) ? a['period_issue'].join(', ') : (a['period_issue']||'not specified');
+    prompt += 'Problems this period: '+problems+'\nOpponent change: '+(a['opp_change']||'none')+'\n';
     if (o) prompt += buildOppContext(o, fencer);
-    prompt += `\n⚠ This is a 1-MINUTE BREAK. Give URGENT, SPECIFIC advice.\n`;
-    prompt += `CRITICAL — Use SWOT thinking:\n`;
-    prompt += `- Address the problems above in context of the score\n`;
-    prompt += `- Tell ${fencer} which of THEIR strengths to deploy NOW against opponent weaknesses\n`;
-    prompt += `- Tell ${fencer} which of THEIR weaknesses are being exposed and how to hide them\n`;
-    prompt += `The advice MUST be completely different depending on the score situation:\n`;
-    if (diff >= 4) {
-      prompt += `- They are WINNING. Tell them to protect the lead: be conservative, make the opponent come to them, avoid risky attacks.\n`;
-    } else if (diff <= -4) {
-      prompt += `- They are LOSING BADLY. They must take risks NOW: be aggressive, change tactics completely, attack with intent, nothing to lose.\n`;
-    } else if (diff > 0) {
-      prompt += `- Slightly ahead. Stay the course but fix the main problem. Don't get passive.\n`;
-    } else if (diff < 0) {
-      prompt += `- Slightly behind. Adjust tactics now — don't wait. Address the main problem immediately.\n`;
-    } else {
-      prompt += `- Tied. This period decides it. Address the main problem and pick one tactical change.\n`;
-    }
-    prompt += `\nGive:\n1. The ONE tactical change to make right now (based on score situation + problem)\n2. The specific action to execute in the next 3 touches\n3. One mental reset cue for walking back to the line`;
-
-  // ── POST-BOUT ──
+    prompt += '\n⚠ 1-MINUTE BREAK. URGENT advice only.\n1. ONE tactical change based on score+problem\n2. Specific action for next 3 touches\n3. Mental reset cue';
   } else if (mode === 'post') {
-    prompt += `MODE: Post-Bout Review for ${fencer}\n`;
-    prompt += `Result: ${a['result']||'not specified'}\n`;
-    prompt += `Who controlled: ${a['control']||'not specified'}\n`;
-    const issues = Array.isArray(a['what_failed']) ? a['what_failed'].join(', ') : (a['what_failed']||'not specified');
-    prompt += `Issues that cost touches: ${issues}\n`;
+    prompt += 'MODE: Post-Bout Review for '+fencer+'\nResult: '+(a['result']||'not specified')+'\nWho controlled: '+(a['control']||'not specified')+'\n';
+    var issues = Array.isArray(a['what_failed']) ? a['what_failed'].join(', ') : (a['what_failed']||'not specified');
+    prompt += 'Issues: '+issues+'\n';
     if (o) prompt += buildOppContext(o, fencer);
-    prompt += `\nGive:\n1. What went right and should be kept\n2. The specific root cause of the main problem\n3. One drill or focus for the next training session to fix it\n4. If there's a next bout today — one tactical adjustment to make immediately`;
-
-  // ── TRAINING ──
+    prompt += '\n1. What went right\n2. Root cause of main problem\n3. One drill to fix it\n4. Tactical adjustment for next bout today';
   } else if (mode === 'train') {
-    prompt += `MODE: Training Session Plan for ${a['fencer']||'the fencer'}\n`;
-    prompt += `Session type: ${a['session_type']||'not specified'}\n`;
-    prompt += `Main focus: ${a['focus']||'not specified'}\n`;
-    prompt += `Recent competition issue: ${a['recent_issue']||'not specified'}\n`;
-    prompt += `Time available: ${a['time']||'not specified'}\n`;
-    prompt += `\nGive a structured training session plan with specific drills, timing for each drill, and coaching cues. Connect every drill directly to fixing the recent competition issue.`;
+    prompt += 'MODE: Training Session Plan for '+(a['fencer']||'the fencer')+'\nSession: '+(a['session_type']||'not specified')+'\nFocus: '+(a['focus']||'not specified')+'\nRecent issue: '+(a['recent_issue']||'not specified')+'\nTime: '+(a['time']||'not specified')+'\n\nGive a structured training plan with specific drills, timing, and coaching cues. Connect every drill to fixing the recent issue.';
   }
-
   return prompt;
 }
 
 function buildOppContext(o, fencer) {
-  let ctx = `\nOPPONENT PROFILE — ${o.name}:\n`;
-  if (o.hand)   ctx += `Handedness: ${o.hand}\n`;
-  if (o.height) ctx += `Height/reach: ${o.height}\n`;
-  if (o.style)  ctx += `Style: ${o.style}\n`;
-  if (o.age)    ctx += `Age group: ${o.age}\n`;
-  if ((o.prefActions||[]).length)  ctx += `Their preferred actions: ${o.prefActions.join(', ')}\n`;
-  if ((o.oppStrengths||[]).length) ctx += `Their strengths (${fencer} should AVOID these): ${o.oppStrengths.join(', ')}\n`;
-  if ((o.oppWeaknesses||[]).length)ctx += `Their weaknesses (${fencer} should EXPLOIT these): ${o.oppWeaknesses.join(', ')}\n`;
-  if ((o.myStrengths||[]).length)  ctx += `${fencer}'s strengths vs this opponent (USE THESE): ${o.myStrengths.join(', ')}\n`;
-  if ((o.myWeaknesses||[]).length) ctx += `${fencer}'s weaknesses vs this opponent (HIDE THESE): ${o.myWeaknesses.join(', ')}\n`;
-  if (o.notes)  ctx += `Scout notes: ${o.notes}\n`;
+  var ctx = '\nOPPONENT — '+o.name+':\n';
+  if (o.hand)   ctx += 'Handedness: '+o.hand+'\n';
+  if (o.height) ctx += 'Height/reach: '+o.height+'\n';
+  if (o.style)  ctx += 'Style: '+o.style+'\n';
+  if (o.age)    ctx += 'Age group: '+o.age+'\n';
+  if ((o.prefActions||[]).length)   ctx += 'Their actions: '+o.prefActions.join(', ')+'\n';
+  if ((o.oppStrengths||[]).length)  ctx += 'Their strengths (AVOID): '+o.oppStrengths.join(', ')+'\n';
+  if ((o.oppWeaknesses||[]).length) ctx += 'Their weaknesses (EXPLOIT): '+o.oppWeaknesses.join(', ')+'\n';
+  if ((o.myStrengths||[]).length)   ctx += fencer+'\'s strengths vs them (USE): '+o.myStrengths.join(', ')+'\n';
+  if ((o.myWeaknesses||[]).length)  ctx += fencer+'\'s weaknesses (HIDE): '+o.myWeaknesses.join(', ')+'\n';
+  if (o.notes)  ctx += 'Scout notes: '+o.notes+'\n';
   return ctx;
 }
 
-// ══════════════════════════════════════════════════════
-//  RUN AI
-// ══════════════════════════════════════════════════════
+var SYS = 'You are an elite foil fencing coach for youth competitive fencers (Y14 level). Use SWOT thinking: deploy fencer strengths against opponent weaknesses, hide fencer weaknesses from opponent strengths. Speak directly to the fencer or parent. Use fencing terminology correctly. Format with numbered steps. Be specific — always reference the actual SWOT, problems, and score provided. Never give generic advice.';
+
+async function callClaude(key, messages) {
+  var res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1024, system:SYS, messages:messages })
+  });
+  if (!res.ok) {
+    var e = await res.json().catch(function(){return{};});
+    throw new Error((e && e.error && e.error.message) || 'HTTP '+res.status);
+  }
+  var data = await res.json();
+  return data.content[0].text;
+}
+
+async function callOpenAI(key, messages) {
+  var res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body: JSON.stringify({ model:'gpt-4o', max_tokens:1024, messages:[{role:'system',content:SYS}].concat(messages) })
+  });
+  if (!res.ok) {
+    var e = await res.json().catch(function(){return{};});
+    throw new Error((e && e.error && e.error.message) || 'HTTP '+res.status);
+  }
+  var data = await res.json();
+  return data.choices[0].message.content;
+}
+
 async function runAI() {
-  const s = getSettings();
+  var s = getSettings();
   if (!s.key) { showToast('Set API key — tap ⚙ at the top', true); openSettings(); return; }
-  const prompt = buildPrompt();
-  document.getElementById('ai-result-area').innerHTML = `
-    <div class="loading-pulse"><div class="pulse-bar"></div><div class="pulse-text">ANALYZING...</div></div>`;
+  var prompt = buildPrompt();
+  document.getElementById('ai-result-area').innerHTML =
+    '<div class="loading-pulse"><div class="pulse-bar"></div><div class="pulse-text">ANALYZING...</div></div>';
   aiHistory = [{ role:'user', content: prompt }];
   try {
-    const ans = s.provider==='openai' ? await callOpenAI(s.key, aiHistory) : await callClaude(s.key, aiHistory);
+    var ans = s.provider==='openai' ? await callOpenAI(s.key, aiHistory) : await callClaude(s.key, aiHistory);
     aiHistory.push({ role:'assistant', content: ans });
-    document.getElementById('ai-result-area').innerHTML = `
-      <div class="ai-response">
-        <div class="ai-resp-header">
-          <span class="ai-resp-mode">${AI_Q[aiMode].label}</span>
-          <span style="font-size:.7rem;color:var(--muted)">${s.provider==='openai'?'GPT-4o':'Claude'}</span>
-        </div>
-        <div class="ai-resp-body">${escHtml(ans)}</div>
-      </div>
-      <div class="followup-row">
-        <input type="text" id="ai-fu" placeholder="Ask a follow-up..." onkeydown="if(event.key==='Enter')sendFollowup()">
-        <button onclick="sendFollowup()">ASK</button>
-      </div>
-      <div style="text-align:center;margin-top:.8rem">
-        <span style="font-size:.72rem;color:var(--muted);cursor:pointer;text-decoration:underline" onclick="resetAI()">↺ New question</span>
-      </div>`;
+    document.getElementById('ai-result-area').innerHTML =
+      '<div class="ai-response">'+
+        '<div class="ai-resp-header">'+
+          '<span class="ai-resp-mode">'+AI_Q[aiMode].label+'</span>'+
+          '<span style="font-size:.7rem;color:var(--muted)">'+(s.provider==='openai'?'GPT-4o':'Claude')+'</span>'+
+        '</div>'+
+        '<div class="ai-resp-body">'+escHtml(ans)+'</div>'+
+      '</div>'+
+      '<div class="followup-row">'+
+        '<input type="text" id="ai-fu" placeholder="Ask a follow-up..." onkeydown="if(event.key===\'Enter\')sendFollowup()">'+
+        '<button onclick="sendFollowup()">ASK</button>'+
+      '</div>'+
+      '<div style="text-align:center;margin-top:.8rem">'+
+        '<span style="font-size:.72rem;color:var(--muted);cursor:pointer;text-decoration:underline" onclick="resetAI()">↺ New question</span>'+
+      '</div>';
   } catch(e) {
-    document.getElementById('ai-result-area').innerHTML = `
-      <div style="background:rgba(224,92,92,.1);border:1px solid var(--red);border-radius:8px;padding:.8rem;color:var(--red);font-size:.82rem">⚠ ${escHtml(e.message)}</div>`;
+    document.getElementById('ai-result-area').innerHTML =
+      '<div style="background:rgba(224,92,92,.1);border:1px solid var(--red);border-radius:8px;padding:.8rem;color:var(--red);font-size:.82rem">⚠ '+escHtml(e.message)+'</div>';
   }
 }
 
 async function sendFollowup() {
-  const input = document.getElementById('ai-fu');
-  const q = input.value.trim();
+  var input = document.getElementById('ai-fu');
+  var q = input.value.trim();
   if (!q) return;
   input.value = '';
   aiHistory.push({ role:'user', content: q });
-  const s = getSettings();
-  const loadEl = document.createElement('div');
+  var s = getSettings();
+  var loadEl = document.createElement('div');
   loadEl.className = 'loading-pulse';
-  loadEl.innerHTML = `<div class="pulse-bar"></div><div class="pulse-text">THINKING...</div>`;
+  loadEl.innerHTML = '<div class="pulse-bar"></div><div class="pulse-text">THINKING...</div>';
   document.querySelector('.followup-row').before(loadEl);
   try {
-    const ans = s.provider==='openai' ? await callOpenAI(s.key, aiHistory) : await callClaude(s.key, aiHistory);
+    var ans = s.provider==='openai' ? await callOpenAI(s.key, aiHistory) : await callClaude(s.key, aiHistory);
     aiHistory.push({ role:'assistant', content: ans });
     loadEl.remove();
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.className = 'ai-response';
-    div.innerHTML = `
-      <div class="ai-resp-header"><span class="ai-resp-mode">Follow-up</span><span style="font-size:.7rem;color:var(--muted)">${s.provider==='openai'?'GPT-4o':'Claude'}</span></div>
-      <div class="ai-resp-body">${escHtml(ans)}</div>`;
+    div.innerHTML =
+      '<div class="ai-resp-header"><span class="ai-resp-mode">Follow-up</span><span style="font-size:.7rem;color:var(--muted)">'+(s.provider==='openai'?'GPT-4o':'Claude')+'</span></div>'+
+      '<div class="ai-resp-body">'+escHtml(ans)+'</div>';
     document.querySelector('.followup-row').before(div);
   } catch(e) {
-    loadEl.remove(); aiHistory.pop(); showToast('Error: '+e.message, true);
+    loadEl.remove();
+    aiHistory.pop();
+    showToast('Error: '+e.message, true);
   }
 }
 
-// ══════════════════════════════════════════════════════
-//  API
-// ══════════════════════════════════════════════════════
-const SYS = `You are an elite foil fencing coach AND strategic advisor for youth competitive fencers (Y14 level).
-
-STRATEGIC FRAMEWORK — Sun Tzu's Art of War applied to foil fencing:
-1. "Know yourself, know your enemy" — always use the SWOT data provided. Never ignore it.
-2. "Attack where they are weak" — deploy the fencer's STRENGTHS directly against the OPPONENT'S WEAKNESSES
-3. "Protect what is vulnerable" — hide the fencer's WEAKNESSES from the OPPONENT'S STRENGTHS
-4. "Supreme excellence is subduing without fighting" — control distance and tempo, make the opponent make the mistake
-5. "All warfare is deception" — use feints, second-intention, preparation actions to disguise true intent
-6. "In chaos, find opportunity" — when losing, the score is information not defeat. Adapt the strategy.
-7. "Speed is the essence" — in a 1-minute break, give ONE clear tactical change, not five
-
-SWOT PRINCIPLE: Every piece of advice must connect:
-MY strength → THEIR weakness = how to score
-THEIR strength → MY weakness = what to avoid and how to hide it
-
-Speak directly to the fencer or parent. Use fencing terminology correctly.
-Format with numbered steps. Be specific — always reference the actual SWOT, problems, and score provided.
-Never give generic advice that ignores the situation.`;
-
-async function callClaude(key, messages) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1024, system:SYS, messages }),
-  });
-  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||`HTTP ${res.status}`); }
-  return (await res.json()).content[0].text;
-}
-async function callOpenAI(key, messages) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
-    body: JSON.stringify({ model:'gpt-4o', max_tokens:1024, messages:[{role:'system',content:SYS},...messages] }),
-  });
-  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||`HTTP ${res.status}`); }
-  return (await res.json()).choices[0].message.content;
-}
-
-// ══════════════════════════════════════════════════════
-//  SETTINGS
-// ══════════════════════════════════════════════════════
-let provSel = 'claude';
+// ── SETTINGS ──
+var provSel = 'claude';
 function providerPick(p) {
   provSel = p;
-  document.querySelectorAll('#pg-provider .pill').forEach(b =>
-    b.classList.toggle('sel', (b.textContent.includes('Claude')&&p==='claude')||(b.textContent.includes('GPT')&&p==='openai')));
+  document.querySelectorAll('#pg-provider .pill').forEach(function(b) {
+    b.classList.toggle('sel', (b.textContent.indexOf('Claude')>-1&&p==='claude')||(b.textContent.indexOf('GPT')>-1&&p==='openai'));
+  });
   document.getElementById('settings-key').placeholder = p==='claude'?'sk-ant-...':'sk-...';
 }
 function openSettings() {
-  const s = getSettings(); provSel = s.provider||'claude';
+  var s = getSettings();
+  provSel = s.provider||'claude';
   document.getElementById('settings-key').value = s.key||'';
-  document.querySelectorAll('#pg-provider .pill').forEach(b =>
-    b.classList.toggle('sel', (b.textContent.includes('Claude')&&provSel==='claude')||(b.textContent.includes('GPT')&&provSel==='openai')));
+  document.querySelectorAll('#pg-provider .pill').forEach(function(b) {
+    b.classList.toggle('sel', (b.textContent.indexOf('Claude')>-1&&provSel==='claude')||(b.textContent.indexOf('GPT')>-1&&provSel==='openai'));
+  });
   document.getElementById('settings-key').placeholder = provSel==='claude'?'sk-ant-...':'sk-...';
   document.getElementById('settings-modal').classList.add('open');
 }
-function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
 function saveSettings() {
-  const key = document.getElementById('settings-key').value.trim();
-  saveSettingsDB({ provider: provSel, key });
-  updateApiBadge(); closeSettings(); showToast('✓ Settings saved!');
+  var key = document.getElementById('settings-key').value.trim();
+  saveSettingsDB({ provider: provSel, key: key });
+  updateApiBadge();
+  closeSettings();
+  showToast('✓ Settings saved!');
 }
 function updateApiBadge() {
-  const s = getSettings();
-  const b = document.getElementById('api-badge');
-  b.textContent = s.key ? `✓ ${s.provider==='openai'?'GPT-4o':'Claude'}` : '⚙ API: Not set';
+  var s = getSettings();
+  var b = document.getElementById('api-badge');
+  b.textContent = s.key ? '✓ '+(s.provider==='openai'?'GPT-4o':'Claude') : '⚙ API: Not set';
   b.className   = s.key ? 'api-badge connected' : 'api-badge';
 }
 
-// ══════════════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════════════
-function showToast(msg, isErr=false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast${isErr?' error':''} show`;
-  setTimeout(() => t.classList.remove('show'), 2800);
-}
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-document.getElementById('opp-modal').addEventListener('click', e => { if(e.target===document.getElementById('opp-modal')) closeOppModal(); });
-document.getElementById('settings-modal').addEventListener('click', e => { if(e.target===document.getElementById('settings-modal')) closeSettings(); });
-
-
-// ══════════════════════════════════════════════════════
-//  FENCINGTRACKER — LOAD FROM URL
-// ══════════════════════════════════════════════════════
-const FT_BASE  = 'https://fencingtracker.com';
-
-let ftUrlTimer = null;
-let ftCurrentProfile = null;
+// ── FENCINGTRACKER ──
+var ftUrlTimer = null;
+var ftCurrentProfile = null;
 
 function ftUrlDebounce(val) {
   clearTimeout(ftUrlTimer);
-  const v = val.trim();
+  var v = val.trim();
   if (!v.includes('fencingtracker.com/p/')) return;
-  ftUrlTimer = setTimeout(() => ftLoadFromUrl(), 600);
+  ftUrlTimer = setTimeout(function() { ftLoadFromUrl(); }, 600);
 }
 
 async function ftLoadFromUrl() {
-  const rawUrl = document.getElementById('ft-url-input').value.trim();
+  var rawUrl = document.getElementById('ft-url-input').value.trim();
   if (!rawUrl) { showToast('Paste a FencingTracker profile URL', true); return; }
-
-  // Accept both /p/ID/Name and full URLs
-  // Normalise: strip trailing slash, add /history
-  const baseUrl = rawUrl.replace(/\/history.*$/, '').replace(/\/$/, '');
+  var baseUrl = rawUrl.replace(/\/history.*$/, '').replace(/\/$/, '');
   if (!baseUrl.includes('/p/')) { showToast('URL must be a fencingtracker.com/p/... profile link', true); return; }
-
-  const histUrl = baseUrl + '/history';
-
-  const loaded = document.getElementById('ft-loaded');
+  var histUrl = baseUrl + '/history';
+  var loaded = document.getElementById('ft-loaded');
   loaded.style.display = 'block';
   loaded.innerHTML = '<div class="ft-loaded-box"><div class="ftl-name">⏳ Loading from FencingTracker...</div></div>';
-
-  const proxies = [
+  var proxies = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?',
-    'https://api.codetabs.com/v1/proxy?quest=',
+    'https://api.codetabs.com/v1/proxy?quest='
   ];
-
-  let html = null;
-  for (const proxy of proxies) {
+  var html = null;
+  for (var pi = 0; pi < proxies.length; pi++) {
     try {
-      const r = await fetch(proxy + encodeURIComponent(histUrl), { signal: AbortSignal.timeout(10000) });
+      var r = await fetch(proxies[pi] + encodeURIComponent(histUrl), { signal: AbortSignal.timeout(10000) });
       if (r.ok) { html = await r.text(); break; }
     } catch(e) { continue; }
   }
-
   if (!html) {
     loaded.innerHTML = '<div class="ft-loaded-box"><div class="ftl-name" style="color:var(--red)">✗ Could not load — check URL and connection</div></div>';
     return;
   }
-
-  // Extract name from URL  e.g. /p/100280844/Raedyn%20Ho%20Hin-Tsui
-  const urlMatch = baseUrl.match(/\/p\/\d+\/([^/?#]+)/);
-  let nameFromUrl = '';
+  var urlMatch = baseUrl.match(/\/p\/\d+\/([^/?#]+)/);
+  var nameFromUrl = '';
   if (urlMatch) {
-    try { nameFromUrl = decodeURIComponent(urlMatch[1]).replace(/[-_]/g,' ').replace(/\s+/g,' ').trim(); }
+    try { nameFromUrl = decodeURIComponent(urlMatch[1]).replace(/[-_]/g,' ').trim(); }
     catch(e) { nameFromUrl = urlMatch[1].replace(/[-_]/g,' ').trim(); }
   }
-
-  const parsed = ftParseHistory(html, nameFromUrl);
-
-  // Use parsed club name if available, else from URL
-  const profile = { name: nameFromUrl, url: baseUrl, ...parsed };
+  var parsed = ftParseHistory(html, nameFromUrl);
+  var profile = Object.assign({ name: nameFromUrl, url: baseUrl }, parsed);
   ftCurrentProfile = profile;
-
-  // Auto-fill name if empty
-  const nameField = document.getElementById('om-name');
+  var nameField = document.getElementById('om-name');
   if (!nameField.value.trim()) nameField.value = profile.name || '';
-
   ftApplyToModal(profile);
 }
 
 function ftParseHistory(html, name) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-
-  // Year born
-  let year = '', club = '';
-  doc.querySelectorAll('h3').forEach(h => {
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(html, 'text/html');
+  var year = '', club = '';
+  doc.querySelectorAll('h3').forEach(function(h) {
     if (/^\d{4}$/.test(h.textContent.trim())) year = h.textContent.trim();
   });
-  // Club
-  const clubLink = doc.querySelector('a[href*="/club/"]');
+  var clubLink = doc.querySelector('a[href*="/club/"]');
   if (clubLink) club = clubLink.textContent.trim();
-
-  // Win/Loss stats
-  let winRatioAll = '', winRatioDE = '', winRatioPool = '';
-  let totalWins = 0, totalLosses = 0;
-  doc.querySelectorAll('table').forEach(t => {
-    t.querySelectorAll('tr').forEach(r => {
-      const cells = [...r.querySelectorAll('td,th')].map(c => c.textContent.trim());
-      if (cells[0]==='Victories'    && cells.length>=6) totalWins   = parseInt(cells[6])||0;
-      if (cells[0]==='Losses'       && cells.length>=6) totalLosses = parseInt(cells[6])||0;
-      if (cells[0]==='Win Ratio'    && cells.length>=6) winRatioAll  = cells[6];
-      if (cells[0]==='DE Win Ratio')   winRatioDE   = cells[cells.length-1];
-      if (cells[0]==='Pool Win Ratio') winRatioPool = cells[cells.length-1];
+  var winRatioAll = '', winRatioDE = '', winRatioPool = '';
+  var totalWins = 0, totalLosses = 0;
+  doc.querySelectorAll('table').forEach(function(t) {
+    t.querySelectorAll('tr').forEach(function(r) {
+      var cells = Array.from(r.querySelectorAll('td,th')).map(function(c) { return c.textContent.trim(); });
+      if (cells[0]==='Victories'     && cells.length>=6) totalWins   = parseInt(cells[6])||0;
+      if (cells[0]==='Losses'        && cells.length>=6) totalLosses = parseInt(cells[6])||0;
+      if (cells[0]==='Win Ratio'     && cells.length>=6) winRatioAll  = cells[6];
+      if (cells[0]==='DE Win Ratio')    winRatioDE   = cells[cells.length-1];
+      if (cells[0]==='Pool Win Ratio')  winRatioPool = cells[cells.length-1];
     });
   });
-
-  // Rating from h6
-  let rating = '';
-  doc.querySelectorAll('h6').forEach(h => {
-    const m = h.textContent.match(/Rating\s+([A-Z]\d+|U)/);
+  var rating = '';
+  doc.querySelectorAll('h6').forEach(function(h) {
+    var m = h.textContent.match(/Rating\s+([A-Z]\d+|U)/);
     if (m) rating = m[1];
   });
-
-  // FT Strength
-  let ftStrength = '';
-  const boutTable = [...doc.querySelectorAll('table')].find(t =>
-    t.textContent.includes('Strength') && t.textContent.includes('Opponent'));
-  if (boutTable) {
-    const ths = [...boutTable.querySelectorAll('th')].map(th => th.textContent.trim());
-    const si = ths.indexOf('Strength');
-    if (si > -1) {
-      const firstRow = boutTable.querySelector('tbody tr');
-      if (firstRow) {
-        const cells = [...firstRow.querySelectorAll('td')];
-        if (cells[si]) ftStrength = cells[si].textContent.trim();
-      }
-    }
-  }
-
-  return { year, club, winRatioAll, winRatioDE, winRatioPool, totalWins, totalLosses, rating, ftStrength };
+  return { year:year, club:club, winRatioAll:winRatioAll, winRatioDE:winRatioDE, winRatioPool:winRatioPool, totalWins:totalWins, totalLosses:totalLosses, rating:rating };
 }
 
 function ftApplyToModal(p) {
-  // Age group from year
   if (p.year) {
-    const age = new Date().getFullYear() - parseInt(p.year);
-    const ag = age<=10?'Y10':age<=12?'Y12':age<=14?'Y14':age<=17?'Cadet':age<=20?'Junior':'Senior';
+    var age = new Date().getFullYear() - parseInt(p.year);
+    var ag = age<=10?'Y10':age<=12?'Y12':age<=14?'Y14':age<=17?'Cadet':age<=20?'Junior':'Senior';
     omSingle('age', ag);
   }
-  // Club
   if (p.club) document.getElementById('om-club').value = p.club;
-
-  // Notes — pre-fill with FT stats
-  const statsNote = [
-    p.winRatioAll ? `Win rate: ${p.winRatioAll} (${p.totalWins}W/${p.totalLosses}L)` : '',
-    p.winRatioDE  ? `DE: ${p.winRatioDE}` : '',
-    p.winRatioPool? `Pool: ${p.winRatioPool}` : '',
-    p.rating      ? `Rating: ${p.rating}` : '',
-    p.ftStrength  ? `FT Strength: ${p.ftStrength}` : '',
+  var statsNote = [
+    p.winRatioAll ? 'Win rate: '+p.winRatioAll+' ('+p.totalWins+'W/'+p.totalLosses+'L)' : '',
+    p.winRatioDE  ? 'DE: '+p.winRatioDE : '',
+    p.winRatioPool? 'Pool: '+p.winRatioPool : '',
+    p.rating      ? 'Rating: '+p.rating : ''
   ].filter(Boolean).join(' | ');
   if (statsNote) document.getElementById('om-notes').value = statsNote;
-
-  // Show summary
-  const loaded = document.getElementById('ft-loaded');
-  const rows = [
-    p.winRatioAll ? `Win rate: <strong>${p.winRatioAll}</strong> (${p.totalWins}W / ${p.totalLosses}L)` : '',
-    p.winRatioDE  ? `DE win rate: <strong>${p.winRatioDE}</strong>` : '',
-    p.winRatioPool? `Pool win rate: <strong>${p.winRatioPool}</strong>` : '',
-    p.rating      ? `Rating: <strong>${p.rating}</strong>` : '',
-    p.ftStrength  ? `FT Strength: <strong>${p.ftStrength}</strong>` : '',
-    p.year        ? `Born: <strong>${p.year}</strong>` : '',
-    p.club        ? `Club: <strong>${p.club}</strong>` : '',
+  var loaded = document.getElementById('ft-loaded');
+  var rows = [
+    p.winRatioAll ? 'Win rate: <strong>'+p.winRatioAll+'</strong> ('+p.totalWins+'W / '+p.totalLosses+'L)' : '',
+    p.winRatioDE  ? 'DE win rate: <strong>'+p.winRatioDE+'</strong>' : '',
+    p.winRatioPool? 'Pool win rate: <strong>'+p.winRatioPool+'</strong>' : '',
+    p.rating      ? 'Rating: <strong>'+p.rating+'</strong>' : '',
+    p.year        ? 'Born: <strong>'+p.year+'</strong>' : '',
+    p.club        ? 'Club: <strong>'+p.club+'</strong>' : ''
   ].filter(Boolean);
-
-  loaded.innerHTML = `<div class="ft-loaded-box">
-    <div class="ftl-name">✓ Loaded — ${p.name||'Profile'}</div>
-    ${rows.map(r => `<div class="ftl-row">${r}</div>`).join('')}
-  </div>`;
+  loaded.innerHTML = '<div class="ft-loaded-box"><div class="ftl-name">✓ Loaded — '+(p.name||'Profile')+'</div>'+
+    rows.map(function(r) { return '<div class="ftl-row">'+r+'</div>'; }).join('')+'</div>';
 }
 
-// clear FT state when modal closes
-const _origCloseOppModal = closeOppModal;
-closeOppModal = function() {
-  ftCurrentProfile = null;
-  const ft = document.getElementById('ft-loaded');
-  if (ft) ft.style.display = 'none';
-  const fu = document.getElementById('ft-url-input');
-  if (fu) fu.value = '';
-  _origCloseOppModal();
-};
+// ── MODAL CLOSE ON OVERLAY CLICK ──
+document.getElementById('opp-modal').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('opp-modal')) closeOppModal();
+});
+document.getElementById('settings-modal').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('settings-modal')) closeSettings();
+});
+
+// ── UTILS ──
+function showToast(msg, isErr) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' error' : '') + ' show';
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 // ── INIT ──
 updateApiBadge();
