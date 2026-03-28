@@ -1016,9 +1016,11 @@ h1, h2, h3, h4, h5 {
     <div class="bottom-bar">
       <div class="bottom-bar-inner">
         <div class="bottom-item active" onclick="navigateTo('dashboard')" data-screen="dashboard"><span class="nav-icon">&#127968;</span>Home</div>
+        <div class="bottom-item" onclick="navigateTo('profile')" data-screen="profile"><span class="nav-icon">&#128100;</span>Me</div>
         <div class="bottom-item" onclick="navigateTo('prebout')" data-screen="prebout"><span class="nav-icon">&#127919;</span>Pre</div>
         <div class="bottom-item" onclick="navigateTo('break')" data-screen="break"><span class="nav-icon">&#9201;</span>Break</div>
         <div class="bottom-item" onclick="navigateTo('postbout')" data-screen="postbout"><span class="nav-icon">&#128203;</span>Post</div>
+        <div class="bottom-item" onclick="navigateTo('practice')" data-screen="practice"><span class="nav-icon">&#127947;</span>Train</div>
         <div class="bottom-item" onclick="navigateTo('drills')" data-screen="drills"><span class="nav-icon">&#129504;</span>Drills</div>
         <div class="bottom-item" onclick="navigateTo('opponents')" data-screen="opponents"><span class="nav-icon">&#127919;</span>Opp</div>
         <div class="bottom-item" onclick="navigateTo('history')" data-screen="history"><span class="nav-icon">&#128202;</span>Log</div>
@@ -1457,7 +1459,7 @@ function initSupabase() {
 
 // ---- AI CALLS ----
 function getAIKey() {
-  return localStorage.getItem('foiliq_ai_key') || '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';
+  return localStorage.getItem('foiliq_ai_key') || '';
 }
 
 function getAIProvider() {
@@ -1483,7 +1485,7 @@ function buildSystemPrompt() {
 function callAI(systemExtra, userMessage, callback) {
   var provider = getAIProvider();
   var key = getAIKey();
-  if (!key) { callback('Error: No API key configured. Go to Settings.'); return; }
+  if (!key || key === 'YOUR_ANTHROPIC_API_KEY') { callback('Error: No API key configured. Go to Settings and enter your Anthropic API key.'); return; }
 
   var systemPrompt = buildSystemPrompt() + '\n\n' + systemExtra;
 
@@ -1565,6 +1567,9 @@ function handleLogin(e) {
       currentUser = res.data.user;
       checkUserSetup();
     }
+  }).catch(function(err) {
+    btn.disabled = false; btn.textContent = 'Sign In';
+    document.getElementById('auth-error').textContent = 'Network error: ' + err.message;
   });
 }
 
@@ -1598,11 +1603,16 @@ function handleRegister(e) {
         document.getElementById('auth-error').style.color = 'var(--success)';
       }
     }
+  }).catch(function(err) {
+    btn.disabled = false; btn.textContent = 'Create Account';
+    document.getElementById('auth-error').textContent = 'Network error: ' + err.message;
   });
 }
 
 function handleGoogleLogin() {
-  supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
+  var prodUrl = 'https://aifenceguy.github.io/foiliq/';
+  var redirectUrl = (window.location.hostname === 'aifenceguy.github.io') ? prodUrl : window.location.origin + window.location.pathname;
+  supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectUrl } });
 }
 
 function handleLogout() {
@@ -1614,9 +1624,11 @@ function handleLogout() {
 }
 
 function checkUserSetup() {
+  if (!currentUser) { showPage('auth'); return; }
   // Check if user has fencers already
   supabaseClient.from('fencers').select('*').eq('user_id', currentUser.id).then(function(res) {
     if (res.error) {
+      console.error('Fencer query error:', res.error.message);
       // Table might not exist yet - show setup to let them configure
       showProfileSetup();
       return;
@@ -1628,6 +1640,9 @@ function checkUserSetup() {
     } else {
       showProfileSetup();
     }
+  }).catch(function(err) {
+    console.error('checkUserSetup failed:', err);
+    showProfileSetup();
   });
 }
 
@@ -1669,16 +1684,21 @@ function completeProfileSetup() {
 
   supabaseClient.from('fencers').insert(fencersToAdd).select().then(function(res) {
     if (res.error) {
-      showToast('Error: ' + res.error.message, 'error');
+      showToast('Error creating fencers: ' + res.error.message, 'error');
       return;
     }
     fencersList = res.data;
     currentFencerId = res.data[0].id;
     // Create empty profiles
     var profiles = res.data.map(function(f) { return { fencer_id: f.id, season: '2025 Spring' }; });
-    supabaseClient.from('fencer_profiles').insert(profiles).then(function() {
+    supabaseClient.from('fencer_profiles').insert(profiles).then(function(profRes) {
+      if (profRes.error) console.error('Profile insert error:', profRes.error.message);
+      showPage('landing');
+    }).catch(function() {
       showPage('landing');
     });
+  }).catch(function(err) {
+    showToast('Network error: ' + err.message, 'error');
   });
 }
 
@@ -1710,8 +1730,10 @@ function enterFencerSector() {
 function navigateTo(screen) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById('screen-' + screen).classList.add('active');
+  // Sidebar nav
   document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
-  document.querySelectorAll('[data-screen="' + screen + '"]').forEach(function(n) { n.classList.add('active'); });
+  document.querySelectorAll('.nav-item[data-screen="' + screen + '"]').forEach(function(n) { n.classList.add('active'); });
+  // Mobile bottom bar
   document.querySelectorAll('.bottom-item').forEach(function(n) { n.classList.remove('active'); });
   document.querySelectorAll('.bottom-item[data-screen="' + screen + '"]').forEach(function(n) { n.classList.add('active'); });
 
@@ -2053,13 +2075,13 @@ function saveDebrief() {
   var matchData = {
     fencer_id: currentFencerId,
     opponent_name: oppName || 'Unknown',
-    opponent_id: oppId || null,
     date: document.getElementById('postbout-date').value,
     result: document.getElementById('postbout-result').value,
     score_us: parseInt(document.getElementById('postbout-score-us').value) || 0,
     score_them: parseInt(document.getElementById('postbout-score-them').value) || 0,
     match_type: 'tournament'
   };
+  if (oppId) matchData.opponent_id = oppId;
 
   supabaseClient.from('match_logs').insert(matchData).select().then(function(matchRes) {
     if (matchRes.error) { showToast('Error saving match: ' + matchRes.error.message, 'error'); return; }
@@ -2429,7 +2451,7 @@ function saveOpponent() {
 }
 
 function loadOpponentDropdown(selectId) {
-  supabaseClient.from('opponents').select('id,name').eq('fencer_id', currentFencerId).order('name').then(function(res) {
+  supabaseClient.from('opponents').select('*').eq('fencer_id', currentFencerId).order('name').then(function(res) {
     opponentsList = res.data || [];
     var sel = document.getElementById(selectId);
     // Keep first option
@@ -2509,8 +2531,7 @@ function saveMatch() {
 
   var data = {
     fencer_id: currentFencerId,
-    opponent_id: oppSelect.value || null,
-    opponent_name: oppName,
+    opponent_name: oppName || 'Unknown',
     date: document.getElementById('match-date').value,
     match_type: document.getElementById('match-type').value,
     result: document.getElementById('match-result').value,
@@ -2523,6 +2544,7 @@ function saveMatch() {
     notes: document.getElementById('match-notes').value,
     coach_notes: document.getElementById('match-coach-notes').value
   };
+  if (oppSelect.value) data.opponent_id = oppSelect.value;
 
   supabaseClient.from('match_logs').insert(data).then(function(res) {
     if (res.error) { showToast('Error: ' + res.error.message, 'error'); return; }
@@ -2535,7 +2557,8 @@ function saveMatch() {
 // ---- SETTINGS ----
 function loadSettings() {
   document.getElementById('settings-ai-provider').value = getAIProvider();
-  document.getElementById('settings-ai-key').value = getAIKey();
+  var aiKey = getAIKey();
+  document.getElementById('settings-ai-key').value = (aiKey && aiKey !== 'YOUR_ANTHROPIC_API_KEY') ? aiKey : '';
   document.getElementById('settings-supa-url').value = localStorage.getItem('foiliq_supa_url') || 'https://kyfkiigbiwhczrtnlivc.supabase.co';
   document.getElementById('settings-supa-key').value = localStorage.getItem('foiliq_supa_key') || 'sb_publishable_GbLL0419rGP6EYSmq42Bsg_r5EkOYtg';
 
@@ -2633,6 +2656,9 @@ function appInit() {
     } else {
       showPage('auth');
     }
+  }).catch(function(err) {
+    console.error('Session check failed:', err);
+    showPage('auth');
   });
 
   // Listen for auth changes (Google redirect, etc.)
@@ -2651,9 +2677,7 @@ if (!localStorage.getItem('foiliq_supa_url')) {
 if (!localStorage.getItem('foiliq_supa_key')) {
   localStorage.setItem('foiliq_supa_key', 'sb_publishable_GbLL0419rGP6EYSmq42Bsg_r5EkOYtg');
 }
-if (!localStorage.getItem('foiliq_ai_key')) {
-  localStorage.setItem('foiliq_ai_key', 'YOUR_ANTHROPIC_API_KEY');
-}
+// AI key must be set by user in Settings — never hardcoded
 
 appInit();
 </script>
