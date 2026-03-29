@@ -214,107 +214,236 @@ h1, h2, h3, h4, h5 {
 .add-fencer-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
 
 /* ============================================
-   LANDING PAGE
+   MARKETING LANDING PAGE
    ============================================ */
-#landing-page {
-  display: none;
-  min-height: 100vh;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, #0d1530 50%, var(--bg-primary) 100%);
+html { scroll-behavior: smooth; }
+#marketing-page { display: none; }
+#marketing-page *, #marketing-page *::before, #marketing-page *::after { box-sizing: border-box; }
+
+/* Fade-in animation */
+.fade-section { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.fade-section.visible { opacity: 1; transform: translateY(0); }
+
+/* Navbar */
+.lp-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 500; padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; background: rgba(10,15,30,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid transparent; transition: border-color 0.3s; }
+.lp-nav.scrolled { border-bottom-color: var(--accent-gold); }
+.lp-nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.lp-nav-logo svg { width: 28px; height: 28px; }
+.lp-nav-logo .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.05em; }
+.lp-nav-logo .logo-w { color: var(--text-primary); }
+.lp-nav-logo .logo-g { color: var(--accent-gold); }
+.lp-nav-center { display: flex; gap: 32px; align-items: center; }
+.lp-nav-link { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; cursor: pointer; position: relative; padding: 8px 0; transition: color 0.2s; }
+.lp-nav-link:hover { color: var(--text-primary); }
+.lp-nav-right { display: flex; align-items: center; gap: 16px; }
+.lp-nav-signin { color: var(--text-muted); text-decoration: none; font-size: 14px; cursor: pointer; transition: color 0.2s; }
+.lp-nav-signin:hover { color: var(--text-primary); }
+.lp-nav-cta { padding: 10px 24px; background: var(--accent-gold); color: var(--bg-primary); border: none; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
+.lp-nav-cta:hover { background: var(--accent-gold-dim); }
+
+/* Dropdown */
+.lp-dropdown { position: relative; }
+.lp-dropdown-menu { display: none; position: absolute; top: 100%; left: -16px; min-width: 260px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 0; margin-top: 8px; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
+.lp-dropdown:hover .lp-dropdown-menu { display: block; }
+.lp-dd-item { display: block; padding: 10px 20px; color: var(--text-primary); font-size: 14px; font-weight: 500; text-decoration: none; transition: background 0.15s; cursor: pointer; }
+.lp-dd-item:hover { background: var(--bg-elevated); }
+.lp-dd-item small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+
+/* Mobile menu */
+.lp-hamburger { display: none; background: none; border: none; color: var(--text-primary); font-size: 28px; cursor: pointer; padding: 4px; }
+.lp-mobile-menu { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-primary); z-index: 600; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
+.lp-mobile-menu.open { display: flex; }
+.lp-mobile-menu a, .lp-mobile-menu span { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--text-primary); text-decoration: none; cursor: pointer; letter-spacing: 1px; }
+.lp-mobile-close { position: absolute; top: 20px; right: 28px; font-size: 36px; background: none; border: none; color: var(--text-primary); cursor: pointer; }
+
+/* Section shared */
+.lp-section { padding: 100px 24px; max-width: 1200px; margin: 0 auto; }
+.lp-eyebrow { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 12px; }
+.lp-headline { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 0.04em; margin-bottom: 20px; line-height: 1.1; }
+.lp-body { font-size: 16px; line-height: 1.75; color: var(--text-secondary); max-width: 640px; }
+.lp-body-center { text-align: center; margin-left: auto; margin-right: auto; }
+.lp-btn-gold { padding: 16px 36px; background: var(--accent-gold); color: var(--bg-primary); border: none; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer; transition: 0.2s; display: inline-block; text-decoration: none; }
+.lp-btn-gold:hover { background: var(--accent-gold-dim); }
+.lp-btn-outline { padding: 16px 36px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-primary); border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer; transition: 0.2s; display: inline-block; text-decoration: none; }
+.lp-btn-outline:hover { border-color: var(--text-primary); }
+
+/* Hero */
+.lp-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; padding-top: 80px; background: radial-gradient(ellipse at 60% 40%, rgba(240,180,41,0.06) 0%, transparent 60%); }
+.lp-hero::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px); pointer-events: none; }
+.lp-hero .lp-headline { font-size: 72px; max-width: 900px; }
+.lp-hero .lp-headline-gold { color: var(--accent-gold); }
+.lp-hero .lp-sub { font-size: 18px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; margin: 24px auto 36px; }
+.lp-hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 36px; }
+.lp-pills { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.lp-pill { padding: 8px 18px; background: var(--bg-card); border: 1px solid rgba(240,180,41,0.25); border-radius: 24px; font-size: 13px; color: var(--text-secondary); }
+
+/* Three Gaps */
+.lp-gaps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.lp-gap-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 32px 28px; transition: border-color 0.3s; }
+.lp-gap-card:hover { border-color: rgba(240,180,41,0.3); }
+.lp-gap-icon { font-size: 36px; margin-bottom: 16px; }
+.lp-gap-card h3 { font-size: 22px; margin-bottom: 12px; }
+.lp-gap-card p { font-size: 15px; line-height: 1.7; color: var(--text-secondary); }
+
+/* How It Works */
+.lp-steps { margin-top: 48px; display: flex; flex-direction: column; gap: 48px; }
+.lp-step { display: flex; gap: 24px; align-items: flex-start; }
+.lp-step-num { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--accent-gold); line-height: 1; min-width: 60px; }
+.lp-step h3 { font-size: 22px; margin-bottom: 8px; }
+.lp-step p { font-size: 15px; line-height: 1.7; color: var(--text-secondary); max-width: 600px; }
+
+/* Division Selector */
+.lp-div-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.lp-div-card { background: var(--bg-card); border: 2px solid var(--border); border-radius: 14px; padding: 32px 28px; cursor: pointer; transition: 0.3s; }
+.lp-div-card:hover { border-color: var(--accent-gold); transform: translateY(-4px); }
+.lp-div-badge { display: inline-block; padding: 4px 14px; background: rgba(240,180,41,0.1); border-radius: 16px; font-size: 11px; font-weight: 600; color: var(--accent-gold); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+.lp-div-card h3 { font-size: 24px; margin-bottom: 6px; }
+.lp-div-card .lp-div-sub { font-size: 14px; color: var(--accent-gold); margin-bottom: 12px; font-weight: 600; }
+.lp-div-card p { font-size: 14px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 16px; }
+.lp-div-features { font-size: 12px; color: var(--text-muted); }
+
+/* Feature Browser */
+.lp-feat-scroll { display: flex; gap: 20px; overflow-x: auto; padding: 48px 0 24px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.lp-feat-scroll::-webkit-scrollbar { height: 6px; }
+.lp-feat-scroll::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 3px; }
+.lp-feat-scroll::-webkit-scrollbar-thumb { background: var(--accent-gold-dim); border-radius: 3px; }
+.lp-feat-card { min-width: 300px; max-width: 320px; flex-shrink: 0; scroll-snap-align: start; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 28px 24px; transition: 0.3s; }
+.lp-feat-card:hover { border-color: rgba(240,180,41,0.3); }
+.lp-feat-card.featured { border-color: var(--accent-gold); }
+.lp-feat-icon { font-size: 28px; margin-bottom: 12px; }
+.lp-feat-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; background: var(--bg-elevated); color: var(--text-muted); }
+.lp-feat-badge.featured { background: rgba(240,180,41,0.15); color: var(--accent-gold); }
+.lp-feat-card h4 { font-size: 20px; margin-bottom: 10px; }
+.lp-feat-card p { font-size: 14px; line-height: 1.65; color: var(--text-secondary); }
+
+/* Competitive Loop (alternating rows) */
+.lp-loop-rows { margin-top: 48px; display: flex; flex-direction: column; gap: 64px; }
+.lp-loop-row { display: flex; gap: 48px; align-items: center; }
+.lp-loop-row.reverse { flex-direction: row-reverse; }
+.lp-loop-visual { flex: 1; display: flex; align-items: center; justify-content: center; }
+.lp-loop-num { font-family: 'Bebas Neue', sans-serif; font-size: 96px; color: rgba(240,180,41,0.12); line-height: 1; }
+.lp-loop-text { flex: 1; }
+.lp-loop-text h3 { font-size: 28px; margin-bottom: 12px; }
+.lp-loop-text p { font-size: 15px; line-height: 1.75; color: var(--text-secondary); }
+
+/* Decision Training Spotlight */
+.lp-dt-section { background: linear-gradient(135deg, rgba(240,180,41,0.05) 0%, var(--bg-secondary) 100%); border-top: 1px solid rgba(240,180,41,0.1); border-bottom: 1px solid rgba(240,180,41,0.1); }
+.lp-dt-inner { display: flex; gap: 48px; align-items: center; }
+.lp-dt-left { flex: 1; }
+.lp-dt-right { flex: 1; }
+.lp-dt-mockup { background: var(--bg-card); border: 2px solid var(--border); border-radius: 16px; padding: 28px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2; color: var(--text-secondary); }
+.lp-dt-mockup .dt-header { color: var(--text-muted); font-size: 12px; letter-spacing: 1px; margin-bottom: 12px; }
+.lp-dt-mockup .dt-q { color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; margin: 16px 0; }
+.lp-dt-mockup .dt-opt { padding: 10px 16px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); }
+.lp-dt-mockup .dt-opt.correct { border-color: var(--success); background: rgba(34,197,94,0.08); color: var(--success); }
+
+/* Stats Bar */
+.lp-stats { background: var(--bg-elevated); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.lp-stats-inner { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 24px; padding: 48px 0; }
+.lp-stat { text-align: center; }
+.lp-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 42px; font-weight: 700; color: var(--accent-gold); }
+.lp-stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Proof Case */
+.lp-proof-cards { display: flex; gap: 24px; justify-content: center; margin: 36px 0; flex-wrap: wrap; }
+.lp-proof-card { background: var(--bg-card); border: 2px solid rgba(240,180,41,0.25); border-radius: 14px; padding: 28px 32px; min-width: 280px; }
+.lp-proof-card h4 { font-size: 20px; margin-bottom: 8px; }
+.lp-proof-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.lp-kpi-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 36px; }
+.lp-kpi-mini { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 28px; text-align: center; }
+.lp-kpi-mini .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: var(--accent-gold); }
+.lp-kpi-mini .kpi-lbl { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Parent Teaser */
+.lp-parent-section { background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(240,180,41,0.04) 100%); }
+.lp-email-row { display: flex; gap: 12px; max-width: 460px; margin-top: 28px; }
+.lp-email-row input { flex: 1; padding: 14px 18px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; }
+.lp-email-row input:focus { border-color: var(--accent-gold); }
+.lp-email-row button { padding: 14px 28px; background: var(--accent-gold); color: var(--bg-primary); border: none; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+.lp-email-row button:hover { background: var(--accent-gold-dim); }
+
+/* Training Deep Dive */
+.lp-train-cols { display: flex; gap: 48px; margin-top: 48px; align-items: flex-start; }
+.lp-train-left { flex: 1; }
+.lp-train-right { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.lp-train-level { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.lp-train-level h4 { font-size: 18px; margin-bottom: 4px; }
+.lp-train-level .level-sub { font-size: 12px; color: var(--accent-gold); margin-bottom: 8px; font-weight: 600; }
+.lp-train-level p { font-size: 14px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 8px; }
+.lp-train-level .level-flow { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+/* Pricing */
+.lp-pricing-grid { display: flex; gap: 24px; justify-content: center; margin-top: 48px; flex-wrap: wrap; }
+.lp-price-card { background: var(--bg-card); border: 2px solid var(--border); border-radius: 16px; padding: 36px 32px; min-width: 320px; max-width: 400px; flex: 1; }
+.lp-price-card.featured { border-color: var(--accent-gold); }
+.lp-price-badge { display: inline-block; padding: 4px 14px; border-radius: 16px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+.lp-price-badge.gold { background: rgba(240,180,41,0.15); color: var(--accent-gold); }
+.lp-price-badge.muted { background: var(--bg-elevated); color: var(--text-muted); }
+.lp-price-card h3 { font-size: 28px; margin-bottom: 4px; }
+.lp-price-amt { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--accent-gold); margin: 8px 0; }
+.lp-price-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+.lp-price-list { list-style: none; padding: 0; margin-bottom: 28px; }
+.lp-price-list li { padding: 8px 0; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+
+/* FAQ Accordion */
+.lp-faq-list { max-width: 760px; margin: 36px auto 0; }
+.lp-faq-item { border-bottom: 1px solid var(--border); }
+.lp-faq-q { width: 100%; background: none; border: none; padding: 20px 0; font-size: 16px; font-weight: 600; color: var(--text-primary); text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Sans', sans-serif; }
+.lp-faq-q::after { content: '+'; font-size: 24px; color: var(--accent-gold); transition: transform 0.3s; }
+.lp-faq-item.open .lp-faq-q::after { transform: rotate(45deg); }
+.lp-faq-a { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease; }
+.lp-faq-item.open .lp-faq-a { max-height: 400px; padding-bottom: 20px; }
+.lp-faq-a p { font-size: 14px; line-height: 1.75; color: var(--text-secondary); }
+
+/* Footer CTA */
+.lp-footer-cta { text-align: center; padding: 100px 24px; background: radial-gradient(ellipse at center, rgba(240,180,41,0.04) 0%, transparent 70%); }
+.lp-footer-cta .lp-headline { font-size: 56px; }
+
+/* Footer */
+.lp-footer { background: var(--bg-secondary); border-top: 1px solid var(--border); padding: 60px 24px 32px; }
+.lp-footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+.lp-footer-col h5 { font-size: 14px; color: var(--accent-gold); margin-bottom: 16px; letter-spacing: 1px; }
+.lp-footer-col a, .lp-footer-col p { font-size: 13px; color: var(--text-muted); display: block; text-decoration: none; line-height: 2; transition: color 0.2s; }
+.lp-footer-col a:hover { color: var(--text-secondary); }
+.lp-footer-brand .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin-bottom: 8px; }
+.lp-footer-copy { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+
+/* Landing responsive */
+@media (max-width: 768px) {
+  .lp-nav-center { display: none; }
+  .lp-hamburger { display: block; }
+  .lp-hero .lp-headline { font-size: 42px; }
+  .lp-hero .lp-sub { font-size: 16px; }
+  .lp-headline { font-size: 36px; }
+  .lp-gaps-grid, .lp-div-grid { grid-template-columns: 1fr; }
+  .lp-dt-inner { flex-direction: column; }
+  .lp-loop-row, .lp-loop-row.reverse { flex-direction: column; }
+  .lp-train-cols { flex-direction: column; }
+  .lp-footer-inner { grid-template-columns: 1fr 1fr; }
+  .lp-pricing-grid { flex-direction: column; align-items: center; }
+  .lp-price-card { min-width: unset; width: 100%; }
+  .lp-footer-cta .lp-headline { font-size: 36px; }
+  .lp-section { padding: 64px 16px; }
 }
 
-.landing-header {
-  text-align: center;
-  padding: 60px 20px 30px;
-}
+/* Keep old landing page for post-auth door selector */
+#landing-page { display: none; min-height: 100vh; background: linear-gradient(135deg, var(--bg-primary) 0%, #0d1530 50%, var(--bg-primary) 100%); }
+.landing-header { text-align: center; padding: 60px 20px 30px; }
 .landing-header h1 { font-size: 64px; margin-bottom: 6px; }
 .landing-header .tagline { font-size: 12px; letter-spacing: 4px; color: var(--text-muted); text-transform: uppercase; }
-
-.doors-container {
-  display: flex;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
-  gap: 24px;
-  min-height: 60vh;
-  align-items: stretch;
-}
-
-.door {
-  flex: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 48px 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-.door::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
-  opacity: 0;
-  transition: 0.3s;
-}
+.doors-container { display: flex; max-width: 1000px; margin: 0 auto; padding: 20px; gap: 24px; min-height: 60vh; align-items: stretch; }
+.door { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 48px 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; }
+.door::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--accent-gold), transparent); opacity: 0; transition: 0.3s; }
 .door:hover::before { opacity: 1; }
 .door:hover { border-color: var(--accent-gold-dim); transform: translateY(-4px); }
-
 .door-icon { font-size: 56px; margin-bottom: 20px; }
 .door h2 { font-size: 36px; margin-bottom: 10px; }
 .door p { color: var(--text-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
-
-.door-btn {
-  padding: 14px 36px;
-  border-radius: 8px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 1px;
-  cursor: pointer;
-  border: none;
-  transition: 0.2s;
-}
+.door-btn { padding: 14px 36px; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer; border: none; transition: 0.2s; }
 .door-btn.primary { background: var(--accent-gold); color: var(--bg-primary); }
 .door-btn.primary:hover { background: var(--accent-gold-dim); }
-
 .door.disabled { opacity: 0.5; cursor: not-allowed; }
 .door.disabled:hover { border-color: var(--border); transform: none; }
-
-.parent-email {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-  width: 100%;
-  max-width: 300px;
-}
-.parent-email input {
-  flex: 1;
-  padding: 10px 14px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 13px;
-  outline: none;
-  font-family: 'DM Sans', sans-serif;
-}
-.parent-email button {
-  padding: 10px 16px;
-  background: var(--text-muted);
-  border: none;
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-}
 
 /* ============================================
    MAIN APP LAYOUT
@@ -851,6 +980,432 @@ h1, h2, h3, h4, h5 {
 </style>
 </head>
 <body>
+
+<!-- ============================================
+     MARKETING LANDING PAGE
+     ============================================ -->
+<div id="marketing-page">
+
+<!-- NAVBAR -->
+<nav class="lp-nav" id="lp-nav">
+  <a class="lp-nav-logo" href="#">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="6" y1="28" x2="26" y2="4" stroke="#f0b429" stroke-width="2.5" stroke-linecap="round"/><line x1="26" y1="28" x2="6" y2="4" stroke="#f0b429" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="16" r="3" fill="#f0b429"/></svg>
+    <span class="logo-text"><span class="logo-w">FOIL</span><span class="logo-g">IQ</span></span>
+  </a>
+  <div class="lp-nav-center">
+    <div class="lp-dropdown">
+      <span class="lp-nav-link">DIVISIONS</span>
+      <div class="lp-dropdown-menu">
+        <span class="lp-dd-item" onclick="showPage('auth')">Y8 / Y10<small>Beginner / Pre-Advanced</small></span>
+        <span class="lp-dd-item" onclick="showPage('auth')">Y12<small>Experienced — breaking the ceiling</small></span>
+        <span class="lp-dd-item" onclick="showPage('auth')">Y14<small>Advanced — SYC / NAC level</small></span>
+      </div>
+    </div>
+    <div class="lp-dropdown">
+      <span class="lp-nav-link">FEATURES</span>
+      <div class="lp-dropdown-menu">
+        <span class="lp-dd-item" onclick="showPage('auth')">Pre-Bout Strategy</span>
+        <span class="lp-dd-item" onclick="showPage('auth')">Break Advisor</span>
+        <span class="lp-dd-item" onclick="showPage('auth')">Post-Bout Debrief</span>
+        <span class="lp-dd-item" onclick="showPage('auth')">Training Module</span>
+        <span class="lp-dd-item" onclick="showPage('auth')">Decision Training</span>
+        <span class="lp-dd-item" onclick="showPage('auth')">KPI Dashboard</span>
+      </div>
+    </div>
+    <a class="lp-nav-link" href="#lp-parent-section">FOR PARENTS</a>
+  </div>
+  <div class="lp-nav-right">
+    <span class="lp-nav-signin" onclick="showPage('auth')">Sign In</span>
+    <button class="lp-nav-cta" onclick="showPage('auth')">GET STARTED</button>
+    <button class="lp-hamburger" onclick="document.getElementById('lp-mobile-menu').classList.add('open')">&#9776;</button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="lp-mobile-menu" id="lp-mobile-menu">
+  <button class="lp-mobile-close" onclick="document.getElementById('lp-mobile-menu').classList.remove('open')">&times;</button>
+  <span onclick="document.getElementById('lp-mobile-menu').classList.remove('open');showPage('auth')">GET STARTED</span>
+  <a href="#lp-gaps" onclick="document.getElementById('lp-mobile-menu').classList.remove('open')">WHY FENCERS PLATEAU</a>
+  <a href="#lp-how" onclick="document.getElementById('lp-mobile-menu').classList.remove('open')">HOW IT WORKS</a>
+  <a href="#lp-divisions" onclick="document.getElementById('lp-mobile-menu').classList.remove('open')">DIVISIONS</a>
+  <a href="#lp-features" onclick="document.getElementById('lp-mobile-menu').classList.remove('open')">FEATURES</a>
+  <a href="#lp-parent-section" onclick="document.getElementById('lp-mobile-menu').classList.remove('open')">FOR PARENTS</a>
+  <span onclick="document.getElementById('lp-mobile-menu').classList.remove('open');showPage('auth')">SIGN IN</span>
+</div>
+
+<!-- SECTION 1: HERO -->
+<section class="lp-hero fade-section" id="lp-hero">
+  <div class="lp-eyebrow">THE MISSING PIECE IN COMPETITIVE FENCING</div>
+  <h1 class="lp-headline">THE FENCERS WHO IMPROVE FASTEST<br>AREN'T THE MOST TALENTED.</h1>
+  <h1 class="lp-headline lp-headline-gold" style="margin-top:-8px">THEY'RE THE MOST SELF-AWARE.</h1>
+  <p class="lp-sub">FoilIQ builds the self-awareness your coach can't build for you &mdash; structured reflection, tactical decision training, and the connective framework that turns hours of practice into real competitive improvement.</p>
+  <div class="lp-hero-ctas">
+    <button class="lp-btn-gold" onclick="showPage('auth')">GET STARTED FREE</button>
+    <a class="lp-btn-outline" href="#lp-gaps">SEE HOW IT WORKS</a>
+  </div>
+  <div class="lp-pills">
+    <span class="lp-pill">&#9876; Y8 &middot; Y10 &middot; Y12 &middot; Y14</span>
+    <span class="lp-pill">&#127942; SYC Circuit Tested</span>
+    <span class="lp-pill">&#129302; Powered by Claude AI</span>
+  </div>
+</section>
+
+<!-- SECTION 2: THE THREE GAPS -->
+<section class="lp-section fade-section" id="lp-gaps">
+  <div style="text-align:center">
+    <div class="lp-eyebrow">WHY FENCERS PLATEAU</div>
+    <h2 class="lp-headline">IT'S NOT THE HOURS. IT'S THE GAPS.</h2>
+    <p class="lp-body lp-body-center">A fencer can train 4&ndash;5 times a week, take 2&ndash;3 private lessons, and still get eliminated at top 32 every single time. Not because they're not working hard enough. Because three critical gaps are going unfilled.</p>
+  </div>
+  <div class="lp-gaps-grid">
+    <div class="lp-gap-card">
+      <div class="lp-gap-icon">&#128336;</div>
+      <h3>THE TIME GAP</h3>
+      <h4 style="color:var(--accent-gold);font-size:16px;margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:600">45 Minutes a Week</h4>
+      <p>That's all your coach has with your kid. FoilIQ is there for the other 99% of a fencer's competitive life &mdash; tournament morning, the 1-minute break, the drive home after a loss.</p>
+    </div>
+    <div class="lp-gap-card">
+      <div class="lp-gap-icon">&#127966;</div>
+      <h3>THE ENVIRONMENT GAP</h3>
+      <h4 style="color:var(--accent-gold);font-size:16px;margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:600">When You've Outgrown Your Club</h4>
+      <p>If you're already the best fencer at your club, there's no one to push your decision speed. FoilIQ simulates the cognitive pressure of higher-level competition &mdash; so geography doesn't limit your development.</p>
+    </div>
+    <div class="lp-gap-card">
+      <div class="lp-gap-icon">&#128172;</div>
+      <h3>THE COMMUNICATION GAP</h3>
+      <h4 style="color:var(--accent-gold);font-size:16px;margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:600">The 1-Minute Break</h4>
+      <p>The picture the coach is painting and what the fencer perceives are often different. The fencer thinks they understand the adjustment. They don't &mdash; not precisely. FoilIQ builds the internal vocabulary so coach instructions actually land.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: HOW IT WORKS -->
+<section class="lp-section fade-section" id="lp-how">
+  <div style="text-align:center">
+    <div class="lp-eyebrow">HOW IT WORKS</div>
+    <h2 class="lp-headline">What happens when you join FoilIQ?</h2>
+  </div>
+  <div class="lp-steps">
+    <div class="lp-step">
+      <div class="lp-step-num">01</div>
+      <div>
+        <h3>BUILD YOUR FENCER PROFILE</h3>
+        <p>Tell FoilIQ your division, goals, strengths and weaknesses. The system designs a personalized improvement path &mdash; not generic advice, but a framework built around your specific gaps.</p>
+      </div>
+    </div>
+    <div class="lp-step">
+      <div class="lp-step-num">02</div>
+      <div>
+        <h3>FOLLOW THE COMPETITIVE LOOP</h3>
+        <p>Before every bout, during the break, after every match, and at every practice &mdash; FoilIQ gives you the right intelligence at the right moment. Every session has a purpose.</p>
+      </div>
+    </div>
+    <div class="lp-step">
+      <div class="lp-step-num">03</div>
+      <div>
+        <h3>DEVELOP SELF-AWARENESS FASTER</h3>
+        <p>The debrief habit. The decision training. The pattern recognition. FoilIQ accelerates the self-discovery that turns good fencers into great ones &mdash; the thing that usually takes years to develop on your own.</p>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:48px">
+    <button class="lp-btn-gold" onclick="showPage('auth')">GET MY FREE LEARNING PLAN</button>
+  </div>
+</section>
+
+<!-- SECTION 4: DIVISION SELECTOR -->
+<section class="lp-section fade-section" id="lp-divisions">
+  <div style="text-align:center">
+    <div class="lp-eyebrow">FIND YOUR LEVEL</div>
+    <h2 class="lp-headline">Built for every stage of competitive development.</h2>
+    <p class="lp-body lp-body-center">FoilIQ adapts to where your fencer is right now &mdash; and builds the framework to get them to the next level.</p>
+  </div>
+  <div class="lp-div-grid">
+    <div class="lp-div-card" onclick="showPage('auth')">
+      <span class="lp-div-badge">BUILDING THE FOUNDATION</span>
+      <h3>Y8 / Y10</h3>
+      <div class="lp-div-sub">BEGINNER / PRE-ADVANCED</div>
+      <p>Learning individual actions and when to use them. FoilIQ teaches the vocabulary of competitive fencing &mdash; each concept explained, drilled, and applied in context. The right foundation prevents years of bad habits.</p>
+      <div class="lp-div-features">Basic Decision Training &middot; Pre-Bout &middot; Practice Module</div>
+    </div>
+    <div class="lp-div-card" onclick="showPage('auth')">
+      <span class="lp-div-badge">BREAKING THROUGH THE CEILING</span>
+      <h3>Y12</h3>
+      <div class="lp-div-sub">EXPERIENCED</div>
+      <p>Winning pools 6-0 but losing at top 32? You have the technique. You're missing the connective framework. FoilIQ builds the decision tree that links your actions to situations &mdash; the layer that turns pool winners into DE survivors.</p>
+      <div class="lp-div-features">Full Competitive Loop &middot; Break Advisor &middot; KPI Dashboard</div>
+    </div>
+    <div class="lp-div-card" onclick="showPage('auth')">
+      <span class="lp-div-badge">COMPETING AT THE HIGHEST LEVEL</span>
+      <h3>Y14</h3>
+      <div class="lp-div-sub">ADVANCED</div>
+      <p>SYC. NAC. The fencers who dominate at this level adapt mid-bout when their plan stops working. FoilIQ trains that adaptation &mdash; cognitive pressure drills modeled on elite competition patterns.</p>
+      <div class="lp-div-features">Advanced Decision Training &middot; Full Analytics &middot; Opponent Intelligence</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5: FEATURE BROWSER -->
+<section class="lp-section fade-section" id="lp-features">
+  <div class="lp-eyebrow">TAKE A LOOK INSIDE</div>
+  <h2 class="lp-headline">Every tool. One connected system.</h2>
+  <div class="lp-feat-scroll">
+    <div class="lp-feat-card"><div class="lp-feat-icon">&#127919;</div><span class="lp-feat-badge">COMPETITION</span><h4>PRE-BOUT STRATEGY</h4><p>Opponent SWOT. Opening tactic. Mid-bout adjustment trigger. Mental cue. Walk in with a game plan &mdash; not a hope.</p></div>
+    <div class="lp-feat-card"><div class="lp-feat-icon">&#9201;</div><span class="lp-feat-badge">COMPETITION</span><h4>BREAK ADVISOR</h4><p>Score. Period. Situation. 3 bullets. Bold the most important one. Precise language the fencer can actually execute under adrenaline.</p></div>
+    <div class="lp-feat-card"><div class="lp-feat-icon">&#128203;</div><span class="lp-feat-badge">COMPETITION</span><h4>POST-BOUT DEBRIEF</h4><p>Log what happened in 60 seconds. FoilIQ detects patterns across your last 5 bouts. Turns experience into structured learning.</p></div>
+    <div class="lp-feat-card featured"><div class="lp-feat-icon">&#127947;</div><span class="lp-feat-badge featured">TRAINING &mdash; FEATURED</span><h4>TRAINING MODULE</h4><p>Beginner &rarr; Experienced &rarr; Advanced. Concept &rarr; Drills &rarr; Performance. The connective framework, not more repetition in the same box.</p></div>
+    <div class="lp-feat-card"><div class="lp-feat-icon">&#129504;</div><span class="lp-feat-badge">TRAINING</span><h4>DECISION TRAINING</h4><p>Scenario-based cognitive pressure drills. Simulates top-32 level decision speed. 5 scenarios, 3 minutes, on your phone.</p></div>
+    <div class="lp-feat-card"><div class="lp-feat-icon">&#128202;</div><span class="lp-feat-badge">ANALYTICS</span><h4>KPI DASHBOARD</h4><p>7 metrics tracked automatically. Win rate, control rate, touch differential, decision drill level and more. Make improvement visible.</p></div>
+  </div>
+</section>
+
+<!-- SECTION 6: THE COMPETITIVE LOOP -->
+<section class="lp-section fade-section" id="lp-loop">
+  <div style="text-align:center">
+    <div class="lp-eyebrow">THE STRUCTURED COMPETITIVE LOOP</div>
+    <h2 class="lp-headline">A framework that connects every part of your season.</h2>
+    <p class="lp-body lp-body-center">Like the CAGED system for guitar &mdash; FoilIQ doesn't give you more drills to practice in isolation. It gives you the connective framework that makes everything you already know work together.</p>
+  </div>
+  <div class="lp-loop-rows">
+    <div class="lp-loop-row">
+      <div class="lp-loop-visual"><div class="lp-loop-num">01</div></div>
+      <div class="lp-loop-text">
+        <h3>Walk in with a game plan</h3>
+        <p>FoilIQ analyzes your opponent's SWOT profile to generate a 3-part game plan: your opening tactic, the trigger that tells you when to switch, and a single mental cue to repeat under pressure. No more going in blind.</p>
+      </div>
+    </div>
+    <div class="lp-loop-row reverse">
+      <div class="lp-loop-visual"><div class="lp-loop-num">02</div></div>
+      <div class="lp-loop-text">
+        <h3>Bridge the coach-fencer gap</h3>
+        <p>The picture the coach is painting and what the fencer perceives are often completely different. The fencer thinks they understand the adjustment. They don't. FoilIQ builds the precise internal vocabulary so when the coach says "remove the blade" &mdash; the fencer knows exactly what that feels like and when to trigger it.</p>
+      </div>
+    </div>
+    <div class="lp-loop-row">
+      <div class="lp-loop-visual"><div class="lp-loop-num">03</div></div>
+      <div class="lp-loop-text">
+        <h3>Turn every bout into data</h3>
+        <p>Log the debrief in 60 seconds while memory is fresh. FoilIQ cross-references your last 5 bouts to surface recurring patterns you can't see yourself. This is the reflection habit that separates fencers who plateau from fencers who compound.</p>
+      </div>
+    </div>
+    <div class="lp-loop-row reverse">
+      <div class="lp-loop-visual"><div class="lp-loop-num">04</div></div>
+      <div class="lp-loop-text">
+        <h3>Show up with a mission</h3>
+        <p>Never walk into practice with an empty mind again. FoilIQ generates a weekly training focus and a single daily mission &mdash; built from your real debrief data, not generic advice. Concept &rarr; Drills from multiple angles &rarr; Performance application. The Pickup Music method, applied to competitive fencing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: DECISION TRAINING SPOTLIGHT -->
+<div class="lp-dt-section">
+<section class="lp-section fade-section" id="lp-dt">
+  <div class="lp-dt-inner">
+    <div class="lp-dt-left">
+      <div class="lp-eyebrow">DECISION TRAINING</div>
+      <h2 class="lp-headline">Build competitive reflexes before the tournament.</h2>
+      <p class="lp-body" style="margin-bottom:20px">Most fencers know the drills. The gap is applying the right tactic at the right moment &mdash; under pressure, when the score is close, against someone you've never fenced before.</p>
+      <p class="lp-body" style="margin-bottom:20px">This is the top 32 problem. And no amount of technical drilling fixes it.</p>
+      <p class="lp-body">Decision Training presents real bout scenarios and trains your response before you need it for real. The fencer who has processed 500 scenarios recognizes the situation instantly. The one who hasn't is thinking when they should be moving.</p>
+      <p style="margin-top:20px;font-size:14px;color:var(--accent-gold);font-weight:600">Beginner &rarr; Intermediate &rarr; Advanced<br>5 scenarios per session. 3 minutes on your phone.</p>
+    </div>
+    <div class="lp-dt-right">
+      <div class="lp-dt-mockup">
+        <div class="dt-header">PERIOD 2 &nbsp;|&nbsp; DOWN 2-3 &nbsp;|&nbsp; COUNTER-ATTACKER</div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <div style="color:var(--text-secondary);font-size:13px">Your last 2 attacks were countered.</div>
+        <div class="dt-q">What do you do next?</div>
+        <div class="dt-opt">[A] Attack again &mdash; adjust your timing</div>
+        <div class="dt-opt correct">[B] Make them go first &mdash; parry riposte &nbsp; &#10003;</div>
+        <div class="dt-opt">[C] Back up and reset distance</div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- SECTION 8: STATS BAR -->
+<div class="lp-stats">
+  <div class="lp-stats-inner lp-section" style="padding:48px 24px">
+    <div class="lp-stat"><div class="lp-stat-val">Y8&ndash;Y14</div><div class="lp-stat-label">Divisions Supported</div></div>
+    <div class="lp-stat"><div class="lp-stat-val">7</div><div class="lp-stat-label">KPIs Tracked Automatically</div></div>
+    <div class="lp-stat"><div class="lp-stat-val">3</div><div class="lp-stat-label">Gaps Filled</div></div>
+    <div class="lp-stat"><div class="lp-stat-val">99%</div><div class="lp-stat-label">Of Competitive Life Covered</div></div>
+  </div>
+</div>
+
+<!-- SECTION 9: PROOF CASE -->
+<section class="lp-section fade-section" id="lp-proof" style="text-align:center">
+  <div class="lp-eyebrow">REAL FENCERS. REAL DATA.</div>
+  <h2 class="lp-headline">The proof is in the results.</h2>
+  <p class="lp-body lp-body-center" style="font-style:italic;margin-bottom:24px">FoilIQ wasn't built in a lab. It was built on the real tournament data of two competitive fencers on the SYC circuit &mdash; and refined through watching what actually happens between a coach's lesson and a fencer's performance.</p>
+  <div class="lp-proof-cards">
+    <div class="lp-proof-card">
+      <h4>&#9876; RAEDYN TSUI</h4>
+      <p>Division: Y14<br>Club: SoCAL Fencing Center<br>Circuit: SYC</p>
+    </div>
+    <div class="lp-proof-card">
+      <h4>&#9876; KAYLAN TSUI</h4>
+      <p>Division: Y12<br>Club: SoCAL Fencing Center<br>Circuit: SYC</p>
+    </div>
+  </div>
+  <p class="lp-body lp-body-center" style="margin-bottom:12px">Their improvement through the 2025&ndash;26 season is FoilIQ's living proof of concept. Their data built this system.</p>
+  <div class="lp-kpi-row">
+    <div class="lp-kpi-mini"><div class="kpi-val">68%</div><div class="kpi-lbl">Win Rate &#8593;</div></div>
+    <div class="lp-kpi-mini"><div class="kpi-val">71%</div><div class="kpi-lbl">Control Rate &#8593;</div></div>
+    <div class="lp-kpi-mini"><div class="kpi-val">ADV</div><div class="kpi-lbl">Decision Drill Level</div></div>
+  </div>
+</section>
+
+<!-- SECTION 10: PARENT SECTOR TEASER -->
+<div class="lp-parent-section" id="lp-parent-section">
+<section class="lp-section fade-section">
+  <div class="lp-eyebrow">FOR PARENTS &mdash; COMING SOON</div>
+  <h2 class="lp-headline">STOP CHASING THE WRONG COMPETITIONS.</h2>
+  <p class="lp-body" style="margin-bottom:8px">Most fencing families are flying cross-country for competitions that don't move their child's ranking or development. Y8 fencers at out-of-region events. Thousands of dollars wasted on the wrong tournaments at the wrong time.</p>
+  <p class="lp-body" style="margin-bottom:8px">FoilIQ's Parent Sector will give you tournament selection intelligence &mdash; local club, RYC, SYC, NAC &mdash; matched to your child's current level, NRPS ranking strategy, and travel budget.</p>
+  <p class="lp-body" style="font-weight:600;color:var(--text-primary)">The right competition at the right time makes all the difference.</p>
+  <div class="lp-email-row" id="parent-waitlist-row">
+    <input type="email" id="lp-parent-email" placeholder="your@email.com">
+    <button onclick="captureParentWaitlist()">NOTIFY ME &rarr;</button>
+  </div>
+  <p style="font-size:12px;color:var(--text-muted);margin-top:10px">We'll notify you the moment Parent Sector launches.</p>
+</section>
+</div>
+
+<!-- SECTION 11: TRAINING MODULE DEEP DIVE -->
+<section class="lp-section fade-section" id="lp-training">
+  <div class="lp-eyebrow">TRAINING MODULE</div>
+  <h2 class="lp-headline">The connective framework. Not more drilling in the same box.</h2>
+  <div class="lp-train-cols">
+    <div class="lp-train-left">
+      <p class="lp-body" style="margin-bottom:16px">A guitar player can be stuck in the pentatonic box for 10 years. They practice every day. They get better within their box. But they never connect the boxes &mdash; never learn CAGED &mdash; and they plateau forever.</p>
+      <p class="lp-body" style="margin-bottom:16px">The same thing happens to fencers. 4&ndash;5 practices a week. Private lessons. Hundreds of hours. And they still win pools 6-0 then lose at top 32.</p>
+      <p class="lp-body" style="font-weight:600;color:var(--text-primary)">Because they're drilling actions in isolation. Not building the connective framework that links actions to situations to adaptations.</p>
+    </div>
+    <div class="lp-train-right">
+      <div class="lp-train-level">
+        <h4>BEGINNER</h4>
+        <div class="level-sub">Y8 / Y10</div>
+        <p>Learn each action in isolation. What it is, why it works, when to use it. Build the vocabulary. Build the foundation. Prevent years of bad habits.</p>
+        <div class="level-flow">&rarr; Concept &rarr; Single drill &rarr; Application</div>
+      </div>
+      <div class="lp-train-level">
+        <h4>EXPERIENCED</h4>
+        <div class="level-sub">Y12</div>
+        <p>Learn the decision tree. Opponent type &rarr; correct action. The connective layer between knowing your actions and choosing the right one. This is where most fencers get stuck.</p>
+        <div class="level-flow">&rarr; Concept &rarr; Multiple drills &rarr; Situation play</div>
+      </div>
+      <div class="lp-train-level">
+        <h4>ADVANCED</h4>
+        <div class="level-sub">Y14</div>
+        <p>Learn to adapt mid-bout when your plan stops working. Period 2, down 2-3, your game plan isn't landing &mdash; now what? The top 32 problem. Solved through cognitive pressure training.</p>
+        <div class="level-flow">&rarr; Concept &rarr; Drills &rarr; Free fencing mission</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 12: PRICING / EARLY ACCESS -->
+<section class="lp-section fade-section" id="lp-pricing" style="text-align:center">
+  <div class="lp-eyebrow">EARLY ACCESS</div>
+  <h2 class="lp-headline">Join the fencing families building smarter.</h2>
+  <div class="lp-pricing-grid">
+    <div class="lp-price-card featured">
+      <span class="lp-price-badge gold">BETA &mdash; FREE</span>
+      <h3>FoilIQ Beta</h3>
+      <div class="lp-price-amt">Free</div>
+      <div class="lp-price-sub">During beta period</div>
+      <ul class="lp-price-list">
+        <li>&#10003; Full competitive loop (Pre-Bout, Break, Post-Bout)</li>
+        <li>&#10003; Training Module (Beginner / Experienced / Advanced)</li>
+        <li>&#10003; Decision Training</li>
+        <li>&#10003; KPI Dashboard (7 metrics)</li>
+        <li>&#10003; Opponent Profiles</li>
+        <li>&#10003; Supabase data &mdash; persists across devices</li>
+      </ul>
+      <button class="lp-btn-gold" style="width:100%" onclick="showPage('auth')">JOIN THE BETA</button>
+    </div>
+    <div class="lp-price-card">
+      <span class="lp-price-badge muted">COMING 2026</span>
+      <h3>FoilIQ Pro</h3>
+      <div class="lp-price-amt" style="color:var(--text-muted)">TBD</div>
+      <div class="lp-price-sub">&nbsp;</div>
+      <ul class="lp-price-list">
+        <li>&#9675; Everything in Beta</li>
+        <li>&#9675; Parent Tournament Sector</li>
+        <li>&#9675; Multi-fencer family accounts</li>
+        <li>&#9675; FoilIQ Pro (Cadet/Junior + sport science)</li>
+        <li>&#9675; Priority support</li>
+      </ul>
+      <button class="lp-btn-outline" style="width:100%" onclick="showPage('auth')">JOIN WAITLIST</button>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 13: FAQ -->
+<section class="lp-section fade-section" id="lp-faq" style="text-align:center">
+  <h2 class="lp-headline">Frequently Asked Questions</h2>
+  <p class="lp-body lp-body-center" style="margin-bottom:16px">Got a different question? Message us.</p>
+  <div class="lp-faq-list" style="text-align:left">
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">Is FoilIQ a replacement for my coach?</button><div class="lp-faq-a"><p>No &mdash; and that's intentional. Your coach sees the bout from the outside. FoilIQ builds awareness from the inside. We fill the three gaps your coach can't: the 99% of competitive life when no coach is present, the cognitive pressure of high-level competition when your club can't provide it, and the internal vocabulary that makes your coach's instructions actually land.</p></div></div>
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">My kid trains 4-5x a week. How is this different from more practice?</button><div class="lp-faq-a"><p>More practice in the same box doesn't break the ceiling. A fencer can train for years and still get stuck at top 32 &mdash; not because they're not working hard, but because they're drilling actions in isolation without the connective framework that links actions to situations to adaptations. FoilIQ is that framework. Think of it as the CAGED system for foil fencing.</p></div></div>
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">What age and division is FoilIQ for?</button><div class="lp-faq-a"><p>Y8 and Y10 for the foundational level. Y12 for experienced fencers hitting the top-32 ceiling. Y14 for advanced competitors at the SYC/NAC level. A separate product &mdash; FoilIQ Pro &mdash; is planned for Cadet and Junior with sport science and AI vision.</p></div></div>
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">What is the Decision Training module?</button><div class="lp-faq-a"><p>Scenario-based cognitive pressure drills. The app presents a real bout scenario &mdash; score, period, opponent type, last action &mdash; and you pick the right tactical response. 5 scenarios, 3 minutes, on your phone. It trains the decision speed and pattern recognition that separates top 32 fencers from pool winners.</p></div></div>
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">How does the Break Advisor work?</button><div class="lp-faq-a"><p>Enter the score, period, and what's happening in the bout. FoilIQ generates 3 bullet points &mdash; max &mdash; in precise language the fencer can execute under adrenaline. It's designed to bridge the gap between what the coach says and what the fencer can actually process and apply in 60 seconds.</p></div></div>
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">Is my fencer's data private?</button><div class="lp-faq-a"><p>Yes. Every account is private and secured. FoilIQ uses Supabase with Row Level Security &mdash; you can only ever see your own fencer's data.</p></div></div>
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">What tournaments does FoilIQ support?</button><div class="lp-faq-a"><p>Any competition &mdash; local club, RYC, SYC, NAC, or practice bouts. Tournament selection intelligence for parents is coming in Phase 2 (Parent Sector).</p></div></div>
+    <div class="lp-faq-item"><button class="lp-faq-q" onclick="this.parentElement.classList.toggle('open')">What's the Parent Sector?</button><div class="lp-faq-a"><p>Coming in Phase 2. Tournament selection intelligence to help families choose the right competitions for their child's level, region, NRPS ranking strategy, and budget. Most families are chasing the wrong events. Parent Sector fixes that.</p></div></div>
+  </div>
+</section>
+
+<!-- SECTION 14: FOOTER CTA -->
+<div class="lp-footer-cta fade-section">
+  <h2 class="lp-headline">STOP GOING TO TOURNAMENTS UNPREPARED.</h2>
+  <p class="lp-body lp-body-center" style="margin-bottom:32px">Build the self-awareness that coaches can't build for you.</p>
+  <button class="lp-btn-gold" style="font-size:22px;padding:20px 48px" onclick="showPage('auth')">GET STARTED FREE</button>
+</div>
+
+<!-- SECTION 15: FOOTER -->
+<footer class="lp-footer">
+  <div class="lp-footer-inner">
+    <div class="lp-footer-col lp-footer-brand">
+      <div class="logo-text"><span style="color:var(--text-primary)">FOIL</span><span style="color:var(--accent-gold)">IQ</span></div>
+      <p>The self-awareness system for competitive foil fencers.</p>
+      <p>Built at SoCAL Fencing Center</p>
+      <p>&copy; 2026 FoilIQ</p>
+    </div>
+    <div class="lp-footer-col">
+      <h5>PRODUCT</h5>
+      <a href="#lp-features">Pre-Bout</a>
+      <a href="#lp-features">Break Advisor</a>
+      <a href="#lp-features">Post-Bout</a>
+      <a href="#lp-training">Training Module</a>
+      <a href="#lp-dt">Decision Training</a>
+      <a href="#lp-features">KPI Dashboard</a>
+      <a href="#lp-features">Opponent Profiles</a>
+    </div>
+    <div class="lp-footer-col">
+      <h5>DIVISIONS</h5>
+      <a href="#lp-divisions">Y8 / Y10 (Beginner)</a>
+      <a href="#lp-divisions">Y12 (Experienced)</a>
+      <a href="#lp-divisions">Y14 (Advanced)</a>
+      <a href="#">FoilIQ Pro &mdash; Coming Soon</a>
+    </div>
+    <div class="lp-footer-col">
+      <h5>COMPANY</h5>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#lp-parent-section">Parent Sector (Coming Soon)</a>
+    </div>
+  </div>
+  <div class="lp-footer-copy">FoilIQ is not a replacement for a coach. Coaches see from the outside. FoilIQ builds awareness from the inside.</div>
+</footer>
+
+</div><!-- end #marketing-page -->
 
 <!-- ============================================
      AUTH PAGE
@@ -1712,12 +2267,16 @@ function completeProfileSetup() {
 
 // ---- PAGE MANAGEMENT ----
 function showPage(page) {
+  document.getElementById('marketing-page').style.display = 'none';
   document.getElementById('auth-page').style.display = 'none';
   document.getElementById('profile-setup-page').style.display = 'none';
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('app-page').style.display = 'none';
 
-  if (page === 'auth') {
+  if (page === 'marketing') {
+    document.getElementById('marketing-page').style.display = 'block';
+    window.scrollTo(0, 0);
+  } else if (page === 'auth') {
     document.getElementById('auth-page').style.display = 'flex';
   } else if (page === 'profile-setup') {
     document.getElementById('profile-setup-page').style.display = 'flex';
@@ -2649,10 +3208,60 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
   });
 });
 
+// ---- MARKETING PAGE ----
+// Scroll-triggered fade-in
+var lpObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-section').forEach(function(el) {
+  lpObserver.observe(el);
+});
+
+// Sticky navbar gold border on scroll
+window.addEventListener('scroll', function() {
+  var nav = document.getElementById('lp-nav');
+  if (nav) {
+    if (window.scrollY > 40) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  }
+});
+
+// Parent waitlist email capture
+function captureParentWaitlist() {
+  var email = document.getElementById('lp-parent-email').value.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email.', 'error');
+    return;
+  }
+  if (supabaseClient) {
+    supabaseClient.from('notifications_sent').insert({
+      notification_type: 'parent_waitlist',
+      channel: 'email',
+      subject: email,
+      body: '',
+      sent_at: new Date().toISOString()
+    }).then(function(res) {
+      if (res.error) {
+        console.error('Waitlist insert error:', res.error.message);
+      }
+    });
+  }
+  showToast('Thanks! We\'ll notify you when Parent Sector launches.', 'success');
+  document.getElementById('lp-parent-email').value = '';
+}
+
 // ---- INIT ----
 function appInit() {
   if (!initSupabase()) {
-    showPage('auth');
+    showPage('marketing');
     return;
   }
 
@@ -2662,11 +3271,11 @@ function appInit() {
       currentUser = res.data.session.user;
       checkUserSetup();
     } else {
-      showPage('auth');
+      showPage('marketing');
     }
   }).catch(function(err) {
     console.error('Session check failed:', err);
-    showPage('auth');
+    showPage('marketing');
   });
 
   // Listen for auth changes (Google redirect, etc.)
