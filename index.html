@@ -1944,22 +1944,55 @@ html { scroll-behavior: smooth; }
           </div>
         </div>
 
-        <!-- CONNECT STATE -->
-        <div id="ana-connect-view" class="ana-connect">
-          <div style="font-size:64px;margin-bottom:16px">&#128200;</div>
-          <h3>Connect Your FencingTracker Profile</h3>
-          <p>Paste your FencingTracker profile URL to import your tournament data, performance history, and strength ratings.</p>
-          <input type="text" id="ana-ft-url" placeholder="https://fencingtracker.com/p/100280844/Your-Name">
-          <br>
-          <button class="btn btn-gold" onclick="importFencingTracker()">Import Data</button>
-          <div class="ana-progress" id="ana-import-progress" style="display:none">
-            <div class="step" id="ana-step-summary">Fetching summary page...</div>
-            <div class="step" id="ana-step-history">Fetching history page...</div>
-            <div class="step" id="ana-step-strength">Fetching strength page...</div>
-            <div class="step" id="ana-step-parse">Parsing &amp; computing insights...</div>
-            <div class="step" id="ana-step-save">Saving to database...</div>
+        <!-- CONNECT / PASTE STATE -->
+        <div id="ana-connect-view">
+          <div style="text-align:center;margin-bottom:24px">
+            <div style="font-size:48px;margin-bottom:12px">&#128200;</div>
+            <h3 style="font-size:28px;margin-bottom:8px">Import from FencingTracker</h3>
+            <p style="color:var(--text-secondary);max-width:600px;margin:0 auto">Go to your FencingTracker profile, copy the page text (Ctrl+A then Ctrl+C), and paste into each tab below.</p>
+            <div id="ana-paste-progress" style="margin-top:12px;font-size:14px;color:var(--accent-gold)"></div>
           </div>
-          <div id="ana-import-error" style="color:var(--danger);margin-top:16px;font-size:14px"></div>
+          <!-- Paste tabs -->
+          <div class="ana-tabs" style="margin-bottom:0">
+            <button class="ana-tab active" onclick="showPasteTab('summary')" id="paste-tab-summary">Summary</button>
+            <button class="ana-tab" onclick="showPasteTab('history')" id="paste-tab-history">History</button>
+            <button class="ana-tab" onclick="showPasteTab('strength')" id="paste-tab-strength">Strength</button>
+          </div>
+          <!-- Summary paste -->
+          <div class="card" style="border-radius:0 0 12px 12px;border-top:none" id="paste-panel-summary">
+            <h4>1. SUMMARY PAGE</h4>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">Go to your FencingTracker profile page (fencingtracker.com/p/...), press Ctrl+A to select all, Ctrl+C to copy, then paste below.</p>
+            <textarea id="paste-summary" rows="10" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Paste FencingTracker summary page text here...&#10;&#10;Expected content includes: fencer name, ratings table (Foil D25 Jan 29 2026),&#10;podium finishes (Gold/Silver/Bronze by season), and recent results table."></textarea>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+              <button class="btn btn-gold" onclick="parsePasteSummary()">Parse Summary</button>
+              <span id="paste-summary-status" style="font-size:13px"></span>
+            </div>
+          </div>
+          <!-- History paste -->
+          <div class="card" style="border-radius:0 0 12px 12px;border-top:none;display:none" id="paste-panel-history">
+            <h4>2. HISTORY PAGE</h4>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">Go to the History tab on your FencingTracker profile, press Ctrl+A, Ctrl+C, then paste below.</p>
+            <textarea id="paste-history" rows="10" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Paste FencingTracker history page text here...&#10;&#10;Expected content includes: Win/Loss stats table (Victories, Losses, Win Ratio by season),&#10;Scores table (Easy wins, Close wins, Close losses, Big losses),&#10;and Time-expired bouts table."></textarea>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+              <button class="btn btn-gold" onclick="parsePasteHistory()">Parse History</button>
+              <span id="paste-history-status" style="font-size:13px"></span>
+            </div>
+          </div>
+          <!-- Strength paste -->
+          <div class="card" style="border-radius:0 0 12px 12px;border-top:none;display:none" id="paste-panel-strength">
+            <h4>3. STRENGTH PAGE</h4>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">Go to the Strength tab on your FencingTracker profile, press Ctrl+A, Ctrl+C, then paste below.</p>
+            <textarea id="paste-strength" rows="10" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Paste FencingTracker strength page text here...&#10;&#10;Expected content includes lines like:&#10;Foil DE 1794 1623 - 1964 1109 1869&#10;Foil Pool 1475 1234 - 1716 987 1532"></textarea>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+              <button class="btn btn-gold" onclick="parsePasteStrength()">Parse Strength</button>
+              <span id="paste-strength-status" style="font-size:13px"></span>
+            </div>
+          </div>
+          <!-- Generate button -->
+          <div style="text-align:center;margin-top:24px">
+            <button class="btn btn-gold" id="ana-generate-btn" onclick="generateDashboardFromPaste()" disabled style="font-size:18px;padding:16px 40px;opacity:0.5">Generate Dashboard</button>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:8px">Requires at least Summary + History</p>
+          </div>
         </div>
 
         <!-- DASHBOARD STATE -->
@@ -3409,348 +3442,327 @@ function showAnaTab(tab) {
   if (tab === 'bouts') renderBoutAnalysis();
 }
 
-function parseFTUrl(url) {
-  var match = url.match(/fencingtracker\.com\/p\/(\d+)\/([^\/\?#]+)/);
-  if (!match) return null;
-  return { id: match[1], name: decodeURIComponent(match[2]) };
+// ---- PASTE-BASED IMPORT ----
+var pasteData = { summary: null, history: null, strength: null };
+
+function showPasteTab(tab) {
+  ['summary', 'history', 'strength'].forEach(function(t) {
+    document.getElementById('paste-panel-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('paste-tab-' + t).classList.toggle('active', t === tab);
+  });
 }
 
-function importFencingTracker() {
-  var url = document.getElementById('ana-ft-url').value.trim();
-  var parsed = parseFTUrl(url);
-  if (!parsed) { document.getElementById('ana-import-error').textContent = 'Invalid URL. Expected: https://fencingtracker.com/p/ID/Name'; return; }
-
-  var progressEl = document.getElementById('ana-import-progress');
-  var errorEl = document.getElementById('ana-import-error');
-  progressEl.style.display = 'block';
-  errorEl.textContent = '';
-
-  var baseUrl = 'https://fencingtracker.com/p/' + parsed.id + '/' + parsed.name;
-  var summaryHtml = null, historyHtml = null, strengthHtml = null;
-
-  setStep('summary', 'active');
-  fetchFT(baseUrl).then(function(html) {
-    summaryHtml = html;
-    setStep('summary', 'done');
-    setStep('history', 'active');
-    return fetchFT(baseUrl + '/history');
-  }).then(function(html) {
-    historyHtml = html;
-    setStep('history', 'done');
-    setStep('strength', 'active');
-    return fetchFT(baseUrl + '/strength');
-  }).then(function(html) {
-    strengthHtml = html;
-    setStep('strength', 'done');
-    setStep('parse', 'active');
-
-    var summary = parseSummaryPage(summaryHtml);
-    var history = parseHistoryPage(historyHtml);
-    var strength = parseStrengthPage(strengthHtml);
-    var computed = computeInsights(summary, history, strength);
-
-    setStep('parse', 'done');
-    setStep('save', 'active');
-
-    // Build the record locally so we always have data even if DB save fails
-    var localRecord = {
-      fencer_id: currentFencerId,
-      user_id: currentUser.id,
-      fencingtracker_url: url,
-      fencingtracker_id: parsed.id,
-      raw_summary: summary,
-      raw_history: history,
-      raw_strength: strength,
-      computed_insights: computed,
-      imported_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    // Set analyticsData immediately so dashboard can render even if save fails
-    analyticsData = localRecord;
-
-    // Try insert first; if duplicate fencer_id, update instead
-    return supabaseClient.from('fencer_analytics').insert(localRecord).select().then(function(insertRes) {
-      if (insertRes.error) {
-        // Likely duplicate — try update
-        return supabaseClient.from('fencer_analytics').update(localRecord).eq('fencer_id', currentFencerId).select().then(function(updateRes) {
-          if (updateRes.data && updateRes.data[0]) analyticsData = updateRes.data[0];
-        });
-      } else if (insertRes.data && insertRes.data[0]) {
-        analyticsData = insertRes.data[0];
-      }
-    });
-  }).then(function() {
-    setStep('save', 'done');
-    showToast('FencingTracker data imported!', 'success');
-    showAnalyticsDashboard();
-  }).catch(function(err) {
-    setStep('save', 'done');
-    // If fetch succeeded but DB save failed, still show the dashboard with local data
-    if (analyticsData && analyticsData.computed_insights) {
-      showToast('Data imported (save to DB failed: ' + err.message + ')', 'error');
-      showAnalyticsDashboard();
+function updatePasteProgress() {
+  var done = 0;
+  var parts = [];
+  ['summary', 'history', 'strength'].forEach(function(t) {
+    var tab = document.getElementById('paste-tab-' + t);
+    if (pasteData[t]) {
+      done++;
+      tab.textContent = '\u2713 ' + t.charAt(0).toUpperCase() + t.slice(1);
+      tab.style.color = 'var(--success)';
     } else {
-      errorEl.textContent = 'Import failed: ' + err.message + '. FencingTracker may be temporarily unavailable. Check the URL and try again.';
-      progressEl.style.display = 'none';
+      tab.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+      tab.style.color = '';
     }
   });
+  var btn = document.getElementById('ana-generate-btn');
+  var ready = pasteData.summary && pasteData.history;
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.5';
+  var prog = document.getElementById('ana-paste-progress');
+  if (done === 3) prog.textContent = '\u2713 All 3 sections pasted \u2014 ready to generate!';
+  else if (done === 0) prog.textContent = '';
+  else prog.textContent = done + '/3 sections pasted' + (ready ? ' \u2014 ready to generate!' : ' \u2014 paste ' + (pasteData.summary ? '' : 'Summary + ') + (pasteData.history ? '' : 'History ') + 'to continue');
 }
 
 function refreshAnalytics() {
-  if (!analyticsData || !analyticsData.fencingtracker_url) return;
-  document.getElementById('ana-ft-url').value = analyticsData.fencingtracker_url;
   document.getElementById('ana-connect-view').style.display = 'block';
   document.getElementById('ana-dashboard-view').style.display = 'none';
-  importFencingTracker();
+  document.getElementById('ana-header-actions').style.display = 'none';
+  pasteData = { summary: null, history: null, strength: null };
+  updatePasteProgress();
 }
 
-function setStep(step, state) {
-  var el = document.getElementById('ana-step-' + step);
-  if (!el) return;
-  el.className = 'step ' + state;
-  if (state === 'done') el.textContent = '\u2713 ' + el.textContent.replace(/^[\u2713\u25cb\u25cf]\s*/, '');
-}
-
-var FT_PROXY = 'https://foiliq-proxy.rtsui-jlconcepts.workers.dev';
-
-function fetchFT(url) {
-  var proxied = FT_PROXY + '?url=' + encodeURIComponent(url);
-  var controller = new AbortController();
-  var timeout = setTimeout(function() { controller.abort(); }, 15000);
-  return fetch(proxied, { signal: controller.signal, headers: { 'Accept': 'text/html' } }).then(function(r) {
-    clearTimeout(timeout);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.text();
-  }).catch(function(err) {
-    clearTimeout(timeout);
-    throw err;
-  });
-}
-
-// ---- PARSERS ----
-// FencingTracker tables are TRANSPOSED: seasons are columns, stats are rows.
-// Helper: parse a transposed stats table into { season: { stat: value } }
-function parseTransposedTable(table) {
+// ---- TEXT PARSERS (plain text, not HTML) ----
+// Utility: parse a transposed text table where seasons are columns
+// Lines like: "Victories  105  106  137  108  13  469"
+function parseTextTable(lines, headerLine) {
   var result = {};
-  var headerRow = table.querySelector('thead tr, tr:first-child');
-  if (!headerRow) return result;
-  var headers = Array.from(headerRow.querySelectorAll('th, td')).map(function(c) { return c.textContent.trim(); });
-  // headers[0] is empty or label, headers[1..n] are season names
-  var seasonCols = headers.slice(1);
-  seasonCols.forEach(function(s) { result[s] = {}; });
-
-  var rows = Array.from(table.querySelectorAll('tbody tr, tr'));
-  // Skip header row if tbody wasn't used
-  var startIdx = table.querySelector('thead') ? 0 : 1;
-  for (var i = startIdx; i < rows.length; i++) {
-    var cells = Array.from(rows[i].querySelectorAll('td'));
-    if (cells.length < 2) continue;
-    var statName = cells[0].textContent.replace(/<[^>]*>/g, '').replace(/[†‡*]/g, '').trim().toLowerCase();
-    for (var j = 1; j < cells.length && j < headers.length; j++) {
-      var val = cells[j].textContent.trim();
-      if (val === '-') val = '0';
-      result[seasonCols[j - 1]] = result[seasonCols[j - 1]] || {};
-      result[seasonCols[j - 1]][statName] = val;
-    }
+  // Header: first line with season patterns
+  var seasons = [];
+  if (headerLine) {
+    var parts = headerLine.split(/\t+|\s{2,}/);
+    parts.forEach(function(p) {
+      p = p.trim();
+      if (p.match(/\d{4}-\d{4}/) || p === 'Before 2022' || p === 'All Time') seasons.push(p);
+    });
   }
+  if (seasons.length === 0) return result;
+  seasons.forEach(function(s) { result[s] = {}; });
+
+  lines.forEach(function(line) {
+    var parts = line.split(/\t+|\s{2,}/);
+    if (parts.length < 2) return;
+    var label = parts[0].replace(/[†‡*\u2020\u2021]/g, '').trim().toLowerCase();
+    if (!label || label.match(/^\d{4}/) || label === 'all time') return;
+    var vals = parts.slice(1).map(function(v) { return v.trim(); });
+    for (var i = 0; i < vals.length && i < seasons.length; i++) {
+      var v = vals[i];
+      if (v === '-') v = '0';
+      result[seasons[i]][label] = v;
+    }
+  });
   return result;
 }
 
-function parseSummaryPage(html) {
-  var doc = new DOMParser().parseFromString(html, 'text/html');
+function parsePasteSummary() {
+  var text = document.getElementById('paste-summary').value;
+  var statusEl = document.getElementById('paste-summary-status');
+  if (!text || text.length < 50) { statusEl.innerHTML = '<span style="color:var(--danger)">Please paste the full page text.</span>'; return; }
+
   var data = { results: [], rating: '', club: '', name: '', podiums: {}, ratings: [] };
-  try {
-    var h1 = doc.querySelector('h1');
-    if (h1) data.name = h1.textContent.trim();
+  var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
+  console.log('[Paste Parse] Summary: ' + lines.length + ' lines');
 
-    var tables = Array.from(doc.querySelectorAll('table'));
-    console.log('[FT Parse] Summary page: ' + tables.length + ' tables found');
-
-    tables.forEach(function(table, tIdx) {
-      var firstHeader = table.querySelector('thead tr th, tr th');
-      var headerText = firstHeader ? firstHeader.textContent.trim().toLowerCase() : '';
-      var allHeaders = Array.from(table.querySelectorAll('thead tr th, tr:first-child th')).map(function(h) { return h.textContent.trim().toLowerCase(); });
-
-      // Rating history table: columns = Weapon, Rating, Date
-      if (allHeaders.some(function(h) { return h === 'rating' || h === 'weapon'; })) {
-        var rRows = Array.from(table.querySelectorAll('tbody tr, tr')).slice(allHeaders.length > 0 ? 0 : 1);
-        rRows.forEach(function(row) {
-          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
-          if (cells.length >= 2) {
-            data.ratings.push({ weapon: cells[0] || '', rating: cells[1] || '', date: cells[2] || '' });
-            if (!data.rating && cells[1]) data.rating = cells[1];
-          }
-        });
-        console.log('[FT Parse] Ratings table: ' + data.ratings.length + ' entries, current: ' + data.rating);
-      }
-
-      // Podiums table: transposed — rows are Gold/Silver/Bronze, columns are seasons
-      if (table.textContent.indexOf('\u{1F947}') >= 0 || table.textContent.indexOf('Gold') >= 0) {
-        data.podiums = parseTransposedTable(table);
-        console.log('[FT Parse] Podiums table parsed, seasons: ' + Object.keys(data.podiums).join(', '));
-      }
-
-      // Results table: columns = Date, Tournament, Event, Place, Rating Earned, Event Class
-      if (allHeaders.some(function(h) { return h === 'place' || h === 'event class'; })) {
-        var resRows = Array.from(table.querySelectorAll('tbody tr'));
-        resRows.forEach(function(row) {
-          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
-          if (cells.length >= 4) {
-            // Place column may contain "5 / 76" format or just "5"
-            var placeStr = cells[3] || '';
-            var placeParts = placeStr.split('/').map(function(s) { return parseInt(s.trim()); });
-            var place = placeParts[0] || 0;
-            var total = placeParts[1] || 0;
-            // If place column is just a number, total might not be here
-            data.results.push({
-              date: cells[0] || '',
-              tournament: cells[1] || '',
-              event: cells[2] || '',
-              place: place,
-              total: total,
-              rating: cells[4] || '',
-              event_class: cells[5] || ''
-            });
-          }
-        });
-        console.log('[FT Parse] Results table: ' + data.results.length + ' events');
-      }
-    });
-
-    // Fallback: try to get rating and club from page text
-    var bodyText = doc.body ? doc.body.textContent : '';
-    if (!data.rating) {
-      var ratingMatch = bodyText.match(/(?:Rating|Current)[:\s]*([A-Z]\d{2}|U\d*)/i);
-      if (ratingMatch) data.rating = ratingMatch[1];
+  // 1. Ratings: look for "Foil  D25  Jan 29, 2026" or "Foil  E25  Apr 23, 2025"
+  lines.forEach(function(line) {
+    var m = line.match(/^(Foil|Epee|Saber|Sabre)\s+([A-Z]\d{2}|U\d*)\s+(.+)/i);
+    if (m) {
+      data.ratings.push({ weapon: m[1], rating: m[2], date: m[3].trim() });
     }
-    var clubMatch = bodyText.match(/Club[:\s]+([^\n,]+)/i);
-    if (clubMatch) data.club = clubMatch[1].trim();
-  } catch(e) { data.parseError = e.message; console.error('[FT Parse] Summary error:', e); }
-  console.log('[FT Parse] Summary result:', JSON.stringify({ name: data.name, rating: data.rating, club: data.club, resultsCount: data.results.length }));
-  return data;
-}
+  });
+  if (data.ratings.length > 0) data.rating = data.ratings[0].rating;
+  console.log('[Paste Parse] Ratings found:', data.ratings.length, 'current:', data.rating);
 
-function parseHistoryPage(html) {
-  var doc = new DOMParser().parseFromString(html, 'text/html');
-  var data = { seasons: {}, scores: {}, timeExpired: {}, bouts: [] };
-  try {
-    var tables = Array.from(doc.querySelectorAll('table'));
-    console.log('[FT Parse] History page: ' + tables.length + ' tables found');
-
-    // The first few tables are transposed stat tables (Win/Loss, Scores, Time-expired)
-    // They all share the same season columns: 2025-2026, 2024-2025, etc.
-    var statTableCount = 0;
-    tables.forEach(function(table, tIdx) {
-      var firstTd = table.querySelector('tbody tr td, tr:nth-child(2) td');
-      var firstText = firstTd ? firstTd.textContent.trim().toLowerCase() : '';
-      var allHeaders = Array.from(table.querySelectorAll('thead tr th, tr:first-child th')).map(function(h) { return h.textContent.trim(); });
-
-      // Detect transposed stat tables: first column header is empty, rest are season years
-      var hasSeasonsInHeader = allHeaders.some(function(h) { return h.match(/\d{4}-\d{4}/) || h === 'Before 2022' || h === 'All Time'; });
-
-      if (hasSeasonsInHeader) {
-        var parsed = parseTransposedTable(table);
-        // Determine which stat table this is by first row label
-        if (firstText.includes('victories') || firstText.includes('losses') || firstText.includes('win ratio')) {
-          // Check if it's pool-specific or DE-specific or overall
-          var allLabels = Array.from(table.querySelectorAll('tbody tr td:first-child, tr:nth-child(n+2) td:first-child')).map(function(c) { return c.textContent.trim().toLowerCase(); });
-          if (allLabels.some(function(l) { return l.includes('pool') && l.includes('victories'); })) {
-            // This is the Pool/DE breakdown table — merge into seasons
-            Object.keys(parsed).forEach(function(season) {
-              data.seasons[season] = Object.assign(data.seasons[season] || {}, parsed[season]);
-            });
-          } else {
-            // Overall win/loss table
-            Object.keys(parsed).forEach(function(season) {
-              data.seasons[season] = Object.assign(data.seasons[season] || {}, parsed[season]);
-            });
-          }
-          statTableCount++;
-          console.log('[FT Parse] Win/Loss stats table ' + statTableCount + ', seasons: ' + Object.keys(parsed).join(', '));
-        } else if (firstText.includes('easy win') || firstText.includes('close win')) {
-          Object.keys(parsed).forEach(function(season) {
-            data.scores[season] = parsed[season];
-          });
-          console.log('[FT Parse] Scores table parsed');
-        } else if (firstText.includes('time')) {
-          Object.keys(parsed).forEach(function(season) {
-            data.timeExpired[season] = parsed[season];
-          });
-          console.log('[FT Parse] Time-expired table parsed');
-        } else {
-          // Generic — merge into seasons
-          Object.keys(parsed).forEach(function(season) {
-            data.seasons[season] = Object.assign(data.seasons[season] || {}, parsed[season]);
-          });
-          statTableCount++;
-        }
+  // 2. Name: look for a line that is a person's name — typically appears early, not all-caps nav items
+  for (var ni = 0; ni < Math.min(lines.length, 40); ni++) {
+    var nl = lines[ni];
+    // Name pattern: 2-4 capitalized words, possibly with hyphen, not a nav item
+    if (nl.match(/^[A-Z][a-z]+(\s+[A-Z][a-z\-]+){1,4}$/) && !nl.match(/^(Fencing Tracker|Log In|Sign Up|Home|Search|Contact)/)) {
+      data.name = nl;
+      break;
+    }
+  }
+  // Fallback: check for a line with birth year nearby
+  if (!data.name) {
+    for (var ni2 = 0; ni2 < lines.length; ni2++) {
+      if (lines[ni2].match(/^(19|20)\d{2}$/) && ni2 > 0) {
+        data.name = lines[ni2 - 1];
+        break;
       }
+    }
+  }
 
-      // Bout-by-bout tables have columns like: Round, Result, Score, Opponent, etc.
-      var hasOpponent = allHeaders.some(function(h) { return h.toLowerCase().includes('opponent'); });
-      var hasResult = allHeaders.some(function(h) { var lh = h.toLowerCase(); return lh === 'result' || lh === 'v/d'; });
-      if (hasOpponent || hasResult) {
-        var headersLower = allHeaders.map(function(h) { return h.toLowerCase(); });
-        var rows = Array.from(table.querySelectorAll('tbody tr'));
-        rows.forEach(function(row) {
-          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
-          if (cells.length >= 3) {
-            var bout = {};
-            cells.forEach(function(cell, idx) {
-              if (headersLower[idx]) bout[headersLower[idx]] = cell;
-            });
-            // Normalize result field
-            var resultVal = bout['result'] || bout['v/d'] || '';
-            bout.result = resultVal.charAt(0).toUpperCase(); // V or D
-            data.bouts.push(bout);
-          }
-        });
+  // 3. Club: look for known patterns or lines near the name
+  for (var ci = 0; ci < lines.length; ci++) {
+    if (lines[ci].match(/fencing center|fencing club|fencing academy|fencing society|FC$|FA$/i)) {
+      data.club = lines[ci];
+      break;
+    }
+  }
+
+  // 4. Podiums: find the table with Gold/Silver/Bronze rows
+  // Look for a line that has season headers
+  var podiumHeaderIdx = -1;
+  for (var pi = 0; pi < lines.length; pi++) {
+    if (lines[pi].match(/2025-2026|2024-2025/) && (lines[pi].match(/Before 2022|All Time/) || lines[pi].match(/\d{4}-\d{4}.*\d{4}-\d{4}/))) {
+      podiumHeaderIdx = pi;
+      break;
+    }
+  }
+  if (podiumHeaderIdx >= 0) {
+    var podiumLines = [];
+    for (var pk = podiumHeaderIdx + 1; pk < Math.min(podiumHeaderIdx + 15, lines.length); pk++) {
+      var pl = lines[pk];
+      if (pl.match(/gold|silver|bronze|5th|8th|total|top/i)) {
+        podiumLines.push(pl);
       }
-    });
+      if (pl.match(/^(Date|Tournament|Event|$)/)) break;
+    }
+    data.podiums = parseTextTable(podiumLines, lines[podiumHeaderIdx]);
+    console.log('[Paste Parse] Podiums: ', Object.keys(data.podiums).length, 'seasons');
+  }
 
-    console.log('[FT Parse] History: ' + Object.keys(data.seasons).length + ' seasons, ' + data.bouts.length + ' bouts');
-    // Log a sample season
-    var sampleSeason = Object.keys(data.seasons)[0];
-    if (sampleSeason) console.log('[FT Parse] Sample season ' + sampleSeason + ':', JSON.stringify(data.seasons[sampleSeason]));
-  } catch(e) { data.parseError = e.message; console.error('[FT Parse] History error:', e); }
-  return data;
-}
-
-function parseStrengthPage(html) {
-  var doc = new DOMParser().parseFromString(html, 'text/html');
-  var data = { pool: {}, de: {} };
-  try {
-    var bodyText = doc.body ? doc.body.textContent : '';
-    // FencingTracker shows strength as numbers, often with labels
-    var tables = Array.from(doc.querySelectorAll('table'));
-    tables.forEach(function(table) {
-      var rows = Array.from(table.querySelectorAll('tr'));
-      rows.forEach(function(row) {
-        var cells = Array.from(row.querySelectorAll('td, th')).map(function(c) { return c.textContent.trim(); });
-        if (cells.length >= 2) {
-          var label = cells[0].toLowerCase();
-          for (var ci = 1; ci < cells.length; ci++) {
-            var val = parseInt(cells[ci].replace(/,/g, ''));
-            if (isNaN(val)) continue;
-            if (label.includes('pool') && !data.pool.value) data.pool.value = val;
-            if ((label.includes('direct elimination') || (label.includes('de') && !label.includes('pool'))) && !data.de.value) data.de.value = val;
-            break;
-          }
-        }
+  // 5. Recent results: look for lines like "Mar 15  Fortune RYC  Event  5 / 76  D25  A3"
+  lines.forEach(function(line) {
+    // Date pattern: 3-letter month + 1-2 digit day at start
+    var m = line.match(/^([A-Z][a-z]{2}\s+\d{1,2})\s{2,}(.+)/);
+    if (!m) return;
+    var rest = m[2];
+    // Try to find place/total pattern: number / number
+    var placeMatch = rest.match(/(\d{1,3})\s*\/\s*(\d{1,4})/);
+    if (placeMatch) {
+      var beforePlace = rest.substring(0, rest.indexOf(placeMatch[0]));
+      var afterPlace = rest.substring(rest.indexOf(placeMatch[0]) + placeMatch[0].length);
+      var parts = beforePlace.split(/\t+|\s{2,}/).filter(function(p) { return p.trim(); });
+      var afterParts = afterPlace.split(/\t+|\s{2,}/).filter(function(p) { return p.trim(); });
+      data.results.push({
+        date: m[1],
+        tournament: parts[0] || '',
+        event: parts[1] || parts[0] || '',
+        place: parseInt(placeMatch[1]) || 0,
+        total: parseInt(placeMatch[2]) || 0,
+        rating: afterParts[0] || '',
+        event_class: afterParts[1] || afterParts[0] || ''
       });
-    });
-    // Fallback: regex on body text
-    if (!data.pool.value) {
-      var poolMatch = bodyText.match(/Pool[^:]*:\s*(\d[\d,]*)/i);
-      if (poolMatch) data.pool.value = parseInt(poolMatch[1].replace(/,/g, ''));
     }
+  });
+  console.log('[Paste Parse] Results:', data.results.length, 'events');
+
+  pasteData.summary = data;
+  statusEl.innerHTML = '<span style="color:var(--success)">\u2713 Found: ' + (data.name || 'Unknown') + ', ' + (data.rating || 'no rating') + ', ' + data.results.length + ' results, ' + data.ratings.length + ' rating entries</span>';
+  updatePasteProgress();
+}
+
+function parsePasteHistory() {
+  var text = document.getElementById('paste-history').value;
+  var statusEl = document.getElementById('paste-history-status');
+  if (!text || text.length < 50) { statusEl.innerHTML = '<span style="color:var(--danger)">Please paste the full page text.</span>'; return; }
+
+  var data = { seasons: {}, scores: {}, timeExpired: {}, bouts: [] };
+  var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
+  console.log('[Paste Parse] History: ' + lines.length + ' lines');
+
+  // Find all season header lines — they contain multiple season patterns
+  var seasonHeaderIdxs = [];
+  lines.forEach(function(line, idx) {
+    if (line.match(/\d{4}-\d{4}/) && (line.match(/Before 2022|All Time/) || (line.match(/\d{4}-\d{4}.*\d{4}-\d{4}/)))) {
+      seasonHeaderIdxs.push(idx);
+    }
+  });
+  console.log('[Paste Parse] Found', seasonHeaderIdxs.length, 'season header lines');
+
+  // Parse each stat block — group lines between consecutive headers
+  seasonHeaderIdxs.forEach(function(headerIdx, blockNum) {
+    var nextHeader = blockNum + 1 < seasonHeaderIdxs.length ? seasonHeaderIdxs[blockNum + 1] : lines.length;
+    var blockLines = [];
+    for (var bi = headerIdx + 1; bi < nextHeader; bi++) {
+      var bl = lines[bi];
+      if (!bl || bl.match(/^\d{4}-\d{4}/) || bl.match(/^(Win\/Loss|Scores|Time|Events|Bout)/i)) continue;
+      blockLines.push(bl);
+    }
+    var parsed = parseTextTable(blockLines, lines[headerIdx]);
+    if (Object.keys(parsed).length === 0) return;
+
+    // Detect block type from its first line
+    var firstLabel = blockLines.length > 0 ? blockLines[0].split(/\t+|\s{2,}/)[0].trim().toLowerCase() : '';
+    if (firstLabel.includes('victories') || firstLabel.includes('losses') || firstLabel.includes('win ratio')) {
+      Object.keys(parsed).forEach(function(s) {
+        data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]);
+      });
+      console.log('[Paste Parse] Win/Loss block parsed, first label: ' + firstLabel);
+    } else if (firstLabel.includes('easy win') || firstLabel.includes('close win')) {
+      Object.keys(parsed).forEach(function(s) {
+        data.scores[s] = parsed[s];
+      });
+      console.log('[Paste Parse] Scores block parsed');
+    } else if (firstLabel.includes('time')) {
+      Object.keys(parsed).forEach(function(s) {
+        data.timeExpired[s] = parsed[s];
+      });
+      console.log('[Paste Parse] Time-expired block parsed');
+    } else if (firstLabel.includes('events') || firstLabel.includes('tournament')) {
+      // Events count table — merge into seasons
+      Object.keys(parsed).forEach(function(s) {
+        data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]);
+      });
+    } else {
+      // Unknown — merge into seasons as catch-all
+      Object.keys(parsed).forEach(function(s) {
+        data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]);
+      });
+    }
+  });
+
+  var seasonCount = Object.keys(data.seasons).filter(function(s) { return s !== 'All Time'; }).length;
+  console.log('[Paste Parse] History result:', seasonCount, 'seasons', JSON.stringify(Object.keys(data.seasons)));
+  var sample = Object.keys(data.seasons)[0];
+  if (sample) console.log('[Paste Parse] Sample season ' + sample + ':', JSON.stringify(data.seasons[sample]));
+
+  pasteData.history = data;
+  statusEl.innerHTML = '<span style="color:var(--success)">\u2713 Found: ' + seasonCount + ' seasons of data, ' + Object.keys(data.scores).length + ' score distributions</span>';
+  updatePasteProgress();
+}
+
+function parsePasteStrength() {
+  var text = document.getElementById('paste-strength').value;
+  var statusEl = document.getElementById('paste-strength-status');
+  if (!text || text.length < 20) { statusEl.innerHTML = '<span style="color:var(--danger)">Please paste the full page text.</span>'; return; }
+
+  var data = { pool: {}, de: {} };
+  var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
+  console.log('[Paste Parse] Strength: ' + lines.length + ' lines');
+
+  // Look for patterns like:
+  // "Foil DE 1794 1623 - 1964 1109 1869"  or  "FoilDE1794..."
+  // "Foil Pool 1475 1234 - 1716 987 1532"
+  lines.forEach(function(line) {
+    // Flexible: "Foil" then "DE" or "Pool", then numbers
+    var deMatch = line.match(/Foil\s*DE\s+(\d[\d,]*)\s+(\d[\d,]*)\s*[-–]\s*(\d[\d,]*)\s+(\d[\d,]*)\s+(\d[\d,]*)/i);
+    if (deMatch) {
+      data.de = { value: parseInt(deMatch[1].replace(/,/g, '')), rangeLow: parseInt(deMatch[2].replace(/,/g, '')), rangeHigh: parseInt(deMatch[3].replace(/,/g, '')), min: parseInt(deMatch[4].replace(/,/g, '')), max: parseInt(deMatch[5].replace(/,/g, '')) };
+    }
+    var poolMatch = line.match(/Foil\s*Pool\s+(\d[\d,]*)\s+(\d[\d,]*)\s*[-–]\s*(\d[\d,]*)\s+(\d[\d,]*)\s+(\d[\d,]*)/i);
+    if (poolMatch) {
+      data.pool = { value: parseInt(poolMatch[1].replace(/,/g, '')), rangeLow: parseInt(poolMatch[2].replace(/,/g, '')), rangeHigh: parseInt(poolMatch[3].replace(/,/g, '')), min: parseInt(poolMatch[4].replace(/,/g, '')), max: parseInt(poolMatch[5].replace(/,/g, '')) };
+    }
+    // Fallback: just "DE" or "Pool" + number
     if (!data.de.value) {
-      var deMatch = bodyText.match(/(?:Direct Elimination|DE)[^:]*:\s*(\d[\d,]*)/i);
-      if (deMatch) data.de.value = parseInt(deMatch[1].replace(/,/g, ''));
+      var dm = line.match(/\bDE\b.*?(\d{3,5})/i);
+      if (dm) data.de.value = parseInt(dm[1]);
     }
-    console.log('[FT Parse] Strength: pool=' + (data.pool.value || 'unknown') + ', de=' + (data.de.value || 'unknown'));
-  } catch(e) { data.parseError = e.message; console.error('[FT Parse] Strength error:', e); }
-  return data;
+    if (!data.pool.value) {
+      var pm = line.match(/\bPool\b.*?(\d{3,5})/i);
+      if (pm) data.pool.value = parseInt(pm[1]);
+    }
+  });
+  console.log('[Paste Parse] Strength: pool=' + (data.pool.value || '?') + ', de=' + (data.de.value || '?'));
+
+  pasteData.strength = data;
+  var parts = [];
+  if (data.pool.value) parts.push('Pool: ' + data.pool.value);
+  if (data.de.value) parts.push('DE: ' + data.de.value);
+  statusEl.innerHTML = '<span style="color:var(--success)">\u2713 Found: ' + (parts.length > 0 ? parts.join(', ') : 'No strength values detected') + '</span>';
+  updatePasteProgress();
+}
+
+function generateDashboardFromPaste() {
+  if (!pasteData.summary || !pasteData.history) { showToast('Paste Summary and History data first.', 'error'); return; }
+  var summary = pasteData.summary;
+  var history = pasteData.history;
+  var strength = pasteData.strength || { pool: {}, de: {} };
+  var computed = computeInsights(summary, history, strength);
+
+  var localRecord = {
+    fencer_id: currentFencerId,
+    user_id: currentUser ? currentUser.id : null,
+    fencingtracker_url: '',
+    fencingtracker_id: '',
+    raw_summary: summary,
+    raw_history: history,
+    raw_strength: strength,
+    computed_insights: computed,
+    imported_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  analyticsData = localRecord;
+
+  // Save to Supabase
+  if (supabaseClient && currentUser) {
+    supabaseClient.from('fencer_analytics').insert(localRecord).select().then(function(res) {
+      if (res.error) {
+        supabaseClient.from('fencer_analytics').update(localRecord).eq('fencer_id', currentFencerId).select().then(function(upd) {
+          if (upd.data && upd.data[0]) analyticsData = upd.data[0];
+        });
+      } else if (res.data && res.data[0]) {
+        analyticsData = res.data[0];
+      }
+    }).catch(function() {});
+  }
+
+  showToast('FencingTracker data imported!', 'success');
+  showAnalyticsDashboard();
 }
 
 function computeInsights(summary, history, strength) {
