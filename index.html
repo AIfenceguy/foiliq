@@ -2254,17 +2254,15 @@ function callAI(systemExtra, userMessage, callback) {
   var systemPrompt = buildSystemPrompt() + '\n\n' + systemExtra;
 
   if (provider === 'anthropic') {
-    fetch('https://api.anthropic.com/v1/messages', {
+    fetch('https://foiliq-proxy.rtsui-jlconcepts.workers.dev/ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'x-api-key': key
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
+        max_tokens: 2000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }]
       })
