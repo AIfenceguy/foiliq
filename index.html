@@ -2208,7 +2208,9 @@ function initSupabase() {
   var url = localStorage.getItem('foiliq_supa_url') || 'https://kyfkiigbiwhczrtnlivc.supabase.co';
   var key = localStorage.getItem('foiliq_supa_key') || 'sb_publishable_GbLL0419rGP6EYSmq42Bsg_r5EkOYtg';
   if (url && key) {
-    supabaseClient = supabase.createClient(url, key);
+    supabaseClient = supabase.createClient(url, key, {
+      auth: { persistSession: true, storageKey: 'foiliq-auth', autoRefreshToken: true, detectSessionInUrl: true }
+    });
     return true;
   }
   return false;
@@ -4261,11 +4263,21 @@ function appInit() {
     showPage('marketing');
   });
 
-  // Listen for auth changes (Google redirect, etc.)
+  // Listen for auth changes (Google redirect, token refresh, etc.)
   supabaseClient.auth.onAuthStateChange(function(event, session) {
-    if (event === 'SIGNED_IN' && session) {
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session) {
       currentUser = session.user;
-      checkUserSetup();
+      // Only navigate if we're on marketing or auth page (don't interrupt active app use)
+      var onMarketing = document.getElementById('marketing-page').style.display === 'block';
+      var onAuth = document.getElementById('auth-page').style.display === 'flex';
+      if (onMarketing || onAuth) {
+        checkUserSetup();
+      }
+    }
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      currentFencerId = null;
+      showPage('marketing');
     }
   });
 }
