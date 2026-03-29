@@ -3452,7 +3452,8 @@ function importFencingTracker() {
     setStep('parse', 'done');
     setStep('save', 'active');
 
-    return supabaseClient.from('fencer_analytics').upsert({
+    // Build the record locally so we always have data even if DB save fails
+    var localRecord = {
       fencer_id: currentFencerId,
       user_id: currentUser.id,
       fencingtracker_url: url,
@@ -3463,23 +3464,35 @@ function importFencingTracker() {
       computed_insights: computed,
       imported_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    }, { onConflict: 'fencer_id' }).select();
-  }).then(function(res) {
-    setStep('save', 'done');
-    if (res && res.data && res.data[0]) {
-      analyticsData = res.data[0];
-    } else {
-      // reload from DB
-      return supabaseClient.from('fencer_analytics').select('*').eq('fencer_id', currentFencerId).limit(1).then(function(r) {
-        if (r.data && r.data[0]) analyticsData = r.data[0];
-      });
-    }
+    };
+    // Set analyticsData immediately so dashboard can render even if save fails
+    analyticsData = localRecord;
+
+    // Try insert first; if duplicate fencer_id, update instead
+    return supabaseClient.from('fencer_analytics').insert(localRecord).select().then(function(insertRes) {
+      if (insertRes.error) {
+        // Likely duplicate — try update
+        return supabaseClient.from('fencer_analytics').update(localRecord).eq('fencer_id', currentFencerId).select().then(function(updateRes) {
+          if (updateRes.data && updateRes.data[0]) analyticsData = updateRes.data[0];
+        });
+      } else if (insertRes.data && insertRes.data[0]) {
+        analyticsData = insertRes.data[0];
+      }
+    });
   }).then(function() {
+    setStep('save', 'done');
     showToast('FencingTracker data imported!', 'success');
     showAnalyticsDashboard();
   }).catch(function(err) {
-    errorEl.textContent = 'Import failed: ' + err.message + '. FencingTracker may be temporarily unavailable. Check the URL and try again.';
-    progressEl.style.display = 'none';
+    setStep('save', 'done');
+    // If fetch succeeded but DB save failed, still show the dashboard with local data
+    if (analyticsData && analyticsData.computed_insights) {
+      showToast('Data imported (save to DB failed: ' + err.message + ')', 'error');
+      showAnalyticsDashboard();
+    } else {
+      errorEl.textContent = 'Import failed: ' + err.message + '. FencingTracker may be temporarily unavailable. Check the URL and try again.';
+      progressEl.style.display = 'none';
+    }
   });
 }
 
@@ -3649,13 +3662,18 @@ function computeInsights(summary, history, strength) {
 
 // ---- DASHBOARD RENDER ----
 function showAnalyticsDashboard() {
+  if (!analyticsData) {
+    document.getElementById('ana-connect-view').style.display = 'block';
+    document.getElementById('ana-dashboard-view').style.display = 'none';
+    return;
+  }
   document.getElementById('ana-connect-view').style.display = 'none';
   document.getElementById('ana-dashboard-view').style.display = 'block';
   document.getElementById('ana-header-actions').style.display = 'flex';
-  if (analyticsData.imported_at) {
+  if (analyticsData && analyticsData.imported_at) {
     document.getElementById('ana-last-updated').textContent = 'Last updated: ' + new Date(analyticsData.imported_at).toLocaleDateString();
   }
-  var ci = analyticsData.computed_insights || {};
+  var ci = (analyticsData && analyticsData.computed_insights) ? analyticsData.computed_insights : {};
   var name = ci.name || (currentFencerData ? currentFencerData.name : '');
   document.getElementById('ana-subtitle').textContent = name + (ci.rating ? ' \u2022 ' + ci.rating : '') + (ci.club ? ' \u2022 ' + ci.club : '');
 
@@ -3663,6 +3681,7 @@ function showAnalyticsDashboard() {
 }
 
 function renderOverviewTab() {
+  if (!analyticsData) return;
   var ci = analyticsData.computed_insights || {};
   var ss = ci.seasonStats || {};
   var seasons = ci.seasons || [];
