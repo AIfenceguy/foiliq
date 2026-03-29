@@ -2218,10 +2218,11 @@ function initSupabase() {
 
 // ---- AI CALLS ----
 function getAIKey() {
-  return localStorage.getItem('foiliq_ai_key')
-    || localStorage.getItem('anthropic_api_key')
+  return localStorage.getItem('anthropic_api_key')
+    || localStorage.getItem('foiliq_ai_key')
     || localStorage.getItem('anthropic_key')
     || localStorage.getItem('apiKey')
+    || localStorage.getItem('claudeApiKey')
     || '';
 }
 
@@ -3334,8 +3335,9 @@ function saveMatch() {
 function loadSettings() {
   document.getElementById('settings-ai-provider').value = getAIProvider();
   var aiKey = getAIKey();
-  // Migrate: if found under alternate name, save to canonical key
-  if (aiKey && !localStorage.getItem('foiliq_ai_key')) {
+  // Migrate: ensure key is saved under canonical name
+  if (aiKey && aiKey !== 'YOUR_ANTHROPIC_API_KEY') {
+    localStorage.setItem('anthropic_api_key', aiKey);
     localStorage.setItem('foiliq_ai_key', aiKey);
   }
   document.getElementById('settings-ai-key').value = (aiKey && aiKey !== 'YOUR_ANTHROPIC_API_KEY') ? aiKey : '';
@@ -3351,12 +3353,18 @@ function loadSettings() {
 }
 
 function saveSettings() {
+  var aiKeyVal = document.getElementById('settings-ai-key').value;
   localStorage.setItem('foiliq_ai_provider', document.getElementById('settings-ai-provider').value);
-  localStorage.setItem('foiliq_ai_key', document.getElementById('settings-ai-key').value);
+  localStorage.setItem('anthropic_api_key', aiKeyVal);
+  localStorage.setItem('foiliq_ai_key', aiKeyVal);
   localStorage.setItem('foiliq_supa_url', document.getElementById('settings-supa-url').value);
   localStorage.setItem('foiliq_supa_key', document.getElementById('settings-supa-key').value);
   showToast('Settings saved!', 'success');
   initSupabase();
+  // Verify key works
+  if (aiKeyVal && getAIProvider() === 'anthropic') {
+    testAIConnection();
+  }
 }
 
 function testAIConnection() {
