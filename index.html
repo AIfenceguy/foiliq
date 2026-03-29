@@ -3635,45 +3635,71 @@ function parsePasteHistory() {
   });
   console.log('[Paste Parse] Found', seasonHeaderIdxs.length, 'season header lines');
 
-  // Parse each stat block — group lines between consecutive headers
+  // Parse each stat block — use section title lines ABOVE each header to determine type
+  // FT layout: "Win/Loss Statistics" title, then season header, then data rows
+  // "Scores" title, then season header, then data rows, etc.
   seasonHeaderIdxs.forEach(function(headerIdx, blockNum) {
     var nextHeader = blockNum + 1 < seasonHeaderIdxs.length ? seasonHeaderIdxs[blockNum + 1] : lines.length;
+
+    // Look backwards from header to find the section title
+    var sectionTitle = '';
+    for (var ti = headerIdx - 1; ti >= Math.max(0, headerIdx - 5); ti--) {
+      var tl = lines[ti].toLowerCase();
+      if (tl.match(/win\/loss|win.loss stat/i)) { sectionTitle = 'winloss'; break; }
+      if (tl.match(/^scores$/i) || tl.match(/score breakdown/i)) { sectionTitle = 'scores'; break; }
+      if (tl.match(/time.expired|time-expired/i)) { sectionTitle = 'timeexpired'; break; }
+      if (tl.match(/^events$/i) || tl.match(/event count/i)) { sectionTitle = 'events'; break; }
+      // Stop scanning if we hit another season header or a long data line
+      if (lines[ti].match(/\d{4}-\d{4}.*\d{4}-\d{4}/)) break;
+    }
+
     var blockLines = [];
     for (var bi = headerIdx + 1; bi < nextHeader; bi++) {
       var bl = lines[bi];
-      if (!bl || bl.match(/^\d{4}-\d{4}/) || bl.match(/^(Win\/Loss|Scores|Time|Events|Bout)/i)) continue;
+      if (!bl) continue;
+      // Skip section title lines that appear between header and data
+      if (bl.match(/^(Win\/Loss|Scores|Time-expired|Time Expired|Events|Bout|†|‡)/i)) continue;
+      if (bl.match(/^\d{4}-\d{4}/)) continue;
       blockLines.push(bl);
     }
     var parsed = parseTextTable(blockLines, lines[headerIdx]);
     if (Object.keys(parsed).length === 0) return;
 
-    // Detect block type from its first line
-    var firstLabel = blockLines.length > 0 ? blockLines[0].split(/\t+|\s{2,}/)[0].trim().toLowerCase() : '';
-    if (firstLabel.includes('victories') || firstLabel.includes('losses') || firstLabel.includes('win ratio')) {
-      Object.keys(parsed).forEach(function(s) {
-        data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]);
-      });
-      console.log('[Paste Parse] Win/Loss block parsed, first label: ' + firstLabel);
-    } else if (firstLabel.includes('easy win') || firstLabel.includes('close win')) {
-      Object.keys(parsed).forEach(function(s) {
-        data.scores[s] = parsed[s];
-      });
-      console.log('[Paste Parse] Scores block parsed');
-    } else if (firstLabel.includes('time')) {
-      Object.keys(parsed).forEach(function(s) {
-        data.timeExpired[s] = parsed[s];
-      });
+    // Detect type: prefer section title, fallback to first row label
+    var firstLabel = blockLines.length > 0 ? blockLines[0].split(/\t+|\s{2,}/)[0].replace(/[†‡*\u2020\u2021]/g, '').trim().toLowerCase() : '';
+
+    if (!sectionTitle) {
+      // Infer from data content
+      if (firstLabel.includes('easy win') || firstLabel.includes('close win') || firstLabel.includes('big loss')) {
+        sectionTitle = 'scores';
+      } else if (blockLines.some(function(l) { return l.toLowerCase().includes('pool victories') || l.toLowerCase().includes('pool win ratio'); })) {
+        sectionTitle = 'winloss';
+      } else if (blockLines.some(function(l) { return l.toLowerCase().includes('as % of all victories') || l.toLowerCase().includes('as % of all losses'); }) && !blockLines.some(function(l) { return l.toLowerCase().includes('pool'); })) {
+        sectionTitle = 'timeexpired';
+      } else if (firstLabel === 'victories' || firstLabel === 'losses') {
+        // Ambiguous — check if it has pool/de rows
+        if (blockLines.some(function(l) { return l.toLowerCase().includes('pool'); })) {
+          sectionTitle = 'winloss';
+        } else if (blockLines.length <= 8) {
+          sectionTitle = 'timeexpired';
+        } else {
+          sectionTitle = 'winloss';
+        }
+      }
+    }
+
+    if (sectionTitle === 'scores') {
+      Object.keys(parsed).forEach(function(s) { data.scores[s] = parsed[s]; });
+      console.log('[Paste Parse] Scores block parsed, keys:', Object.keys((parsed[Object.keys(parsed)[0]] || {})).join(', '));
+    } else if (sectionTitle === 'timeexpired') {
+      Object.keys(parsed).forEach(function(s) { data.timeExpired[s] = parsed[s]; });
       console.log('[Paste Parse] Time-expired block parsed');
-    } else if (firstLabel.includes('events') || firstLabel.includes('tournament')) {
-      // Events count table — merge into seasons
-      Object.keys(parsed).forEach(function(s) {
-        data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]);
-      });
+    } else if (sectionTitle === 'events') {
+      Object.keys(parsed).forEach(function(s) { data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]); });
     } else {
-      // Unknown — merge into seasons as catch-all
-      Object.keys(parsed).forEach(function(s) {
-        data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]);
-      });
+      // Default: win/loss or unknown — merge into seasons
+      Object.keys(parsed).forEach(function(s) { data.seasons[s] = Object.assign(data.seasons[s] || {}, parsed[s]); });
+      console.log('[Paste Parse] Win/Loss block parsed, first label: ' + firstLabel);
     }
   });
 
@@ -3827,6 +3853,17 @@ function computeInsights(summary, history, strength) {
       closeWins: parseInt(sc['close wins'] || '0'),
       closeLosses: parseInt(sc['close losses'] || '0'),
       bigLosses: parseInt(sc['big losses'] || '0')
+    };
+  });
+
+  // Time-expired from history.timeExpired
+  insights.timeExpired = {};
+  allSeasons.forEach(function(s) {
+    var te = (history.timeExpired || {})[s] || {};
+    insights.timeExpired[s] = {
+      victories: parseInt(te['victories'] || '0'),
+      losses: parseInt(te['losses'] || '0'),
+      total: parseInt(te['total'] || '0')
     };
   });
 
@@ -4029,6 +4066,54 @@ function renderTrendsCharts() {
     });
   }
 
+  var seasons = ci.seasons || [];
+
+  // Close bout performance — grouped bar + line
+  var closeCanvas = document.getElementById('ana-chart-close');
+  if (closeCanvas) {
+    if (anaCharts['ana-chart-close']) anaCharts['ana-chart-close'].destroy();
+    var closeWins = seasons.map(function(s) { return ((ci.scoreStats || {})[s] || {}).closeWins || 0; });
+    var closeLosses = seasons.map(function(s) { return ((ci.scoreStats || {})[s] || {}).closeLosses || 0; });
+    var closeRate = seasons.map(function(s) {
+      var w = ((ci.scoreStats || {})[s] || {}).closeWins || 0;
+      var l = ((ci.scoreStats || {})[s] || {}).closeLosses || 0;
+      return (w + l) > 0 ? Math.round(w / (w + l) * 100) : 0;
+    });
+    console.log('[FT Render] Close bouts:', { wins: closeWins, losses: closeLosses, rate: closeRate });
+    anaCharts['ana-chart-close'] = new Chart(closeCanvas, {
+      type: 'bar',
+      data: {
+        labels: seasons,
+        datasets: [
+          { label: 'Close Wins', data: closeWins, backgroundColor: ANA_COLORS.green, borderRadius: 4 },
+          { label: 'Close Losses', data: closeLosses, backgroundColor: ANA_COLORS.red, borderRadius: 4 },
+          { label: 'Close Win %', data: closeRate, type: 'line', borderColor: ANA_COLORS.amber, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, yAxisID: 'y1', pointRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8899bb', font: { family: 'DM Sans' } } } }, scales: { x: { ticks: { color: '#4a5568' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { beginAtZero: true, ticks: { color: '#4a5568', stepSize: 5 }, grid: { color: 'rgba(255,255,255,0.04)' } }, y1: { position: 'right', min: 0, max: 100, ticks: { color: ANA_COLORS.amber, callback: function(v) { return v + '%'; } }, grid: { display: false } } } }
+    });
+  }
+
+  // Time-expired bouts — stacked bar
+  var teCanvas = document.getElementById('ana-chart-timeexp');
+  if (teCanvas) {
+    if (anaCharts['ana-chart-timeexp']) anaCharts['ana-chart-timeexp'].destroy();
+    var teWins = seasons.map(function(s) { return ((ci.timeExpired || {})[s] || {}).victories || 0; });
+    var teLosses = seasons.map(function(s) { return ((ci.timeExpired || {})[s] || {}).losses || 0; });
+    console.log('[FT Render] Time-expired:', { wins: teWins, losses: teLosses });
+    anaCharts['ana-chart-timeexp'] = new Chart(teCanvas, {
+      type: 'bar',
+      data: {
+        labels: seasons,
+        datasets: [
+          { label: 'TE Wins', data: teWins, backgroundColor: ANA_COLORS.green, borderRadius: 4 },
+          { label: 'TE Losses', data: teLosses, backgroundColor: ANA_COLORS.red, borderRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8899bb', font: { family: 'DM Sans' } } } }, scales: { x: { stacked: true, ticks: { color: '#4a5568' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { stacked: true, beginAtZero: true, ticks: { color: '#4a5568', stepSize: 5 }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+    });
+  }
+
   // Score distribution donut — from actual FT score stats
   var sdCanvas = document.getElementById('ana-chart-scoredist');
   if (sdCanvas) {
@@ -4039,7 +4124,7 @@ function renderTrendsCharts() {
     var closeW = sc.closeWins || 0;
     var closeL = sc.closeLosses || 0;
     var bigL = sc.bigLosses || 0;
-    console.log('[FT Render] Score dist:', curSeason, { easy: easy, closeW: closeW, closeL: closeL, bigL: bigL });
+    console.log('[FT Render] Score dist (' + curSeason + '):', { easy: easy, closeW: closeW, closeL: closeL, bigL: bigL });
     anaCharts['ana-chart-scoredist'] = new Chart(sdCanvas, {
       type: 'doughnut',
       data: {
@@ -4050,19 +4135,22 @@ function renderTrendsCharts() {
     });
   }
 
-  // Percentile trend line
+  // Percentile trend line — from summary results
   var ptCanvas = document.getElementById('ana-chart-percentile');
   if (ptCanvas) {
     if (anaCharts['ana-chart-percentile']) anaCharts['ana-chart-percentile'].destroy();
-    var results = (ci.recentResults || []).slice().reverse();
-    anaCharts['ana-chart-percentile'] = new Chart(ptCanvas, {
-      type: 'line',
-      data: {
-        labels: results.map(function(r, i) { return r.date || 'Event ' + (i + 1); }),
-        datasets: [{ label: 'Percentile Finish', data: results.map(function(r) { return r.percentile; }), borderColor: ANA_COLORS.blue, backgroundColor: ANA_COLORS.blueFill, tension: 0.4, fill: true, borderWidth: 2, pointRadius: 4, pointBackgroundColor: ANA_COLORS.blue }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#4a5568', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { min: 0, max: 100, ticks: { color: '#4a5568', callback: function(v) { return v + '%'; } }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
-    });
+    var results = (ci.recentResults || []).filter(function(r) { return r.total > 0; }).slice().reverse();
+    console.log('[FT Render] Percentile trend:', results.length, 'events', results.map(function(r) { return r.date + ':' + r.percentile + '%'; }).join(', '));
+    if (results.length > 0) {
+      anaCharts['ana-chart-percentile'] = new Chart(ptCanvas, {
+        type: 'line',
+        data: {
+          labels: results.map(function(r, i) { return r.date || 'Event ' + (i + 1); }),
+          datasets: [{ label: 'Percentile Finish', data: results.map(function(r) { return r.percentile; }), borderColor: ANA_COLORS.blue, backgroundColor: ANA_COLORS.blueFill, tension: 0.4, fill: true, borderWidth: 2, pointRadius: 4, pointBackgroundColor: ANA_COLORS.blue }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#4a5568', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { min: 0, max: 100, ticks: { color: '#4a5568', callback: function(v) { return v + '%'; } }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+      });
+    }
   }
 }
 
