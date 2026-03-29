@@ -1627,7 +1627,7 @@ html { scroll-behavior: smooth; }
           <span class="nav-icon">&#128202;</span> History
         </div>
         <div class="nav-item" onclick="navigateTo('analytics')" data-screen="analytics">
-          <span class="nav-icon">&#128200;</span> Analytics
+          <span class="nav-icon">&#128200;</span> Analytics <span style="font-size:9px;background:var(--accent-gold);color:var(--bg-primary);padding:1px 6px;border-radius:8px;margin-left:4px;font-family:'DM Sans',sans-serif;font-weight:700;vertical-align:middle">NEW</span>
         </div>
         <div class="nav-item" onclick="navigateTo('settings')" data-screen="settings">
           <span class="nav-icon">&#9881;</span> Settings
@@ -3537,20 +3537,28 @@ function parsePasteSummary() {
   if (data.ratings.length > 0) data.rating = data.ratings[0].rating;
   console.log('[Paste Parse] Ratings found:', data.ratings.length, 'current:', data.rating);
 
-  // 2. Name: look for a line that is a person's name — typically appears early, not all-caps nav items
-  for (var ni = 0; ni < Math.min(lines.length, 40); ni++) {
-    var nl = lines[ni];
-    // Name pattern: 2-4 capitalized words, possibly with hyphen, not a nav item
-    if (nl.match(/^[A-Z][a-z]+(\s+[A-Z][a-z\-]+){1,4}$/) && !nl.match(/^(Fencing Tracker|Log In|Sign Up|Home|Search|Contact)/)) {
-      data.name = nl;
-      break;
+  // 2. Name: find by birth year anchor (4-digit year 2005-2018 on its own line)
+  var FT_NAV_SKIP = /^(fencing tracker|largest clubs|top clubs|national circuit|recruiting|summary|history|strength|home|search|log in|sign up|contact|rankings|about|results|clubs|fencers|events|blog|bosf|donate|login|register|menu|skip)/i;
+  // Best approach: find the birth year line, name is the line before it
+  for (var ni2 = 0; ni2 < lines.length; ni2++) {
+    if (lines[ni2].match(/^(200[5-9]|201[0-9]|202[0-5])$/) && ni2 > 0) {
+      var candidate = lines[ni2 - 1];
+      if (!candidate.match(FT_NAV_SKIP) && candidate.length > 3) {
+        data.name = candidate;
+        // Club is often the line after birth year
+        if (ni2 + 1 < lines.length && !lines[ni2 + 1].match(FT_NAV_SKIP) && !lines[ni2 + 1].match(/^\d{4}$/)) {
+          data.club = lines[ni2 + 1];
+        }
+        break;
+      }
     }
   }
-  // Fallback: check for a line with birth year nearby
+  // Fallback: 2-4 capitalized words, skip nav
   if (!data.name) {
-    for (var ni2 = 0; ni2 < lines.length; ni2++) {
-      if (lines[ni2].match(/^(19|20)\d{2}$/) && ni2 > 0) {
-        data.name = lines[ni2 - 1];
+    for (var ni = 0; ni < Math.min(lines.length, 50); ni++) {
+      var nl = lines[ni];
+      if (nl.match(/^[A-Z][a-z]+(\s+[A-Z][a-z\-]+){1,4}$/) && !nl.match(FT_NAV_SKIP)) {
+        data.name = nl;
         break;
       }
     }
@@ -3703,13 +3711,58 @@ function parsePasteHistory() {
     }
   });
 
+  // Parse bout-by-bout data
+  // Format: "Pool  D  3:5  CHONG Tristan  25  B25  34  S-class Fencing  2209  1727  4.7  21%"
+  // Or: "T64  D  9:12  LEHTINEN Axel  47  D25  24  Bay Area  1815  1804  9.6  49%"
+  var currentTournament = '';
+  var currentEvent = '';
+  for (var bi = 0; bi < lines.length; bi++) {
+    var bl = lines[bi];
+    // Bout line: starts with Pool/T128/T64/T32/T16/T8/T4/T2 followed by V or D
+    var boutMatch = bl.match(/^(Pool|T\d+)\s+([VD])\s+(\d+:\d+)\s+(.+)/);
+    if (boutMatch) {
+      var rest = boutMatch[4];
+      // Split remaining by tabs or 2+ spaces
+      var fields = rest.split(/\t+|\s{2,}/).map(function(f) { return f.trim(); }).filter(function(f) { return f; });
+      var bout = {
+        tournament: currentTournament,
+        event: currentEvent,
+        round: boutMatch[1],
+        result: boutMatch[2],
+        score: boutMatch[3],
+        opponent_name: fields[0] || '',
+        opponent_seed: fields[1] || '',
+        opponent_rating: fields[2] || '',
+        opponent_place: fields[3] || '',
+        opponent_club: fields[4] || '',
+        opponent_strength: parseInt(fields[5]) || 0,
+        my_strength: parseInt(fields[6]) || 0,
+        strength_change: fields[7] || '',
+        win_probability: parseInt(fields[8]) || 0
+      };
+      data.bouts.push(bout);
+      continue;
+    }
+    // Event info line: contains "(A3, JNR)" or "(B2, C3)" + date
+    if (bl.match(/\([A-Z][0-9C].*\),\s*(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i)) {
+      currentEvent = bl;
+      continue;
+    }
+    // Place line: "Place X of Y"
+    if (bl.match(/^Place\s+\d+\s+of\s+\d+/)) continue;
+    // Tournament name: line before event info (short text, not a stat row, not a season header)
+    if (bi + 1 < lines.length && lines[bi + 1].match(/\([A-Z][0-9C].*\),/) && !bl.match(/\d{4}-\d{4}/) && bl.length < 100) {
+      currentTournament = bl;
+    }
+  }
+  console.log('[Paste Parse] Bouts parsed:', data.bouts.length);
+  if (data.bouts.length > 0) console.log('[Paste Parse] Sample bout:', JSON.stringify(data.bouts[0]));
+
   var seasonCount = Object.keys(data.seasons).filter(function(s) { return s !== 'All Time'; }).length;
-  console.log('[Paste Parse] History result:', seasonCount, 'seasons', JSON.stringify(Object.keys(data.seasons)));
-  var sample = Object.keys(data.seasons)[0];
-  if (sample) console.log('[Paste Parse] Sample season ' + sample + ':', JSON.stringify(data.seasons[sample]));
+  console.log('[Paste Parse] History result:', seasonCount, 'seasons, ' + Object.keys(data.scores).length + ' score dists, ' + Object.keys(data.timeExpired).length + ' time-expired, ' + data.bouts.length + ' bouts');
 
   pasteData.history = data;
-  statusEl.innerHTML = '<span style="color:var(--success)">\u2713 Found: ' + seasonCount + ' seasons of data, ' + Object.keys(data.scores).length + ' score distributions</span>';
+  statusEl.innerHTML = '<span style="color:var(--success)">\u2713 Found: ' + seasonCount + ' seasons, ' + Object.keys(data.scores).length + ' score dists, ' + data.bouts.length + ' bouts</span>';
   updatePasteProgress();
 }
 
@@ -4157,40 +4210,102 @@ function renderTrendsCharts() {
 // ---- BOUT ANALYSIS TAB ----
 function renderBoutAnalysis() {
   var bouts = (analyticsData.raw_history || {}).bouts || [];
-  // Upset analysis cards
-  var upsetHtml = '<div class="card"><h4>BEST UPSETS</h4>';
-  upsetHtml += '<p style="color:var(--text-muted);font-size:13px">Wins where opponent was favored.</p>';
-  var wins = bouts.filter(function(b) { return (b.result || '').toUpperCase() === 'V'; });
-  if (wins.length > 0) {
-    wins.slice(0, 5).forEach(function(b) {
-      upsetHtml += '<div class="ana-bout-row"><span class="vd win">V</span><span>' + (b.score || b.opponent || '') + '</span><span style="color:var(--text-muted)">' + (b.opponent || '') + '</span></div>';
+  console.log('[FT Render] Bout analysis:', bouts.length, 'bouts');
+
+  // BEST UPSETS: wins where win_probability < 35%
+  var upsets = bouts.filter(function(b) { return b.result === 'V' && b.win_probability > 0 && b.win_probability < 35; })
+    .sort(function(a, b) { return a.win_probability - b.win_probability; });
+  // DROPPED BOUTS: losses where win_probability > 65%
+  var drops = bouts.filter(function(b) { return b.result === 'D' && b.win_probability > 65; })
+    .sort(function(a, b) { return b.win_probability - a.win_probability; });
+
+  var upsetHtml = '<div class="card"><h4>BEST UPSETS</h4><p style="color:var(--text-muted);font-size:13px">Wins where opponent was favored (win prob &lt; 35%)</p>';
+  if (upsets.length > 0) {
+    upsets.slice(0, 5).forEach(function(b) {
+      upsetHtml += '<div class="ana-bout-row"><span class="vd win">V</span><span class="mono" style="min-width:45px">' + b.score + '</span><span style="flex:1">vs ' + b.opponent_name + ' <span style="color:var(--text-muted)">(' + b.opponent_rating + ')</span></span><span style="color:var(--text-muted);font-size:12px">' + b.opponent_club + '</span><span class="mono" style="color:var(--success);font-size:12px;min-width:40px">' + b.win_probability + '%</span></div>';
+    });
+  } else if (bouts.length > 0) {
+    // Show best wins by lowest probability
+    var bestWins = bouts.filter(function(b) { return b.result === 'V' && b.win_probability > 0; }).sort(function(a, b) { return a.win_probability - b.win_probability; });
+    bestWins.slice(0, 5).forEach(function(b) {
+      upsetHtml += '<div class="ana-bout-row"><span class="vd win">V</span><span class="mono" style="min-width:45px">' + b.score + '</span><span style="flex:1">vs ' + b.opponent_name + '</span><span class="mono" style="font-size:12px;color:var(--text-muted)">' + b.win_probability + '% prob</span></div>';
     });
   } else {
-    upsetHtml += '<p style="color:var(--text-muted);padding:12px">No bout data available yet.</p>';
+    upsetHtml += '<p style="color:var(--text-muted);padding:12px">No bout data. Paste History page with bout details.</p>';
   }
   upsetHtml += '</div>';
 
-  upsetHtml += '<div class="card"><h4>DROPPED BOUTS</h4>';
-  upsetHtml += '<p style="color:var(--text-muted);font-size:13px">Losses where you were favored.</p>';
-  var losses = bouts.filter(function(b) { return (b.result || '').toUpperCase() === 'D'; });
-  if (losses.length > 0) {
-    losses.slice(0, 5).forEach(function(b) {
-      upsetHtml += '<div class="ana-bout-row"><span class="vd loss">D</span><span>' + (b.score || b.opponent || '') + '</span><span style="color:var(--text-muted)">' + (b.opponent || '') + '</span></div>';
+  upsetHtml += '<div class="card"><h4>DROPPED BOUTS</h4><p style="color:var(--text-muted);font-size:13px">Losses where you were favored (win prob &gt; 65%)</p>';
+  if (drops.length > 0) {
+    drops.slice(0, 5).forEach(function(b) {
+      upsetHtml += '<div class="ana-bout-row"><span class="vd loss">D</span><span class="mono" style="min-width:45px">' + b.score + '</span><span style="flex:1">vs ' + b.opponent_name + ' <span style="color:var(--text-muted)">(' + b.opponent_rating + ')</span></span><span style="color:var(--text-muted);font-size:12px">' + b.opponent_club + '</span><span class="mono" style="color:var(--danger);font-size:12px;min-width:40px">' + b.win_probability + '%</span></div>';
+    });
+  } else if (bouts.length > 0) {
+    var worstLosses = bouts.filter(function(b) { return b.result === 'D' && b.win_probability > 0; }).sort(function(a, b) { return b.win_probability - a.win_probability; });
+    worstLosses.slice(0, 5).forEach(function(b) {
+      upsetHtml += '<div class="ana-bout-row"><span class="vd loss">D</span><span class="mono" style="min-width:45px">' + b.score + '</span><span style="flex:1">vs ' + b.opponent_name + '</span><span class="mono" style="font-size:12px;color:var(--text-muted)">' + b.win_probability + '% prob</span></div>';
     });
   } else {
-    upsetHtml += '<p style="color:var(--text-muted);padding:12px">No bout data available yet.</p>';
+    upsetHtml += '<p style="color:var(--text-muted);padding:12px">No bout data available.</p>';
   }
   upsetHtml += '</div>';
   document.getElementById('ana-upset-cards').innerHTML = upsetHtml;
 
-  // Bout detail
+  // LOSS TYPE DISTRIBUTION (donut)
+  var lossCanvas = document.getElementById('ana-chart-losstype');
+  if (lossCanvas && bouts.length > 0) {
+    if (anaCharts['ana-chart-losstype']) anaCharts['ana-chart-losstype'].destroy();
+    var allLosses = bouts.filter(function(b) { return b.result === 'D'; });
+    var deTight = allLosses.filter(function(b) { var sc = (b.score || '').split(':'); return b.round !== 'Pool' && Math.abs((parseInt(sc[0])||0) - (parseInt(sc[1])||0)) <= 3; }).length;
+    var expected = allLosses.filter(function(b) { return b.win_probability > 0 && b.win_probability < 35; }).length;
+    var poolDrops = allLosses.filter(function(b) { return b.round === 'Pool' && b.win_probability > 50; }).length;
+    var otherL = allLosses.length - deTight - expected - poolDrops;
+    if (otherL < 0) otherL = 0;
+    anaCharts['ana-chart-losstype'] = new Chart(lossCanvas, {
+      type: 'doughnut',
+      data: { labels: ['Tight DE (' + deTight + ')', 'Expected (' + expected + ')', 'Pool Drops (' + poolDrops + ')', 'Other (' + otherL + ')'], datasets: [{ data: [deTight, expected, poolDrops, otherL], backgroundColor: [ANA_COLORS.amber, ANA_COLORS.muted, ANA_COLORS.red, '#555'] }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#8899bb', font: { family: 'DM Sans', size: 12 } } } } }
+    });
+  }
+
+  // WIN RATE BY OPPONENT CLUB (bar chart)
+  var clubCanvas = document.getElementById('ana-chart-clubs');
+  if (clubCanvas && bouts.length > 0) {
+    if (anaCharts['ana-chart-clubs']) anaCharts['ana-chart-clubs'].destroy();
+    var clubStats = {};
+    bouts.forEach(function(b) {
+      var club = b.opponent_club || 'Unknown';
+      if (!clubStats[club]) clubStats[club] = { wins: 0, total: 0 };
+      clubStats[club].total++;
+      if (b.result === 'V') clubStats[club].wins++;
+    });
+    var clubEntries = Object.keys(clubStats).map(function(c) { return { club: c, wins: clubStats[c].wins, total: clubStats[c].total, rate: Math.round(clubStats[c].wins / clubStats[c].total * 100) }; })
+      .filter(function(c) { return c.total >= 2; })
+      .sort(function(a, b) { return b.total - a.total; })
+      .slice(0, 10);
+    var clubColors = clubEntries.map(function(c) { return c.rate < 40 ? ANA_COLORS.red : c.rate > 65 ? ANA_COLORS.green : ANA_COLORS.amber; });
+    anaCharts['ana-chart-clubs'] = new Chart(clubCanvas, {
+      type: 'bar',
+      data: { labels: clubEntries.map(function(c) { return c.club.length > 20 ? c.club.substring(0, 18) + '..' : c.club; }), datasets: [{ label: 'Win %', data: clubEntries.map(function(c) { return c.rate; }), backgroundColor: clubColors, borderRadius: 4 }] },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100, ticks: { color: '#4a5568', callback: function(v) { return v + '%'; } }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#8899bb', font: { size: 11 } }, grid: { display: false } } } }
+    });
+  }
+
+  // RECENT BOUT DETAIL
   var detailHtml = '';
   if (bouts.length === 0) {
-    detailHtml = '<p style="color:var(--text-muted);padding:20px">No bout-by-bout data parsed. FencingTracker data may need manual review.</p>';
+    detailHtml = '<p style="color:var(--text-muted);padding:20px">No bout-by-bout data. Make sure to paste the full History page including individual bout rows.</p>';
   } else {
-    bouts.slice(0, 30).forEach(function(b) {
-      var isWin = (b.result || '').toUpperCase() === 'V';
-      detailHtml += '<div class="ana-bout-row"><span class="vd ' + (isWin ? 'win' : 'loss') + '">' + (isWin ? 'V' : 'D') + '</span><span class="mono" style="min-width:50px">' + (b.score || '') + '</span><span style="flex:1">vs ' + (b.opponent || 'Unknown') + '</span><span style="color:var(--text-muted);font-size:12px">' + (b.round || '') + '</span></div>';
+    // Group by tournament
+    var lastTourn = '';
+    bouts.forEach(function(b) {
+      if (b.tournament && b.tournament !== lastTourn) {
+        detailHtml += '<div style="padding:10px 0 6px;font-size:13px;font-weight:600;color:var(--accent-gold);border-top:1px solid var(--border);margin-top:8px">' + b.tournament + (b.event ? ' \u2014 ' + b.event.split(',')[0] : '') + '</div>';
+        lastTourn = b.tournament;
+      }
+      var isWin = b.result === 'V';
+      var probColor = b.win_probability < 35 ? 'var(--danger)' : b.win_probability > 65 ? 'var(--success)' : 'var(--text-muted)';
+      detailHtml += '<div class="ana-bout-row"><span class="vd ' + (isWin ? 'win' : 'loss') + '">' + b.result + '</span><span class="mono" style="min-width:50px">' + (b.score || '') + '</span><span style="flex:1">vs ' + (b.opponent_name || '?') + ' <span style="color:var(--text-muted);font-size:12px">(' + (b.opponent_rating || '?') + ')</span></span><span style="color:var(--text-muted);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (b.opponent_club || '') + '</span><span class="mono" style="font-size:12px;color:' + probColor + ';min-width:36px;text-align:right">' + (b.win_probability ? b.win_probability + '%' : '') + '</span><span style="font-size:11px;color:var(--text-muted);min-width:36px">' + (b.round || '') + '</span></div>';
     });
   }
   document.getElementById('ana-bout-detail').innerHTML = detailHtml;
@@ -4211,14 +4326,33 @@ function generateTrainingInsights() {
     return r.date + ' | ' + r.tournament + ' | ' + r.event + ' | ' + r.place + '/' + r.total + ' (Top ' + (100 - r.percentile) + '%)';
   }).join('\n');
 
-  var systemExtra = 'Analyze this fencer\'s tournament data and generate exactly 5 specific, actionable training recommendations. Each must be derived directly from a specific pattern in the data. Output ONLY a JSON array of 5 objects. No preamble.\n\nEach object: {"priority": 1-5, "title": "Short title", "data_source": "Specific stat", "why": "1-2 sentences", "concept": "Tactical/mental concept", "drill": "Specific drill", "foiliq_action": "Which FoilIQ feature helps", "expected_impact": "What metric improves"}';
+  // Compute close bout and time-expired stats for prompt
+  var curSeason = seasons.length > 0 ? seasons[seasons.length - 1] : '';
+  var curScores = (ci.scoreStats || {})[curSeason] || {};
+  var clutchW = curScores.closeWins || 0;
+  var clutchL = curScores.closeLosses || 0;
+  var clutchTotal = clutchW + clutchL;
+  var clutchRate = clutchTotal > 0 ? Math.round(clutchW / clutchTotal * 100) : 0;
+  var curTE = (ci.timeExpired || {})[curSeason] || {};
+  var bigLossPct = 0;
+  var totalLosses = (current.losses || 0);
+  if (totalLosses > 0) bigLossPct = Math.round((curScores.bigLosses || 0) / totalLosses * 100);
+  var teLossPct = totalLosses > 0 ? Math.round((curTE.losses || 0) / totalLosses * 100) : 0;
+  var gapDir = (ci.deStrength || 0) > (ci.poolStrength || 0) ? 'Fencer performs significantly better in DEs than pools.' : 'Fencer performs better in pools than DEs.';
 
-  var userMsg = 'FENCER DATA:\nName: ' + (ci.name || '') + ', Division: ' + (currentFencerData ? currentFencerData.division : '') +
-    '\n\nSEASON STATS:\nOverall win rate: ' + (current.winRate || 0) + '% (vs ' + (prev.winRate || 0) + '% last season)' +
-    '\nPool win rate: ' + (current.poolWinRate || 0) + '%\nDE win rate: ' + (current.deWinRate || 0) + '%' +
+  var systemExtra = 'You are FoilIQ, an AI fencing manager for competitive foil fencers. Analyze this fencer\'s tournament data and generate exactly 5 specific, actionable training recommendations. Base EVERY recommendation on a specific number from the data. No generic advice. Output ONLY a valid JSON array. No markdown. No preamble.\n\nEach object: {"priority": 1-5, "title": "Short action title", "data_basis": "The specific stat this is based on", "why": "What the data shows in 1-2 sentences", "concept": "The tactical or mental concept to understand", "drill": "Specific drill to practice at club this week", "foiliq_action": "Which FoilIQ screen helps with this", "expected_impact": "What metric should improve and by how much"}';
+
+  var userMsg = 'FENCER: ' + (ci.name || '') + ', ' + (currentFencerData ? currentFencerData.division : '') + ', Rating: ' + (ci.rating || 'U') + ', Club: ' + (ci.club || '') +
+    '\n\nCURRENT SEASON STATS (' + curSeason + '):' +
+    '\nOverall win rate: ' + (current.winRate || 0) + '% (vs ' + (prev.winRate || 0) + '% last season)' +
+    '\nPool win rate: ' + (current.poolWinRate || 0) + '%' +
+    '\nDE win rate: ' + (current.deWinRate || 0) + '% (vs ' + (prev.deWinRate || 0) + '% last season)' +
+    '\nClose bout win rate: ' + clutchRate + '% (close wins: ' + clutchW + ', close losses: ' + clutchL + ')' +
+    '\nTime-expired losses: ' + teLossPct + '% of all losses (' + (curTE.losses || 0) + ' bouts)' +
+    '\nBig losses: ' + bigLossPct + '% of all losses (' + (curScores.bigLosses || 0) + ' bouts)' +
     '\nPool strength: ' + (ci.poolStrength || 'unknown') + ', DE strength: ' + (ci.deStrength || 'unknown') +
-    '\nStrength gap: ' + (ci.strengthGap || 0) +
-    '\n\nRECENT RESULTS:\n' + (recentFormatted || 'No data') +
+    '\nStrength gap: ' + (ci.strengthGap || 0) + ' points. ' + gapDir +
+    '\n\nRECENT RESULTS (last 10):\n' + (recentFormatted || 'No data') +
     '\n\nGenerate 5 training recommendations as JSON array.';
 
   callAI(systemExtra, userMsg, function(text) {
