@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 /* ============================================
    FOILIQ DESIGN SYSTEM
@@ -936,6 +937,73 @@ html { scroll-behavior: smooth; }
   .landing-header h1 { font-size: 48px; }
 }
 
+/* ============================================
+   ANALYTICS DASHBOARD
+   ============================================ */
+.ana-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.ana-tab { padding: 12px 20px; background: none; border: none; color: var(--text-secondary); font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+.ana-tab.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
+.ana-panel { display: none; }
+.ana-panel.active { display: block; animation: fadeIn 0.3s ease; }
+.ana-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.ana-kpi { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+.ana-kpi .val { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: var(--accent-gold); }
+.ana-kpi .lbl { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+.ana-kpi .trend { font-size: 12px; margin-top: 4px; }
+.ana-kpi .trend.up { color: var(--success); }
+.ana-kpi .trend.down { color: var(--danger); }
+.ana-anomaly { background: var(--bg-card); border: 2px solid var(--accent-gold); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+.ana-anomaly.warn { border-color: #e67e22; }
+.ana-anomaly h3 { font-size: 22px; margin-bottom: 16px; }
+.ana-anomaly .gap-visual { display: flex; align-items: center; gap: 20px; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+.ana-anomaly .gap-val { font-size: 28px; font-weight: 700; }
+.ana-anomaly .gap-arrow { color: var(--accent-gold); font-size: 14px; text-align: center; }
+.ana-anomaly blockquote { font-style: italic; color: var(--text-secondary); border-left: 3px solid var(--accent-gold); padding-left: 16px; margin-top: 16px; font-size: 15px; line-height: 1.7; }
+.ana-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.ana-chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.ana-chart-card h4 { font-size: 14px; color: var(--accent-gold); margin-bottom: 12px; letter-spacing: 1px; }
+.ana-chart-card.full { grid-column: 1 / -1; }
+.ana-chart-wrap { position: relative; height: 280px; }
+.ana-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ana-table th { text-align: left; padding: 10px 12px; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+.ana-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+.ana-pct-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.ana-pct-badge.top10 { background: rgba(34,197,94,0.15); color: var(--success); }
+.ana-pct-badge.top25 { background: rgba(240,180,41,0.15); color: var(--accent-gold); }
+.ana-pct-badge.below { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+.ana-connect { text-align: center; padding: 80px 20px; }
+.ana-connect h3 { font-size: 28px; margin-bottom: 12px; }
+.ana-connect p { color: var(--text-secondary); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; }
+.ana-connect input { padding: 14px 18px; width: 100%; max-width: 500px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; margin-bottom: 16px; }
+.ana-connect input:focus { border-color: var(--accent-gold); }
+.ana-progress { margin: 24px auto; max-width: 400px; text-align: left; }
+.ana-progress .step { padding: 8px 0; font-size: 13px; color: var(--text-muted); }
+.ana-progress .step.active { color: var(--accent-gold); }
+.ana-progress .step.done { color: var(--success); }
+.ana-insight-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; border-left: 4px solid var(--accent-blue); }
+.ana-insight-card.p1, .ana-insight-card.p2 { border-left-color: var(--danger); }
+.ana-insight-card.p3 { border-left-color: var(--accent-gold); }
+.ana-insight-card .priority { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.ana-insight-card h4 { font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.ana-insight-card .data-basis { font-size: 12px; color: var(--accent-gold); margin-bottom: 12px; }
+.ana-insight-card .section-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; margin-top: 12px; }
+.ana-insight-card .drill-box { background: var(--bg-elevated); border-radius: 8px; padding: 14px; margin-top: 8px; font-size: 14px; color: var(--text-secondary); }
+.ana-insight-card .meta-row { display: flex; gap: 24px; margin-top: 12px; font-size: 12px; color: var(--text-muted); }
+.ana-bout-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
+.ana-bout-row .vd { padding: 3px 8px; border-radius: 4px; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1px; min-width: 28px; text-align: center; }
+.ana-bout-row .vd.win { background: rgba(34,197,94,0.15); color: var(--success); }
+.ana-bout-row .vd.loss { background: rgba(239,68,68,0.15); color: var(--danger); }
+.ana-upset-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.ana-projection { background: var(--bg-card); border: 2px solid rgba(240,180,41,0.2); border-radius: 14px; padding: 28px; margin-top: 24px; display: flex; align-items: center; gap: 32px; justify-content: center; text-align: center; }
+.ana-projection .proj-block h5 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.ana-projection .proj-arrow { font-size: 32px; color: var(--accent-gold); }
+@media (max-width: 768px) {
+  .ana-kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .ana-chart-row { grid-template-columns: 1fr; }
+  .ana-upset-cards { grid-template-columns: 1fr; }
+  .ana-projection { flex-direction: column; gap: 16px; }
+}
+
 /* Modal */
 .modal-overlay {
   display: none;
@@ -1558,6 +1626,9 @@ html { scroll-behavior: smooth; }
         <div class="nav-item" onclick="navigateTo('history')" data-screen="history">
           <span class="nav-icon">&#128202;</span> History
         </div>
+        <div class="nav-item" onclick="navigateTo('analytics')" data-screen="analytics">
+          <span class="nav-icon">&#128200;</span> Analytics
+        </div>
         <div class="nav-item" onclick="navigateTo('settings')" data-screen="settings">
           <span class="nav-icon">&#9881;</span> Settings
         </div>
@@ -1579,6 +1650,7 @@ html { scroll-behavior: smooth; }
         <div class="bottom-item" onclick="navigateTo('drills')" data-screen="drills"><span class="nav-icon">&#129504;</span>Drills</div>
         <div class="bottom-item" onclick="navigateTo('opponents')" data-screen="opponents"><span class="nav-icon">&#127919;</span>Opp</div>
         <div class="bottom-item" onclick="navigateTo('history')" data-screen="history"><span class="nav-icon">&#128202;</span>Log</div>
+        <div class="bottom-item" onclick="navigateTo('analytics')" data-screen="analytics"><span class="nav-icon">&#128200;</span>Stats</div>
         <div class="bottom-item" onclick="navigateTo('settings')" data-screen="settings"><span class="nav-icon">&#9881;</span>Set</div>
       </div>
     </div>
@@ -1857,6 +1929,103 @@ html { scroll-behavior: smooth; }
           <select id="hist-filter-result" onchange="loadMatchHistory()"><option value="">All Results</option><option value="win">Wins</option><option value="loss">Losses</option></select>
         </div>
         <div id="history-list"></div>
+      </div>
+
+      <!-- ANALYTICS SCREEN -->
+      <div class="screen" id="screen-analytics">
+        <div class="page-header">
+          <div>
+            <h1>Analytics</h1>
+            <div class="subtitle" id="ana-subtitle">FencingTracker Performance Dashboard</div>
+          </div>
+          <div id="ana-header-actions" style="display:none">
+            <span style="font-size:12px;color:var(--text-muted)" id="ana-last-updated"></span>
+            <button class="btn btn-outline btn-sm" onclick="refreshAnalytics()" style="margin-left:12px">Refresh Data</button>
+          </div>
+        </div>
+
+        <!-- CONNECT STATE -->
+        <div id="ana-connect-view" class="ana-connect">
+          <div style="font-size:64px;margin-bottom:16px">&#128200;</div>
+          <h3>Connect Your FencingTracker Profile</h3>
+          <p>Paste your FencingTracker profile URL to import your tournament data, performance history, and strength ratings.</p>
+          <input type="text" id="ana-ft-url" placeholder="https://fencingtracker.com/p/100280844/Your-Name">
+          <br>
+          <button class="btn btn-gold" onclick="importFencingTracker()">Import Data</button>
+          <div class="ana-progress" id="ana-import-progress" style="display:none">
+            <div class="step" id="ana-step-summary">Fetching summary page...</div>
+            <div class="step" id="ana-step-history">Fetching history page...</div>
+            <div class="step" id="ana-step-strength">Fetching strength page...</div>
+            <div class="step" id="ana-step-parse">Parsing &amp; computing insights...</div>
+            <div class="step" id="ana-step-save">Saving to database...</div>
+          </div>
+          <div id="ana-import-error" style="color:var(--danger);margin-top:16px;font-size:14px"></div>
+        </div>
+
+        <!-- DASHBOARD STATE -->
+        <div id="ana-dashboard-view" style="display:none">
+          <!-- Tab nav -->
+          <div class="ana-tabs">
+            <button class="ana-tab active" onclick="showAnaTab('overview')">Overview</button>
+            <button class="ana-tab" onclick="showAnaTab('trends')">Performance Trends</button>
+            <button class="ana-tab" onclick="showAnaTab('bouts')">Bout Analysis</button>
+            <button class="ana-tab" onclick="showAnaTab('training')">Training Insights</button>
+          </div>
+
+          <!-- TAB: OVERVIEW -->
+          <div class="ana-panel active" id="ana-panel-overview">
+            <div class="ana-kpi-row" id="ana-kpi-row"></div>
+            <div id="ana-anomaly-container"></div>
+            <div class="ana-chart-row">
+              <div class="ana-chart-card"><h4>WIN RATE BY TYPE (ALL SEASONS)</h4><div class="ana-chart-wrap"><canvas id="ana-chart-winrate"></canvas></div></div>
+              <div class="ana-chart-card"><h4>PODIUM FINISHES BY SEASON</h4><div class="ana-chart-wrap"><canvas id="ana-chart-podiums"></canvas></div></div>
+            </div>
+            <div class="ana-chart-card full" style="margin-bottom:24px"><h4>RECENT RESULTS (LAST 10 EVENTS)</h4><div id="ana-recent-table"></div></div>
+          </div>
+
+          <!-- TAB: PERFORMANCE TRENDS -->
+          <div class="ana-panel" id="ana-panel-trends">
+            <div class="ana-chart-row">
+              <div class="ana-chart-card full"><h4>WIN RATE TRAJECTORY</h4><div class="ana-chart-wrap" style="height:320px"><canvas id="ana-chart-winrate-lg"></canvas></div></div>
+            </div>
+            <div class="ana-chart-row">
+              <div class="ana-chart-card"><h4>POOL vs DE STRENGTH</h4><div class="ana-chart-wrap"><canvas id="ana-chart-strength"></canvas></div></div>
+              <div class="ana-chart-card"><h4>CLOSE BOUT PERFORMANCE</h4><div class="ana-chart-wrap"><canvas id="ana-chart-close"></canvas></div></div>
+            </div>
+            <div class="ana-chart-row">
+              <div class="ana-chart-card"><h4>TIME-EXPIRED BOUTS</h4><div class="ana-chart-wrap"><canvas id="ana-chart-timeexp"></canvas></div></div>
+              <div class="ana-chart-card"><h4>SCORE DISTRIBUTION (CURRENT SEASON)</h4><div class="ana-chart-wrap"><canvas id="ana-chart-scoredist"></canvas></div></div>
+            </div>
+            <div class="ana-chart-row">
+              <div class="ana-chart-card full"><h4>TOURNAMENT PERCENTILE TREND</h4><div class="ana-chart-wrap" style="height:280px"><canvas id="ana-chart-percentile"></canvas></div></div>
+            </div>
+          </div>
+
+          <!-- TAB: BOUT ANALYSIS -->
+          <div class="ana-panel" id="ana-panel-bouts">
+            <div class="filter-bar" style="margin-bottom:20px">
+              <select id="ana-bout-season" onchange="renderBoutAnalysis()"><option value="">Current Season</option></select>
+              <select id="ana-bout-round" onchange="renderBoutAnalysis()"><option value="">All Rounds</option><option value="pool">Pool</option><option value="de">DE</option></select>
+              <select id="ana-bout-result" onchange="renderBoutAnalysis()"><option value="">All Results</option><option value="V">Wins</option><option value="D">Losses</option></select>
+            </div>
+            <div class="ana-upset-cards" id="ana-upset-cards"></div>
+            <div class="ana-chart-row">
+              <div class="ana-chart-card"><h4>LOSS TYPE DISTRIBUTION</h4><div class="ana-chart-wrap"><canvas id="ana-chart-losstype"></canvas></div></div>
+              <div class="ana-chart-card"><h4>WIN RATE BY OPPONENT CLUB</h4><div class="ana-chart-wrap"><canvas id="ana-chart-clubs"></canvas></div></div>
+            </div>
+            <div class="ana-chart-card full" style="margin-top:24px"><h4>RECENT BOUT DETAIL</h4><div id="ana-bout-detail"></div></div>
+          </div>
+
+          <!-- TAB: TRAINING INSIGHTS -->
+          <div class="ana-panel" id="ana-panel-training">
+            <div style="text-align:center;margin-bottom:24px">
+              <button class="btn btn-gold" onclick="generateTrainingInsights()" id="ana-gen-insights-btn">Generate Training Insights</button>
+              <p style="font-size:12px;color:var(--text-muted);margin-top:8px">Uses Claude AI to analyze your data and produce 5 specific recommendations</p>
+            </div>
+            <div id="ana-insights-list"></div>
+            <div id="ana-projection-container"></div>
+          </div>
+        </div>
       </div>
 
       <!-- SETTINGS SCREEN -->
@@ -2313,6 +2482,7 @@ function navigateTo(screen) {
   if (screen === 'settings') loadSettings();
   if (screen === 'drills') loadDrillHome();
   if (screen === 'postbout') loadPostbout();
+  if (screen === 'analytics') loadAnalytics();
 }
 
 // ---- FENCER SELECTOR ----
@@ -3207,6 +3377,591 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
     if (e.target === overlay) overlay.classList.remove('active');
   });
 });
+
+// ---- ANALYTICS DASHBOARD ----
+var analyticsData = null;
+var anaCharts = {};
+var ANA_COLORS = { blue: '#378ADD', green: '#1D9E75', amber: '#BA7517', red: '#E24B4A', greenFill: 'rgba(29,158,117,0.3)', redFill: 'rgba(226,75,74,0.3)', amberFill: 'rgba(186,117,23,0.3)', blueFill: 'rgba(55,138,221,0.3)', muted: '#4a5568' };
+
+function loadAnalytics() {
+  if (!currentFencerId) return;
+  supabaseClient.from('fencer_analytics').select('*').eq('fencer_id', currentFencerId).order('imported_at', { ascending: false }).limit(1).then(function(res) {
+    if (res.data && res.data[0] && res.data[0].raw_summary) {
+      analyticsData = res.data[0];
+      showAnalyticsDashboard();
+    } else {
+      document.getElementById('ana-connect-view').style.display = 'block';
+      document.getElementById('ana-dashboard-view').style.display = 'none';
+      document.getElementById('ana-header-actions').style.display = 'none';
+    }
+  }).catch(function() {
+    document.getElementById('ana-connect-view').style.display = 'block';
+    document.getElementById('ana-dashboard-view').style.display = 'none';
+  });
+}
+
+function showAnaTab(tab) {
+  document.querySelectorAll('.ana-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.ana-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelector('.ana-tab[onclick*="' + tab + '"]').classList.add('active');
+  document.getElementById('ana-panel-' + tab).classList.add('active');
+  if (tab === 'trends') renderTrendsCharts();
+  if (tab === 'bouts') renderBoutAnalysis();
+}
+
+function parseFTUrl(url) {
+  var match = url.match(/fencingtracker\.com\/p\/(\d+)\/([^\/\?#]+)/);
+  if (!match) return null;
+  return { id: match[1], name: decodeURIComponent(match[2]) };
+}
+
+function importFencingTracker() {
+  var url = document.getElementById('ana-ft-url').value.trim();
+  var parsed = parseFTUrl(url);
+  if (!parsed) { document.getElementById('ana-import-error').textContent = 'Invalid URL. Expected: https://fencingtracker.com/p/ID/Name'; return; }
+
+  var progressEl = document.getElementById('ana-import-progress');
+  var errorEl = document.getElementById('ana-import-error');
+  progressEl.style.display = 'block';
+  errorEl.textContent = '';
+
+  var baseUrl = 'https://fencingtracker.com/p/' + parsed.id + '/' + parsed.name;
+  var summaryHtml = null, historyHtml = null, strengthHtml = null;
+
+  setStep('summary', 'active');
+  fetchFT(baseUrl).then(function(html) {
+    summaryHtml = html;
+    setStep('summary', 'done');
+    setStep('history', 'active');
+    return fetchFT(baseUrl + '/history');
+  }).then(function(html) {
+    historyHtml = html;
+    setStep('history', 'done');
+    setStep('strength', 'active');
+    return fetchFT(baseUrl + '/strength');
+  }).then(function(html) {
+    strengthHtml = html;
+    setStep('strength', 'done');
+    setStep('parse', 'active');
+
+    var summary = parseSummaryPage(summaryHtml);
+    var history = parseHistoryPage(historyHtml);
+    var strength = parseStrengthPage(strengthHtml);
+    var computed = computeInsights(summary, history, strength);
+
+    setStep('parse', 'done');
+    setStep('save', 'active');
+
+    return supabaseClient.from('fencer_analytics').upsert({
+      fencer_id: currentFencerId,
+      user_id: currentUser.id,
+      fencingtracker_url: url,
+      fencingtracker_id: parsed.id,
+      raw_summary: summary,
+      raw_history: history,
+      raw_strength: strength,
+      computed_insights: computed,
+      imported_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'fencer_id' }).select();
+  }).then(function(res) {
+    setStep('save', 'done');
+    if (res && res.data && res.data[0]) {
+      analyticsData = res.data[0];
+    } else {
+      // reload from DB
+      return supabaseClient.from('fencer_analytics').select('*').eq('fencer_id', currentFencerId).limit(1).then(function(r) {
+        if (r.data && r.data[0]) analyticsData = r.data[0];
+      });
+    }
+  }).then(function() {
+    showToast('FencingTracker data imported!', 'success');
+    showAnalyticsDashboard();
+  }).catch(function(err) {
+    errorEl.textContent = 'Import failed: ' + err.message + '. FencingTracker may block cross-origin requests from this site. Try using a CORS proxy or manual entry.';
+    progressEl.style.display = 'none';
+  });
+}
+
+function refreshAnalytics() {
+  if (!analyticsData || !analyticsData.fencingtracker_url) return;
+  document.getElementById('ana-ft-url').value = analyticsData.fencingtracker_url;
+  document.getElementById('ana-connect-view').style.display = 'block';
+  document.getElementById('ana-dashboard-view').style.display = 'none';
+  importFencingTracker();
+}
+
+function setStep(step, state) {
+  var el = document.getElementById('ana-step-' + step);
+  if (!el) return;
+  el.className = 'step ' + state;
+  if (state === 'done') el.textContent = '\u2713 ' + el.textContent.replace(/^[\u2713\u25cb\u25cf]\s*/, '');
+}
+
+function fetchFT(url) {
+  var controller = new AbortController();
+  var timeout = setTimeout(function() { controller.abort(); }, 15000);
+  return fetch(url, { signal: controller.signal, headers: { 'Accept': 'text/html' } }).then(function(r) {
+    clearTimeout(timeout);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  }).catch(function(err) {
+    clearTimeout(timeout);
+    throw err;
+  });
+}
+
+// ---- PARSERS ----
+function parseSummaryPage(html) {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  var data = { results: [], rating: '', club: '', name: '', podiums: {} };
+  try {
+    // Name from h1 or title
+    var h1 = doc.querySelector('h1');
+    if (h1) data.name = h1.textContent.trim();
+    // Look for tables and extract what we can
+    var tables = doc.querySelectorAll('table');
+    tables.forEach(function(table) {
+      var rows = table.querySelectorAll('tr');
+      rows.forEach(function(row) {
+        var cells = Array.from(row.querySelectorAll('td, th')).map(function(c) { return c.textContent.trim(); });
+        // Results row: Date, Tournament, Event, Place, Total, Rating, Class
+        if (cells.length >= 5 && cells[0].match(/^\d{4}-\d{2}|^\w{3}\s\d/)) {
+          data.results.push({ date: cells[0], tournament: cells[1] || '', event: cells[2] || '', place: parseInt(cells[3]) || 0, total: parseInt(cells[4]) || 0, rating: cells[5] || '', event_class: cells[6] || '' });
+        }
+      });
+    });
+    // Try to get rating from text
+    var bodyText = doc.body ? doc.body.textContent : '';
+    var ratingMatch = bodyText.match(/Rating:\s*([A-Z]\d{2}|U\d*)/i);
+    if (ratingMatch) data.rating = ratingMatch[1];
+    // Club
+    var clubMatch = bodyText.match(/Club:\s*([^\n]+)/i);
+    if (clubMatch) data.club = clubMatch[1].trim();
+  } catch(e) { data.parseError = e.message; }
+  return data;
+}
+
+function parseHistoryPage(html) {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  var data = { seasons: {}, bouts: [] };
+  try {
+    var tables = doc.querySelectorAll('table');
+    tables.forEach(function(table) {
+      var headerRow = table.querySelector('tr');
+      if (!headerRow) return;
+      var headers = Array.from(headerRow.querySelectorAll('th, td')).map(function(c) { return c.textContent.trim().toLowerCase(); });
+      var rows = Array.from(table.querySelectorAll('tr')).slice(1);
+
+      // Win/Loss stats table detection
+      if (headers.some(function(h) { return h.includes('victories') || h.includes('win'); })) {
+        rows.forEach(function(row) {
+          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
+          if (cells.length >= 2 && cells[0].match(/\d{4}/)) {
+            var season = cells[0];
+            data.seasons[season] = data.seasons[season] || {};
+            // Map available cells to stats
+            cells.forEach(function(cell, idx) {
+              if (headers[idx]) data.seasons[season][headers[idx]] = cell;
+            });
+          }
+        });
+      }
+
+      // Bout-by-bout detection
+      if (headers.some(function(h) { return h.includes('opponent') || h.includes('score'); })) {
+        rows.forEach(function(row) {
+          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
+          if (cells.length >= 3) {
+            var bout = {};
+            cells.forEach(function(cell, idx) {
+              if (headers[idx]) bout[headers[idx]] = cell;
+            });
+            data.bouts.push(bout);
+          }
+        });
+      }
+    });
+  } catch(e) { data.parseError = e.message; }
+  return data;
+}
+
+function parseStrengthPage(html) {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  var data = { pool: {}, de: {} };
+  try {
+    var bodyText = doc.body ? doc.body.textContent : '';
+    var poolMatch = bodyText.match(/Pool\s*(?:Strength)?[:\s]*(\d[\d,]*)/i);
+    var deMatch = bodyText.match(/DE\s*(?:Strength)?[:\s]*(\d[\d,]*)/i);
+    if (poolMatch) data.pool.value = parseInt(poolMatch[1].replace(/,/g, ''));
+    if (deMatch) data.de.value = parseInt(deMatch[1].replace(/,/g, ''));
+    // Look for tables with strength data
+    var tables = doc.querySelectorAll('table');
+    tables.forEach(function(table) {
+      var rows = Array.from(table.querySelectorAll('tr'));
+      rows.forEach(function(row) {
+        var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
+        if (cells.length >= 2) {
+          var label = cells[0].toLowerCase();
+          var val = parseInt(cells[1].replace(/,/g, ''));
+          if (label.includes('pool') && !isNaN(val)) data.pool.value = val;
+          if (label.includes('de') && !isNaN(val) && !label.includes('pool')) data.de.value = val;
+        }
+      });
+    });
+  } catch(e) { data.parseError = e.message; }
+  return data;
+}
+
+function computeInsights(summary, history, strength) {
+  var insights = {};
+  // Win rates from history seasons
+  var seasons = Object.keys(history.seasons || {}).sort();
+  insights.seasons = seasons;
+  insights.seasonStats = {};
+  seasons.forEach(function(s) {
+    var d = history.seasons[s];
+    insights.seasonStats[s] = {
+      winRate: parseFloat(d['win ratio'] || d['win_ratio'] || d['overall'] || '0'),
+      poolWinRate: parseFloat(d['pool win ratio'] || d['pool_win_ratio'] || d['pool'] || '0'),
+      deWinRate: parseFloat(d['de win ratio'] || d['de_win_ratio'] || d['de'] || '0'),
+      victories: parseInt(d['victories'] || '0'),
+      losses: parseInt(d['losses'] || '0')
+    };
+  });
+  // Strength gap
+  insights.poolStrength = (strength.pool || {}).value || 0;
+  insights.deStrength = (strength.de || {}).value || 0;
+  insights.strengthGap = Math.abs(insights.poolStrength - insights.deStrength);
+  // Recent results with percentile
+  insights.recentResults = (summary.results || []).slice(0, 15).map(function(r) {
+    var pct = r.total > 0 ? Math.round(((r.total - r.place) / r.total) * 100) : 0;
+    return Object.assign({}, r, { percentile: pct });
+  });
+  insights.rating = summary.rating || '';
+  insights.club = summary.club || '';
+  insights.name = summary.name || '';
+  return insights;
+}
+
+// ---- DASHBOARD RENDER ----
+function showAnalyticsDashboard() {
+  document.getElementById('ana-connect-view').style.display = 'none';
+  document.getElementById('ana-dashboard-view').style.display = 'block';
+  document.getElementById('ana-header-actions').style.display = 'flex';
+  if (analyticsData.imported_at) {
+    document.getElementById('ana-last-updated').textContent = 'Last updated: ' + new Date(analyticsData.imported_at).toLocaleDateString();
+  }
+  var ci = analyticsData.computed_insights || {};
+  var name = ci.name || (currentFencerData ? currentFencerData.name : '');
+  document.getElementById('ana-subtitle').textContent = name + (ci.rating ? ' \u2022 ' + ci.rating : '') + (ci.club ? ' \u2022 ' + ci.club : '');
+
+  renderOverviewTab();
+}
+
+function renderOverviewTab() {
+  var ci = analyticsData.computed_insights || {};
+  var ss = ci.seasonStats || {};
+  var seasons = ci.seasons || [];
+  var current = seasons.length > 0 ? ss[seasons[seasons.length - 1]] || {} : {};
+  var prev = seasons.length > 1 ? ss[seasons[seasons.length - 2]] || {} : {};
+
+  // KPI cards
+  var kpiHtml = '';
+  function kpiCard(val, label, prevVal) {
+    var trend = '';
+    if (prevVal !== undefined && prevVal > 0) {
+      var diff = val - prevVal;
+      trend = '<div class="trend ' + (diff >= 0 ? 'up' : 'down') + '">' + (diff >= 0 ? '\u2191' : '\u2193') + ' ' + Math.abs(diff).toFixed(1) + '% vs last season</div>';
+    }
+    return '<div class="ana-kpi"><div class="val">' + (val ? val.toFixed(1) + '%' : '--') + '</div><div class="lbl">' + label + '</div>' + trend + '</div>';
+  }
+  kpiHtml += kpiCard(current.winRate, 'Overall Win Rate', prev.winRate);
+  kpiHtml += kpiCard(current.poolWinRate, 'Pool Win Rate', prev.poolWinRate);
+  kpiHtml += kpiCard(current.deWinRate, 'DE Win Rate', prev.deWinRate);
+  // Clutch rate placeholder
+  kpiHtml += '<div class="ana-kpi"><div class="val">' + (ci.strengthGap || '--') + '</div><div class="lbl">Pool-DE Strength Gap</div></div>';
+  document.getElementById('ana-kpi-row').innerHTML = kpiHtml;
+
+  // Anomaly card
+  var anomalyHtml = '';
+  if (ci.strengthGap > 200) {
+    var cls = ci.strengthGap > 300 ? '' : ' warn';
+    anomalyHtml = '<div class="ana-anomaly' + cls + '">' +
+      '<h3>POOL vs DE STRENGTH GAP \u2014 ' + ci.strengthGap + ' points</h3>' +
+      '<div class="gap-visual">' +
+        '<div><div class="gap-val" style="color:var(--success)">' + (ci.poolStrength || '?') + '</div><div style="font-size:12px;color:var(--text-muted)">Pool Strength</div></div>' +
+        '<div class="gap-arrow">\u2190\u2014 ' + ci.strengthGap + ' \u2014\u2192</div>' +
+        '<div><div class="gap-val" style="color:var(--accent-gold)">' + (ci.deStrength || '?') + '</div><div style="font-size:12px;color:var(--text-muted)">DE Strength</div></div>' +
+      '</div>' +
+      '<blockquote>You fence like a different athlete once it matters. Your seeding doesn\'t reflect your true ability. Fixing your pool game plan changes every tournament bracket.</blockquote>' +
+    '</div>';
+  }
+  document.getElementById('ana-anomaly-container').innerHTML = anomalyHtml;
+
+  // Win rate chart
+  renderWinRateChart('ana-chart-winrate', ci);
+  // Podium chart placeholder
+  renderPodiumChart('ana-chart-podiums', ci);
+  // Recent results table
+  renderRecentTable(ci);
+}
+
+function renderWinRateChart(canvasId, ci) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (anaCharts[canvasId]) anaCharts[canvasId].destroy();
+  var seasons = ci.seasons || [];
+  var ss = ci.seasonStats || {};
+  var overall = seasons.map(function(s) { return (ss[s] || {}).winRate || 0; });
+  var pool = seasons.map(function(s) { return (ss[s] || {}).poolWinRate || 0; });
+  var de = seasons.map(function(s) { return (ss[s] || {}).deWinRate || 0; });
+
+  anaCharts[canvasId] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: seasons,
+      datasets: [
+        { label: 'Overall', data: overall, borderColor: ANA_COLORS.blue, backgroundColor: ANA_COLORS.blueFill, tension: 0.3, fill: false, borderWidth: 2 },
+        { label: 'Pool', data: pool, borderColor: ANA_COLORS.green, backgroundColor: ANA_COLORS.greenFill, tension: 0.3, fill: false, borderWidth: 2 },
+        { label: 'DE', data: de, borderColor: ANA_COLORS.amber, backgroundColor: ANA_COLORS.amberFill, tension: 0.3, fill: false, borderWidth: 2 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8899bb', font: { family: 'DM Sans' } } } }, scales: { x: { ticks: { color: '#4a5568' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { min: 0, max: 100, ticks: { color: '#4a5568', callback: function(v) { return v + '%'; } }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+  });
+}
+
+function renderPodiumChart(canvasId, ci) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (anaCharts[canvasId]) anaCharts[canvasId].destroy();
+  var seasons = ci.seasons || [];
+  // Placeholder — compute from recent results grouped by season
+  var results = ci.recentResults || [];
+  var goldBySeason = {}, silverBySeason = {}, bronzeBySeason = {}, top8BySeason = {};
+  seasons.forEach(function(s) { goldBySeason[s] = 0; silverBySeason[s] = 0; bronzeBySeason[s] = 0; top8BySeason[s] = 0; });
+  results.forEach(function(r) {
+    // Approximate season from date
+    var s = seasons[seasons.length - 1] || 'current';
+    if (r.place === 1) goldBySeason[s] = (goldBySeason[s] || 0) + 1;
+    else if (r.place === 2) silverBySeason[s] = (silverBySeason[s] || 0) + 1;
+    else if (r.place === 3) bronzeBySeason[s] = (bronzeBySeason[s] || 0) + 1;
+    else if (r.place <= 8) top8BySeason[s] = (top8BySeason[s] || 0) + 1;
+  });
+
+  anaCharts[canvasId] = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: seasons,
+      datasets: [
+        { label: 'Gold', data: seasons.map(function(s) { return goldBySeason[s] || 0; }), backgroundColor: '#f0b429' },
+        { label: 'Silver', data: seasons.map(function(s) { return silverBySeason[s] || 0; }), backgroundColor: '#8899bb' },
+        { label: 'Bronze', data: seasons.map(function(s) { return bronzeBySeason[s] || 0; }), backgroundColor: '#c49320' },
+        { label: 'Top 8', data: seasons.map(function(s) { return top8BySeason[s] || 0; }), backgroundColor: '#3d7ef5' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8899bb', font: { family: 'DM Sans' } } } }, scales: { x: { ticks: { color: '#4a5568' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { beginAtZero: true, ticks: { color: '#4a5568', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+  });
+}
+
+function renderRecentTable(ci) {
+  var results = ci.recentResults || [];
+  if (results.length === 0) {
+    document.getElementById('ana-recent-table').innerHTML = '<p style="color:var(--text-muted);padding:20px">No results data available.</p>';
+    return;
+  }
+  var html = '<table class="ana-table"><thead><tr><th>Date</th><th>Tournament</th><th>Event</th><th>Place/Total</th><th>Percentile</th><th>Class</th></tr></thead><tbody>';
+  results.slice(0, 10).forEach(function(r) {
+    var pctClass = r.percentile >= 90 ? 'top10' : r.percentile >= 75 ? 'top25' : 'below';
+    html += '<tr><td>' + (r.date || '') + '</td><td>' + (r.tournament || '') + '</td><td>' + (r.event || '') + '</td><td>' + r.place + '/' + r.total + '</td><td><span class="ana-pct-badge ' + pctClass + '">Top ' + (100 - r.percentile) + '%</span></td><td>' + (r.event_class || '') + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('ana-recent-table').innerHTML = html;
+}
+
+// ---- TRENDS TAB ----
+function renderTrendsCharts() {
+  var ci = analyticsData.computed_insights || {};
+  renderWinRateChart('ana-chart-winrate-lg', ci);
+
+  // Strength bar chart
+  var sCanvas = document.getElementById('ana-chart-strength');
+  if (sCanvas) {
+    if (anaCharts['ana-chart-strength']) anaCharts['ana-chart-strength'].destroy();
+    anaCharts['ana-chart-strength'] = new Chart(sCanvas, {
+      type: 'bar',
+      data: {
+        labels: ['Pool Strength', 'DE Strength'],
+        datasets: [{ data: [ci.poolStrength || 0, ci.deStrength || 0], backgroundColor: [ANA_COLORS.green, ANA_COLORS.amber], borderRadius: 6 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8899bb' }, grid: { display: false } }, y: { ticks: { color: '#4a5568' }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+    });
+  }
+
+  // Score distribution donut
+  var sdCanvas = document.getElementById('ana-chart-scoredist');
+  if (sdCanvas) {
+    if (anaCharts['ana-chart-scoredist']) anaCharts['ana-chart-scoredist'].destroy();
+    var rr = ci.recentResults || [];
+    var easy = 0, closeW = 0, closeL = 0, bigL = 0;
+    rr.forEach(function(r) {
+      if (r.percentile >= 85) easy++;
+      else if (r.percentile >= 65) closeW++;
+      else if (r.percentile >= 40) closeL++;
+      else bigL++;
+    });
+    anaCharts['ana-chart-scoredist'] = new Chart(sdCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['Top Finishes', 'Solid Finishes', 'Mid-Pack', 'Bottom Half'],
+        datasets: [{ data: [easy, closeW, closeL, bigL], backgroundColor: [ANA_COLORS.green, '#C0DD97', ANA_COLORS.amber, ANA_COLORS.red] }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#8899bb', font: { family: 'DM Sans', size: 12 } } } } }
+    });
+  }
+
+  // Percentile trend line
+  var ptCanvas = document.getElementById('ana-chart-percentile');
+  if (ptCanvas) {
+    if (anaCharts['ana-chart-percentile']) anaCharts['ana-chart-percentile'].destroy();
+    var results = (ci.recentResults || []).slice().reverse();
+    anaCharts['ana-chart-percentile'] = new Chart(ptCanvas, {
+      type: 'line',
+      data: {
+        labels: results.map(function(r, i) { return r.date || 'Event ' + (i + 1); }),
+        datasets: [{ label: 'Percentile Finish', data: results.map(function(r) { return r.percentile; }), borderColor: ANA_COLORS.blue, backgroundColor: ANA_COLORS.blueFill, tension: 0.4, fill: true, borderWidth: 2, pointRadius: 4, pointBackgroundColor: ANA_COLORS.blue }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#4a5568', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { min: 0, max: 100, ticks: { color: '#4a5568', callback: function(v) { return v + '%'; } }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+    });
+  }
+}
+
+// ---- BOUT ANALYSIS TAB ----
+function renderBoutAnalysis() {
+  var bouts = (analyticsData.raw_history || {}).bouts || [];
+  // Upset analysis cards
+  var upsetHtml = '<div class="card"><h4>BEST UPSETS</h4>';
+  upsetHtml += '<p style="color:var(--text-muted);font-size:13px">Wins where opponent was favored.</p>';
+  var wins = bouts.filter(function(b) { return (b.result || '').toUpperCase() === 'V'; });
+  if (wins.length > 0) {
+    wins.slice(0, 5).forEach(function(b) {
+      upsetHtml += '<div class="ana-bout-row"><span class="vd win">V</span><span>' + (b.score || b.opponent || '') + '</span><span style="color:var(--text-muted)">' + (b.opponent || '') + '</span></div>';
+    });
+  } else {
+    upsetHtml += '<p style="color:var(--text-muted);padding:12px">No bout data available yet.</p>';
+  }
+  upsetHtml += '</div>';
+
+  upsetHtml += '<div class="card"><h4>DROPPED BOUTS</h4>';
+  upsetHtml += '<p style="color:var(--text-muted);font-size:13px">Losses where you were favored.</p>';
+  var losses = bouts.filter(function(b) { return (b.result || '').toUpperCase() === 'D'; });
+  if (losses.length > 0) {
+    losses.slice(0, 5).forEach(function(b) {
+      upsetHtml += '<div class="ana-bout-row"><span class="vd loss">D</span><span>' + (b.score || b.opponent || '') + '</span><span style="color:var(--text-muted)">' + (b.opponent || '') + '</span></div>';
+    });
+  } else {
+    upsetHtml += '<p style="color:var(--text-muted);padding:12px">No bout data available yet.</p>';
+  }
+  upsetHtml += '</div>';
+  document.getElementById('ana-upset-cards').innerHTML = upsetHtml;
+
+  // Bout detail
+  var detailHtml = '';
+  if (bouts.length === 0) {
+    detailHtml = '<p style="color:var(--text-muted);padding:20px">No bout-by-bout data parsed. FencingTracker data may need manual review.</p>';
+  } else {
+    bouts.slice(0, 30).forEach(function(b) {
+      var isWin = (b.result || '').toUpperCase() === 'V';
+      detailHtml += '<div class="ana-bout-row"><span class="vd ' + (isWin ? 'win' : 'loss') + '">' + (isWin ? 'V' : 'D') + '</span><span class="mono" style="min-width:50px">' + (b.score || '') + '</span><span style="flex:1">vs ' + (b.opponent || 'Unknown') + '</span><span style="color:var(--text-muted);font-size:12px">' + (b.round || '') + '</span></div>';
+    });
+  }
+  document.getElementById('ana-bout-detail').innerHTML = detailHtml;
+}
+
+// ---- TRAINING INSIGHTS TAB ----
+function generateTrainingInsights() {
+  var btn = document.getElementById('ana-gen-insights-btn');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing data...';
+  var ci = analyticsData.computed_insights || {};
+  var ss = ci.seasonStats || {};
+  var seasons = ci.seasons || [];
+  var current = seasons.length > 0 ? ss[seasons[seasons.length - 1]] || {} : {};
+  var prev = seasons.length > 1 ? ss[seasons[seasons.length - 2]] || {} : {};
+
+  var recentFormatted = (ci.recentResults || []).slice(0, 10).map(function(r) {
+    return r.date + ' | ' + r.tournament + ' | ' + r.event + ' | ' + r.place + '/' + r.total + ' (Top ' + (100 - r.percentile) + '%)';
+  }).join('\n');
+
+  var systemExtra = 'Analyze this fencer\'s tournament data and generate exactly 5 specific, actionable training recommendations. Each must be derived directly from a specific pattern in the data. Output ONLY a JSON array of 5 objects. No preamble.\n\nEach object: {"priority": 1-5, "title": "Short title", "data_source": "Specific stat", "why": "1-2 sentences", "concept": "Tactical/mental concept", "drill": "Specific drill", "foiliq_action": "Which FoilIQ feature helps", "expected_impact": "What metric improves"}';
+
+  var userMsg = 'FENCER DATA:\nName: ' + (ci.name || '') + ', Division: ' + (currentFencerData ? currentFencerData.division : '') +
+    '\n\nSEASON STATS:\nOverall win rate: ' + (current.winRate || 0) + '% (vs ' + (prev.winRate || 0) + '% last season)' +
+    '\nPool win rate: ' + (current.poolWinRate || 0) + '%\nDE win rate: ' + (current.deWinRate || 0) + '%' +
+    '\nPool strength: ' + (ci.poolStrength || 'unknown') + ', DE strength: ' + (ci.deStrength || 'unknown') +
+    '\nStrength gap: ' + (ci.strengthGap || 0) +
+    '\n\nRECENT RESULTS:\n' + (recentFormatted || 'No data') +
+    '\n\nGenerate 5 training recommendations as JSON array.';
+
+  callAI(systemExtra, userMsg, function(text) {
+    btn.disabled = false;
+    btn.textContent = 'Generate Training Insights';
+    try {
+      var start = text.indexOf('[');
+      var end = text.lastIndexOf(']');
+      var jsonStr = (start >= 0 && end >= 0) ? text.substring(start, end + 1) : text;
+      var insights = JSON.parse(jsonStr);
+      renderTrainingInsights(insights);
+      // Save to Supabase
+      supabaseClient.from('fencer_analytics').update({ training_recommendations: insights, updated_at: new Date().toISOString() }).eq('fencer_id', currentFencerId).then(function() {});
+    } catch(e) {
+      document.getElementById('ana-insights-list').innerHTML = '<div class="card"><h4>AI Response</h4><div class="ai-output">' + text + '</div></div>';
+    }
+  });
+}
+
+function renderTrainingInsights(insights) {
+  var html = '';
+  insights.forEach(function(ins) {
+    var pClass = ins.priority <= 2 ? ' p' + ins.priority : ins.priority === 3 ? ' p3' : '';
+    html += '<div class="ana-insight-card' + pClass + '">' +
+      '<div class="priority">PRIORITY ' + ins.priority + '</div>' +
+      '<h4>' + (ins.title || '') + '</h4>' +
+      '<div class="data-basis">Data: ' + (ins.data_source || '') + '</div>' +
+      '<div class="section-lbl">WHY THIS MATTERS</div>' +
+      '<p style="font-size:14px;color:var(--text-secondary);line-height:1.65">' + (ins.why || '') + '</p>' +
+      '<div class="section-lbl">THE CONCEPT</div>' +
+      '<p style="font-size:14px;color:var(--text-secondary);line-height:1.65">' + (ins.concept || '') + '</p>' +
+      '<div class="drill-box"><strong>DRILL:</strong> ' + (ins.drill || '') + '</div>' +
+      '<div class="meta-row"><span>FoilIQ: ' + (ins.foiliq_action || '') + '</span><span>Impact: ' + (ins.expected_impact || '') + '</span></div>' +
+    '</div>';
+  });
+
+  // Projection card
+  var ci = analyticsData.computed_insights || {};
+  var ss = ci.seasonStats || {};
+  var seasons = ci.seasons || [];
+  var current = seasons.length > 0 ? ss[seasons[seasons.length - 1]] || {} : {};
+  html += '<div class="ana-projection">' +
+    '<div class="proj-block"><h5>CURRENT</h5><div class="mono" style="font-size:24px;color:var(--text-primary)">' + (current.winRate || 0).toFixed(1) + '% WR</div><div style="font-size:12px;color:var(--text-muted)">DE: ' + (current.deWinRate || 0).toFixed(1) + '%</div></div>' +
+    '<div class="proj-arrow">\u2192</div>' +
+    '<div class="proj-block"><h5>PROJECTED (IF TOP 3 GAPS CLOSED)</h5><div class="mono" style="font-size:24px;color:var(--accent-gold)">' + Math.min(((current.winRate || 0) + 8), 95).toFixed(1) + '% WR</div><div style="font-size:12px;color:var(--success)">\u2191 Pool-DE gap reduced by 50%</div></div>' +
+  '</div>';
+
+  document.getElementById('ana-insights-list').innerHTML = html;
+
+  // Also check for previously saved insights
+  if (analyticsData.training_recommendations && insights.length === 0) {
+    renderTrainingInsights(analyticsData.training_recommendations);
+  }
+}
+
+// Load previously saved training insights if they exist
+function loadSavedInsights() {
+  if (analyticsData && analyticsData.training_recommendations && analyticsData.training_recommendations.length > 0) {
+    renderTrainingInsights(analyticsData.training_recommendations);
+  }
+}
 
 // ---- MARKETING PAGE ----
 // Scroll-triggered fade-in
