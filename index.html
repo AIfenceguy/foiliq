@@ -2218,7 +2218,11 @@ function initSupabase() {
 
 // ---- AI CALLS ----
 function getAIKey() {
-  return localStorage.getItem('foiliq_ai_key') || '';
+  return localStorage.getItem('foiliq_ai_key')
+    || localStorage.getItem('anthropic_api_key')
+    || localStorage.getItem('anthropic_key')
+    || localStorage.getItem('apiKey')
+    || '';
 }
 
 function getAIProvider() {
@@ -3330,6 +3334,10 @@ function saveMatch() {
 function loadSettings() {
   document.getElementById('settings-ai-provider').value = getAIProvider();
   var aiKey = getAIKey();
+  // Migrate: if found under alternate name, save to canonical key
+  if (aiKey && !localStorage.getItem('foiliq_ai_key')) {
+    localStorage.setItem('foiliq_ai_key', aiKey);
+  }
   document.getElementById('settings-ai-key').value = (aiKey && aiKey !== 'YOUR_ANTHROPIC_API_KEY') ? aiKey : '';
   document.getElementById('settings-supa-url').value = localStorage.getItem('foiliq_supa_url') || 'https://kyfkiigbiwhczrtnlivc.supabase.co';
   document.getElementById('settings-supa-key').value = localStorage.getItem('foiliq_supa_key') || 'sb_publishable_GbLL0419rGP6EYSmq42Bsg_r5EkOYtg';
@@ -4314,6 +4322,12 @@ function renderBoutAnalysis() {
 // ---- TRAINING INSIGHTS TAB ----
 function generateTrainingInsights() {
   var btn = document.getElementById('ana-gen-insights-btn');
+  // Check API key first
+  var testKey = getAIKey();
+  if (!testKey || testKey === 'YOUR_ANTHROPIC_API_KEY') {
+    document.getElementById('ana-insights-list').innerHTML = '<div class="card" style="border-left:4px solid var(--danger);padding:24px"><h4 style="color:var(--danger)">API Key Required</h4><p style="color:var(--text-secondary);margin-top:8px">Go to <strong>Settings</strong> and enter your Anthropic API key to generate training insights.</p><button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="navigateTo(\'settings\')">Open Settings</button></div>';
+    return;
+  }
   btn.disabled = true;
   btn.textContent = 'Analyzing data...';
   var ci = analyticsData.computed_insights || {};
@@ -4367,7 +4381,12 @@ function generateTrainingInsights() {
       // Save to Supabase
       supabaseClient.from('fencer_analytics').update({ training_recommendations: insights, updated_at: new Date().toISOString() }).eq('fencer_id', currentFencerId).then(function() {});
     } catch(e) {
-      document.getElementById('ana-insights-list').innerHTML = '<div class="card"><h4>AI Response</h4><div class="ai-output">' + text + '</div></div>';
+      var isError = text.indexOf('Error:') === 0 || text.indexOf('AI Error:') === 0 || text.indexOf('AI call failed:') === 0;
+      if (isError) {
+        document.getElementById('ana-insights-list').innerHTML = '<div class="card" style="border-left:4px solid var(--danger);padding:24px"><h4 style="color:var(--danger)">AI Error</h4><p style="color:var(--text-secondary);margin-top:8px">' + text + '</p><button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="navigateTo(\'settings\')">Check Settings</button></div>';
+      } else {
+        document.getElementById('ana-insights-list').innerHTML = '<div class="card"><h4>AI Response (could not parse as JSON)</h4><div class="ai-output">' + text + '</div><p style="font-size:12px;color:var(--text-muted);margin-top:8px">Try clicking Generate again.</p></div>';
+      }
     }
   });
 }
