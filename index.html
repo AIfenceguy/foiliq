@@ -1663,6 +1663,12 @@ function addFencerSetupBlock() {
 }
 
 function completeProfileSetup() {
+  if (!currentUser || !currentUser.id) {
+    showToast('Not logged in. Please sign in first.', 'error');
+    showPage('auth');
+    return;
+  }
+  var userId = currentUser.id;
   var blocks = document.querySelectorAll('.fencer-setup-block');
   var fencersToAdd = [];
   blocks.forEach(function(block) {
@@ -1673,7 +1679,7 @@ function completeProfileSetup() {
       division: block.querySelector('.setup-division').value,
       handedness: block.querySelector('.setup-hand').value,
       club: block.querySelector('.setup-club').value || 'SoCAL Fencing Center',
-      user_id: currentUser.id
+      user_id: userId
     });
   });
 
@@ -1682,8 +1688,10 @@ function completeProfileSetup() {
     return;
   }
 
+  console.log('Inserting fencers with user_id:', userId, fencersToAdd);
   supabaseClient.from('fencers').insert(fencersToAdd).select().then(function(res) {
     if (res.error) {
+      console.error('Fencer insert error:', res.error);
       showToast('Error creating fencers: ' + res.error.message, 'error');
       return;
     }
