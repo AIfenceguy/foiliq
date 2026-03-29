@@ -3528,77 +3528,191 @@ function fetchFT(url) {
 }
 
 // ---- PARSERS ----
+// FencingTracker tables are TRANSPOSED: seasons are columns, stats are rows.
+// Helper: parse a transposed stats table into { season: { stat: value } }
+function parseTransposedTable(table) {
+  var result = {};
+  var headerRow = table.querySelector('thead tr, tr:first-child');
+  if (!headerRow) return result;
+  var headers = Array.from(headerRow.querySelectorAll('th, td')).map(function(c) { return c.textContent.trim(); });
+  // headers[0] is empty or label, headers[1..n] are season names
+  var seasonCols = headers.slice(1);
+  seasonCols.forEach(function(s) { result[s] = {}; });
+
+  var rows = Array.from(table.querySelectorAll('tbody tr, tr'));
+  // Skip header row if tbody wasn't used
+  var startIdx = table.querySelector('thead') ? 0 : 1;
+  for (var i = startIdx; i < rows.length; i++) {
+    var cells = Array.from(rows[i].querySelectorAll('td'));
+    if (cells.length < 2) continue;
+    var statName = cells[0].textContent.replace(/<[^>]*>/g, '').replace(/[†‡*]/g, '').trim().toLowerCase();
+    for (var j = 1; j < cells.length && j < headers.length; j++) {
+      var val = cells[j].textContent.trim();
+      if (val === '-') val = '0';
+      result[seasonCols[j - 1]] = result[seasonCols[j - 1]] || {};
+      result[seasonCols[j - 1]][statName] = val;
+    }
+  }
+  return result;
+}
+
 function parseSummaryPage(html) {
   var doc = new DOMParser().parseFromString(html, 'text/html');
-  var data = { results: [], rating: '', club: '', name: '', podiums: {} };
+  var data = { results: [], rating: '', club: '', name: '', podiums: {}, ratings: [] };
   try {
-    // Name from h1 or title
     var h1 = doc.querySelector('h1');
     if (h1) data.name = h1.textContent.trim();
-    // Look for tables and extract what we can
-    var tables = doc.querySelectorAll('table');
-    tables.forEach(function(table) {
-      var rows = table.querySelectorAll('tr');
-      rows.forEach(function(row) {
-        var cells = Array.from(row.querySelectorAll('td, th')).map(function(c) { return c.textContent.trim(); });
-        // Results row: Date, Tournament, Event, Place, Total, Rating, Class
-        if (cells.length >= 5 && cells[0].match(/^\d{4}-\d{2}|^\w{3}\s\d/)) {
-          data.results.push({ date: cells[0], tournament: cells[1] || '', event: cells[2] || '', place: parseInt(cells[3]) || 0, total: parseInt(cells[4]) || 0, rating: cells[5] || '', event_class: cells[6] || '' });
-        }
-      });
+
+    var tables = Array.from(doc.querySelectorAll('table'));
+    console.log('[FT Parse] Summary page: ' + tables.length + ' tables found');
+
+    tables.forEach(function(table, tIdx) {
+      var firstHeader = table.querySelector('thead tr th, tr th');
+      var headerText = firstHeader ? firstHeader.textContent.trim().toLowerCase() : '';
+      var allHeaders = Array.from(table.querySelectorAll('thead tr th, tr:first-child th')).map(function(h) { return h.textContent.trim().toLowerCase(); });
+
+      // Rating history table: columns = Weapon, Rating, Date
+      if (allHeaders.some(function(h) { return h === 'rating' || h === 'weapon'; })) {
+        var rRows = Array.from(table.querySelectorAll('tbody tr, tr')).slice(allHeaders.length > 0 ? 0 : 1);
+        rRows.forEach(function(row) {
+          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
+          if (cells.length >= 2) {
+            data.ratings.push({ weapon: cells[0] || '', rating: cells[1] || '', date: cells[2] || '' });
+            if (!data.rating && cells[1]) data.rating = cells[1];
+          }
+        });
+        console.log('[FT Parse] Ratings table: ' + data.ratings.length + ' entries, current: ' + data.rating);
+      }
+
+      // Podiums table: transposed — rows are Gold/Silver/Bronze, columns are seasons
+      if (table.textContent.indexOf('\u{1F947}') >= 0 || table.textContent.indexOf('Gold') >= 0) {
+        data.podiums = parseTransposedTable(table);
+        console.log('[FT Parse] Podiums table parsed, seasons: ' + Object.keys(data.podiums).join(', '));
+      }
+
+      // Results table: columns = Date, Tournament, Event, Place, Rating Earned, Event Class
+      if (allHeaders.some(function(h) { return h === 'place' || h === 'event class'; })) {
+        var resRows = Array.from(table.querySelectorAll('tbody tr'));
+        resRows.forEach(function(row) {
+          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
+          if (cells.length >= 4) {
+            // Place column may contain "5 / 76" format or just "5"
+            var placeStr = cells[3] || '';
+            var placeParts = placeStr.split('/').map(function(s) { return parseInt(s.trim()); });
+            var place = placeParts[0] || 0;
+            var total = placeParts[1] || 0;
+            // If place column is just a number, total might not be here
+            data.results.push({
+              date: cells[0] || '',
+              tournament: cells[1] || '',
+              event: cells[2] || '',
+              place: place,
+              total: total,
+              rating: cells[4] || '',
+              event_class: cells[5] || ''
+            });
+          }
+        });
+        console.log('[FT Parse] Results table: ' + data.results.length + ' events');
+      }
     });
-    // Try to get rating from text
+
+    // Fallback: try to get rating and club from page text
     var bodyText = doc.body ? doc.body.textContent : '';
-    var ratingMatch = bodyText.match(/Rating:\s*([A-Z]\d{2}|U\d*)/i);
-    if (ratingMatch) data.rating = ratingMatch[1];
-    // Club
-    var clubMatch = bodyText.match(/Club:\s*([^\n]+)/i);
+    if (!data.rating) {
+      var ratingMatch = bodyText.match(/(?:Rating|Current)[:\s]*([A-Z]\d{2}|U\d*)/i);
+      if (ratingMatch) data.rating = ratingMatch[1];
+    }
+    var clubMatch = bodyText.match(/Club[:\s]+([^\n,]+)/i);
     if (clubMatch) data.club = clubMatch[1].trim();
-  } catch(e) { data.parseError = e.message; }
+  } catch(e) { data.parseError = e.message; console.error('[FT Parse] Summary error:', e); }
+  console.log('[FT Parse] Summary result:', JSON.stringify({ name: data.name, rating: data.rating, club: data.club, resultsCount: data.results.length }));
   return data;
 }
 
 function parseHistoryPage(html) {
   var doc = new DOMParser().parseFromString(html, 'text/html');
-  var data = { seasons: {}, bouts: [] };
+  var data = { seasons: {}, scores: {}, timeExpired: {}, bouts: [] };
   try {
-    var tables = doc.querySelectorAll('table');
-    tables.forEach(function(table) {
-      var headerRow = table.querySelector('tr');
-      if (!headerRow) return;
-      var headers = Array.from(headerRow.querySelectorAll('th, td')).map(function(c) { return c.textContent.trim().toLowerCase(); });
-      var rows = Array.from(table.querySelectorAll('tr')).slice(1);
+    var tables = Array.from(doc.querySelectorAll('table'));
+    console.log('[FT Parse] History page: ' + tables.length + ' tables found');
 
-      // Win/Loss stats table detection
-      if (headers.some(function(h) { return h.includes('victories') || h.includes('win'); })) {
-        rows.forEach(function(row) {
-          var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
-          if (cells.length >= 2 && cells[0].match(/\d{4}/)) {
-            var season = cells[0];
-            data.seasons[season] = data.seasons[season] || {};
-            // Map available cells to stats
-            cells.forEach(function(cell, idx) {
-              if (headers[idx]) data.seasons[season][headers[idx]] = cell;
+    // The first few tables are transposed stat tables (Win/Loss, Scores, Time-expired)
+    // They all share the same season columns: 2025-2026, 2024-2025, etc.
+    var statTableCount = 0;
+    tables.forEach(function(table, tIdx) {
+      var firstTd = table.querySelector('tbody tr td, tr:nth-child(2) td');
+      var firstText = firstTd ? firstTd.textContent.trim().toLowerCase() : '';
+      var allHeaders = Array.from(table.querySelectorAll('thead tr th, tr:first-child th')).map(function(h) { return h.textContent.trim(); });
+
+      // Detect transposed stat tables: first column header is empty, rest are season years
+      var hasSeasonsInHeader = allHeaders.some(function(h) { return h.match(/\d{4}-\d{4}/) || h === 'Before 2022' || h === 'All Time'; });
+
+      if (hasSeasonsInHeader) {
+        var parsed = parseTransposedTable(table);
+        // Determine which stat table this is by first row label
+        if (firstText.includes('victories') || firstText.includes('losses') || firstText.includes('win ratio')) {
+          // Check if it's pool-specific or DE-specific or overall
+          var allLabels = Array.from(table.querySelectorAll('tbody tr td:first-child, tr:nth-child(n+2) td:first-child')).map(function(c) { return c.textContent.trim().toLowerCase(); });
+          if (allLabels.some(function(l) { return l.includes('pool') && l.includes('victories'); })) {
+            // This is the Pool/DE breakdown table — merge into seasons
+            Object.keys(parsed).forEach(function(season) {
+              data.seasons[season] = Object.assign(data.seasons[season] || {}, parsed[season]);
+            });
+          } else {
+            // Overall win/loss table
+            Object.keys(parsed).forEach(function(season) {
+              data.seasons[season] = Object.assign(data.seasons[season] || {}, parsed[season]);
             });
           }
-        });
+          statTableCount++;
+          console.log('[FT Parse] Win/Loss stats table ' + statTableCount + ', seasons: ' + Object.keys(parsed).join(', '));
+        } else if (firstText.includes('easy win') || firstText.includes('close win')) {
+          Object.keys(parsed).forEach(function(season) {
+            data.scores[season] = parsed[season];
+          });
+          console.log('[FT Parse] Scores table parsed');
+        } else if (firstText.includes('time')) {
+          Object.keys(parsed).forEach(function(season) {
+            data.timeExpired[season] = parsed[season];
+          });
+          console.log('[FT Parse] Time-expired table parsed');
+        } else {
+          // Generic — merge into seasons
+          Object.keys(parsed).forEach(function(season) {
+            data.seasons[season] = Object.assign(data.seasons[season] || {}, parsed[season]);
+          });
+          statTableCount++;
+        }
       }
 
-      // Bout-by-bout detection
-      if (headers.some(function(h) { return h.includes('opponent') || h.includes('score'); })) {
+      // Bout-by-bout tables have columns like: Round, Result, Score, Opponent, etc.
+      var hasOpponent = allHeaders.some(function(h) { return h.toLowerCase().includes('opponent'); });
+      var hasResult = allHeaders.some(function(h) { var lh = h.toLowerCase(); return lh === 'result' || lh === 'v/d'; });
+      if (hasOpponent || hasResult) {
+        var headersLower = allHeaders.map(function(h) { return h.toLowerCase(); });
+        var rows = Array.from(table.querySelectorAll('tbody tr'));
         rows.forEach(function(row) {
           var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
           if (cells.length >= 3) {
             var bout = {};
             cells.forEach(function(cell, idx) {
-              if (headers[idx]) bout[headers[idx]] = cell;
+              if (headersLower[idx]) bout[headersLower[idx]] = cell;
             });
+            // Normalize result field
+            var resultVal = bout['result'] || bout['v/d'] || '';
+            bout.result = resultVal.charAt(0).toUpperCase(); // V or D
             data.bouts.push(bout);
           }
         });
       }
     });
-  } catch(e) { data.parseError = e.message; }
+
+    console.log('[FT Parse] History: ' + Object.keys(data.seasons).length + ' seasons, ' + data.bouts.length + ' bouts');
+    // Log a sample season
+    var sampleSeason = Object.keys(data.seasons)[0];
+    if (sampleSeason) console.log('[FT Parse] Sample season ' + sampleSeason + ':', JSON.stringify(data.seasons[sampleSeason]));
+  } catch(e) { data.parseError = e.message; console.error('[FT Parse] History error:', e); }
   return data;
 }
 
@@ -3607,56 +3721,123 @@ function parseStrengthPage(html) {
   var data = { pool: {}, de: {} };
   try {
     var bodyText = doc.body ? doc.body.textContent : '';
-    var poolMatch = bodyText.match(/Pool\s*(?:Strength)?[:\s]*(\d[\d,]*)/i);
-    var deMatch = bodyText.match(/DE\s*(?:Strength)?[:\s]*(\d[\d,]*)/i);
-    if (poolMatch) data.pool.value = parseInt(poolMatch[1].replace(/,/g, ''));
-    if (deMatch) data.de.value = parseInt(deMatch[1].replace(/,/g, ''));
-    // Look for tables with strength data
-    var tables = doc.querySelectorAll('table');
+    // FencingTracker shows strength as numbers, often with labels
+    var tables = Array.from(doc.querySelectorAll('table'));
     tables.forEach(function(table) {
       var rows = Array.from(table.querySelectorAll('tr'));
       rows.forEach(function(row) {
-        var cells = Array.from(row.querySelectorAll('td')).map(function(c) { return c.textContent.trim(); });
+        var cells = Array.from(row.querySelectorAll('td, th')).map(function(c) { return c.textContent.trim(); });
         if (cells.length >= 2) {
           var label = cells[0].toLowerCase();
-          var val = parseInt(cells[1].replace(/,/g, ''));
-          if (label.includes('pool') && !isNaN(val)) data.pool.value = val;
-          if (label.includes('de') && !isNaN(val) && !label.includes('pool')) data.de.value = val;
+          for (var ci = 1; ci < cells.length; ci++) {
+            var val = parseInt(cells[ci].replace(/,/g, ''));
+            if (isNaN(val)) continue;
+            if (label.includes('pool') && !data.pool.value) data.pool.value = val;
+            if ((label.includes('direct elimination') || (label.includes('de') && !label.includes('pool'))) && !data.de.value) data.de.value = val;
+            break;
+          }
         }
       });
     });
-  } catch(e) { data.parseError = e.message; }
+    // Fallback: regex on body text
+    if (!data.pool.value) {
+      var poolMatch = bodyText.match(/Pool[^:]*:\s*(\d[\d,]*)/i);
+      if (poolMatch) data.pool.value = parseInt(poolMatch[1].replace(/,/g, ''));
+    }
+    if (!data.de.value) {
+      var deMatch = bodyText.match(/(?:Direct Elimination|DE)[^:]*:\s*(\d[\d,]*)/i);
+      if (deMatch) data.de.value = parseInt(deMatch[1].replace(/,/g, ''));
+    }
+    console.log('[FT Parse] Strength: pool=' + (data.pool.value || 'unknown') + ', de=' + (data.de.value || 'unknown'));
+  } catch(e) { data.parseError = e.message; console.error('[FT Parse] Strength error:', e); }
   return data;
 }
 
 function computeInsights(summary, history, strength) {
   var insights = {};
-  // Win rates from history seasons
-  var seasons = Object.keys(history.seasons || {}).sort();
-  insights.seasons = seasons;
+  // Seasons from history — filter out "All Time"
+  var allSeasons = Object.keys(history.seasons || {}).filter(function(s) { return s !== 'All Time'; });
+  // Sort chronologically: "Before 2022" first, then "2022-2023", "2023-2024", etc.
+  allSeasons.sort(function(a, b) {
+    if (a.includes('Before')) return -1;
+    if (b.includes('Before')) return 1;
+    return a.localeCompare(b);
+  });
+  insights.seasons = allSeasons;
   insights.seasonStats = {};
-  seasons.forEach(function(s) {
-    var d = history.seasons[s];
+
+  allSeasons.forEach(function(s) {
+    var d = history.seasons[s] || {};
+    // FencingTracker stores: victories, losses, win ratio, pool victories, pool losses, pool win ratio, de victories, de losses, de win ratio
+    var victories = parseInt(d['victories'] || '0');
+    var losses = parseInt(d['losses'] || '0');
+    var total = victories + losses;
+    var winRate = total > 0 ? (victories / total * 100) : 0;
+    // Check for explicit win ratio from FT
+    var ftWinRatio = d['win ratio'] || d['win_ratio'] || '';
+    if (ftWinRatio && ftWinRatio.includes('%')) winRate = parseFloat(ftWinRatio);
+
+    var poolV = parseInt(d['pool victories'] || '0');
+    var poolL = parseInt(d['pool losses'] || '0');
+    var poolTotal = poolV + poolL;
+    var poolWinRate = poolTotal > 0 ? (poolV / poolTotal * 100) : 0;
+    var ftPoolRatio = d['pool win ratio'] || '';
+    if (ftPoolRatio && ftPoolRatio.includes('%')) poolWinRate = parseFloat(ftPoolRatio);
+
+    var deV = parseInt(d['de victories'] || '0');
+    var deL = parseInt(d['de losses'] || '0');
+    var deTotal = deV + deL;
+    var deWinRate = deTotal > 0 ? (deV / deTotal * 100) : 0;
+    var ftDeRatio = d['de win ratio'] || '';
+    if (ftDeRatio && ftDeRatio.includes('%')) deWinRate = parseFloat(ftDeRatio);
+
     insights.seasonStats[s] = {
-      winRate: parseFloat(d['win ratio'] || d['win_ratio'] || d['overall'] || '0'),
-      poolWinRate: parseFloat(d['pool win ratio'] || d['pool_win_ratio'] || d['pool'] || '0'),
-      deWinRate: parseFloat(d['de win ratio'] || d['de_win_ratio'] || d['de'] || '0'),
-      victories: parseInt(d['victories'] || '0'),
-      losses: parseInt(d['losses'] || '0')
+      winRate: Math.round(winRate * 10) / 10,
+      poolWinRate: Math.round(poolWinRate * 10) / 10,
+      deWinRate: Math.round(deWinRate * 10) / 10,
+      victories: victories,
+      losses: losses,
+      poolVictories: poolV,
+      poolLosses: poolL,
+      deVictories: deV,
+      deLosses: deL
     };
   });
+
+  // Score distribution from history.scores
+  insights.scoreStats = {};
+  allSeasons.forEach(function(s) {
+    var sc = (history.scores || {})[s] || {};
+    insights.scoreStats[s] = {
+      easyWins: parseInt(sc['easy wins'] || '0'),
+      closeWins: parseInt(sc['close wins'] || '0'),
+      closeLosses: parseInt(sc['close losses'] || '0'),
+      bigLosses: parseInt(sc['big losses'] || '0')
+    };
+  });
+
   // Strength gap
   insights.poolStrength = (strength.pool || {}).value || 0;
   insights.deStrength = (strength.de || {}).value || 0;
   insights.strengthGap = Math.abs(insights.poolStrength - insights.deStrength);
+
+  // Podiums from summary
+  insights.podiums = summary.podiums || {};
+
   // Recent results with percentile
-  insights.recentResults = (summary.results || []).slice(0, 15).map(function(r) {
+  insights.recentResults = (summary.results || []).slice(0, 20).map(function(r) {
     var pct = r.total > 0 ? Math.round(((r.total - r.place) / r.total) * 100) : 0;
     return Object.assign({}, r, { percentile: pct });
   });
+
   insights.rating = summary.rating || '';
   insights.club = summary.club || '';
   insights.name = summary.name || '';
+
+  console.log('[FT Compute] Seasons:', insights.seasons);
+  console.log('[FT Compute] Stats:', JSON.stringify(insights.seasonStats));
+  console.log('[FT Compute] Results:', insights.recentResults.length);
+  console.log('[FT Compute] Strength: pool=' + insights.poolStrength + ', de=' + insights.deStrength + ', gap=' + insights.strengthGap);
   return insights;
 }
 
@@ -3690,20 +3871,27 @@ function renderOverviewTab() {
 
   // KPI cards
   var kpiHtml = '';
-  function kpiCard(val, label, prevVal) {
+  function kpiCard(val, label, prevVal, suffix) {
+    suffix = suffix || '%';
     var trend = '';
-    if (prevVal !== undefined && prevVal > 0) {
+    if (prevVal !== undefined && prevVal > 0 && val) {
       var diff = val - prevVal;
-      trend = '<div class="trend ' + (diff >= 0 ? 'up' : 'down') + '">' + (diff >= 0 ? '\u2191' : '\u2193') + ' ' + Math.abs(diff).toFixed(1) + '% vs last season</div>';
+      trend = '<div class="trend ' + (diff >= 0 ? 'up' : 'down') + '">' + (diff >= 0 ? '\u2191' : '\u2193') + ' ' + Math.abs(diff).toFixed(1) + ' vs last season</div>';
     }
-    return '<div class="ana-kpi"><div class="val">' + (val ? val.toFixed(1) + '%' : '--') + '</div><div class="lbl">' + label + '</div>' + trend + '</div>';
+    return '<div class="ana-kpi"><div class="val">' + (val ? val.toFixed(1) + suffix : '--') + '</div><div class="lbl">' + label + '</div>' + trend + '</div>';
   }
   kpiHtml += kpiCard(current.winRate, 'Overall Win Rate', prev.winRate);
   kpiHtml += kpiCard(current.poolWinRate, 'Pool Win Rate', prev.poolWinRate);
   kpiHtml += kpiCard(current.deWinRate, 'DE Win Rate', prev.deWinRate);
-  // Clutch rate placeholder
-  kpiHtml += '<div class="ana-kpi"><div class="val">' + (ci.strengthGap || '--') + '</div><div class="lbl">Pool-DE Strength Gap</div></div>';
+  // Clutch rate from score stats
+  var curScores = (ci.scoreStats || {})[seasons[seasons.length - 1]] || {};
+  var clutchW = curScores.closeWins || 0;
+  var clutchL = curScores.closeLosses || 0;
+  var clutchTotal = clutchW + clutchL;
+  var clutchRate = clutchTotal > 0 ? (clutchW / clutchTotal * 100) : 0;
+  kpiHtml += kpiCard(clutchRate > 0 ? clutchRate : null, 'Clutch Win Rate', null);
   document.getElementById('ana-kpi-row').innerHTML = kpiHtml;
+  console.log('[FT Render] KPIs: winRate=' + (current.winRate||0) + ' pool=' + (current.poolWinRate||0) + ' de=' + (current.deWinRate||0) + ' clutch=' + clutchRate);
 
   // Anomaly card
   var anomalyHtml = '';
@@ -3758,18 +3946,25 @@ function renderPodiumChart(canvasId, ci) {
   if (!canvas) return;
   if (anaCharts[canvasId]) anaCharts[canvasId].destroy();
   var seasons = ci.seasons || [];
-  // Placeholder — compute from recent results grouped by season
-  var results = ci.recentResults || [];
+  var podiums = ci.podiums || {};
+  // Podiums is { season: { '\u{1F947} gold': '2', '\u{1F948} silver': '1', ... } }
+  // Also might be: { season: { 'gold': '2' } } depending on parse
+  function getPodium(season, key) {
+    var sd = podiums[season] || {};
+    var keys = Object.keys(sd);
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i].toLowerCase().indexOf(key) >= 0) return parseInt(sd[keys[i]]) || 0;
+    }
+    return 0;
+  }
   var goldBySeason = {}, silverBySeason = {}, bronzeBySeason = {}, top8BySeason = {};
-  seasons.forEach(function(s) { goldBySeason[s] = 0; silverBySeason[s] = 0; bronzeBySeason[s] = 0; top8BySeason[s] = 0; });
-  results.forEach(function(r) {
-    // Approximate season from date
-    var s = seasons[seasons.length - 1] || 'current';
-    if (r.place === 1) goldBySeason[s] = (goldBySeason[s] || 0) + 1;
-    else if (r.place === 2) silverBySeason[s] = (silverBySeason[s] || 0) + 1;
-    else if (r.place === 3) bronzeBySeason[s] = (bronzeBySeason[s] || 0) + 1;
-    else if (r.place <= 8) top8BySeason[s] = (top8BySeason[s] || 0) + 1;
+  seasons.forEach(function(s) {
+    goldBySeason[s] = getPodium(s, 'gold');
+    silverBySeason[s] = getPodium(s, 'silver');
+    bronzeBySeason[s] = getPodium(s, 'bronze');
+    top8BySeason[s] = getPodium(s, 'top 8') || getPodium(s, 'top8');
   });
+  console.log('[FT Render] Podiums per season:', JSON.stringify({ gold: goldBySeason, silver: silverBySeason }));
 
   anaCharts[canvasId] = new Chart(canvas, {
     type: 'bar',
@@ -3820,22 +4015,21 @@ function renderTrendsCharts() {
     });
   }
 
-  // Score distribution donut
+  // Score distribution donut — from actual FT score stats
   var sdCanvas = document.getElementById('ana-chart-scoredist');
   if (sdCanvas) {
     if (anaCharts['ana-chart-scoredist']) anaCharts['ana-chart-scoredist'].destroy();
-    var rr = ci.recentResults || [];
-    var easy = 0, closeW = 0, closeL = 0, bigL = 0;
-    rr.forEach(function(r) {
-      if (r.percentile >= 85) easy++;
-      else if (r.percentile >= 65) closeW++;
-      else if (r.percentile >= 40) closeL++;
-      else bigL++;
-    });
+    var curSeason = seasons.length > 0 ? seasons[seasons.length - 1] : '';
+    var sc = (ci.scoreStats || {})[curSeason] || {};
+    var easy = sc.easyWins || 0;
+    var closeW = sc.closeWins || 0;
+    var closeL = sc.closeLosses || 0;
+    var bigL = sc.bigLosses || 0;
+    console.log('[FT Render] Score dist:', curSeason, { easy: easy, closeW: closeW, closeL: closeL, bigL: bigL });
     anaCharts['ana-chart-scoredist'] = new Chart(sdCanvas, {
       type: 'doughnut',
       data: {
-        labels: ['Top Finishes', 'Solid Finishes', 'Mid-Pack', 'Bottom Half'],
+        labels: ['Easy Wins (' + easy + ')', 'Close Wins (' + closeW + ')', 'Close Losses (' + closeL + ')', 'Big Losses (' + bigL + ')'],
         datasets: [{ data: [easy, closeW, closeL, bigL], backgroundColor: [ANA_COLORS.green, '#C0DD97', ANA_COLORS.amber, ANA_COLORS.red] }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#8899bb', font: { family: 'DM Sans', size: 12 } } } } }
