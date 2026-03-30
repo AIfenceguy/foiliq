@@ -2156,7 +2156,9 @@ html { scroll-behavior: smooth; }
                 <div class="form-group"><label>Club</label><input type="text" id="scout-add-club" placeholder="Club name"></div>
                 <div class="form-group"><label>Rating</label><input type="text" id="scout-add-rating" placeholder="e.g. D25"></div>
               </div>
-              <div class="form-group"><label>Paste FencingTracker Profile Data</label><textarea id="scout-add-raw" rows="8" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Go to fencingtracker.com, find the opponent's profile page, select all text on the page, and paste it here."></textarea></div>
+              <div class="form-group"><label>SUMMARY</label><textarea id="scout-add-summary" rows="5" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Go to the opponent's FencingTracker profile, click the Summary tab, select all (Ctrl+A), copy and paste here."></textarea></div>
+              <div class="form-group"><label>HISTORY</label><textarea id="scout-add-history" rows="5" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Click the History tab on FencingTracker, select all (Ctrl+A), copy and paste here."></textarea></div>
+              <div class="form-group"><label>STRENGTH</label><textarea id="scout-add-strength" rows="5" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Click the Strength tab on FencingTracker, select all (Ctrl+A), copy and paste here."></textarea></div>
               <button class="btn btn-gold" style="width:100%" onclick="saveScoutProfile()">Save &amp; Generate Report</button>
               <p style="text-align:center;margin-top:10px;cursor:pointer;color:var(--text-muted);font-size:13px" onclick="hideScoutAddForm()">Cancel</p>
             </div>
@@ -4764,7 +4766,9 @@ function showScoutAddForm() {
   document.getElementById('scout-add-name').value = '';
   document.getElementById('scout-add-club').value = '';
   document.getElementById('scout-add-rating').value = '';
-  document.getElementById('scout-add-raw').value = '';
+  document.getElementById('scout-add-summary').value = '';
+  document.getElementById('scout-add-history').value = '';
+  document.getElementById('scout-add-strength').value = '';
   currentScoutId = null;
   renderScoutList();
 }
@@ -4785,7 +4789,7 @@ function saveScoutProfile() {
       opponent_name: name,
       opponent_club: document.getElementById('scout-add-club').value.trim(),
       opponent_rating: document.getElementById('scout-add-rating').value.trim(),
-      fencingtracker_raw: document.getElementById('scout-add-raw').value,
+      fencingtracker_raw: 'SUMMARY:\n' + (document.getElementById('scout-add-summary').value || '') + '\n\nHISTORY:\n' + (document.getElementById('scout-add-history').value || '') + '\n\nSTRENGTH:\n' + (document.getElementById('scout-add-strength').value || ''),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
