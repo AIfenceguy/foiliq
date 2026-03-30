@@ -4274,10 +4274,11 @@ function renderTrendsCharts() {
         datasets: [
           { label: 'Close Wins', data: closeWins, backgroundColor: ANA_COLORS.green, borderRadius: 4 },
           { label: 'Close Losses', data: closeLosses, backgroundColor: ANA_COLORS.red, borderRadius: 4 },
-          { label: 'Close Win %', data: closeRate, type: 'line', borderColor: ANA_COLORS.amber, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, yAxisID: 'y1', pointRadius: 4 }
+          { label: 'Close Win %', data: closeRate, type: 'line', borderColor: ANA_COLORS.amber, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 5, pointBackgroundColor: ANA_COLORS.amber, datalabels: { display: true } }
         ]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8899bb', font: { family: 'DM Sans' } } } }, scales: { x: { ticks: { color: '#4a5568' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { beginAtZero: true, ticks: { color: '#4a5568', stepSize: 5 }, grid: { color: 'rgba(255,255,255,0.04)' } }, y1: { position: 'right', min: 0, max: 100, ticks: { color: ANA_COLORS.amber, callback: function(v) { return v + '%'; } }, grid: { display: false } } } }
+      plugins: [{ id: 'closeRateLabels', afterDatasetsDraw: function(chart) { var meta = chart.getDatasetMeta(2); if (!meta || !meta.data) return; var ctx = chart.ctx; ctx.save(); ctx.font = '600 11px "JetBrains Mono", monospace'; ctx.fillStyle = ANA_COLORS.amber; ctx.textAlign = 'center'; meta.data.forEach(function(pt, i) { ctx.fillText(closeRate[i] + '%', pt.x, pt.y - 10); }); ctx.restore(); } }],
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8899bb', font: { family: 'DM Sans' } } } }, scales: { x: { ticks: { color: '#4a5568' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { beginAtZero: true, ticks: { color: '#4a5568', stepSize: 5 }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
     });
   }
 
