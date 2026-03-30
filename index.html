@@ -4781,9 +4781,25 @@ function hideScoutAddForm() {
 function saveScoutProfile() {
   var name = document.getElementById('scout-add-name').value.trim();
   if (!name) { showToast('Opponent name required.', 'error'); return; }
+
+  // Get fresh session from the SAME supabaseClient instance
   supabaseClient.auth.getSession().then(function(sessionRes) {
-    var user = sessionRes.data && sessionRes.data.session ? sessionRes.data.session.user : null;
-    if (!user) { showToast('You must be logged in to save scout profiles.', 'error'); return; }
+    var session = sessionRes.data ? sessionRes.data.session : null;
+    var user = session ? session.user : null;
+
+    console.log('[Scout] Session check:', {
+      hasSession: !!session,
+      userId: user ? user.id : 'null',
+      email: user ? user.email : 'null',
+      accessToken: session ? session.access_token.substring(0, 20) + '...' : 'null'
+    });
+
+    if (!user || !user.id) {
+      showToast('You must be logged in to save scout profiles. Please sign in again.', 'error');
+      console.error('[Scout] No authenticated user found. currentUser:', currentUser);
+      return;
+    }
+
     var data = {
       user_id: user.id,
       opponent_name: name,
@@ -4793,15 +4809,29 @@ function saveScoutProfile() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
+
+    console.log('[Scout] Inserting scout_profiles with user_id:', user.id, 'name:', name);
+
     supabaseClient.from('scout_profiles').insert(data).select().then(function(res) {
-      if (res.error) { showToast('Error: ' + res.error.message, 'error'); return; }
+      if (res.error) {
+        console.error('[Scout] Insert error:', JSON.stringify(res.error));
+        showToast('Scout save error: ' + res.error.message + ' (code: ' + (res.error.code || 'none') + ', hint: ' + (res.error.hint || 'none') + ')', 'error');
+        return;
+      }
+      console.log('[Scout] Insert success:', res.data);
       var newProfile = res.data[0];
       scoutProfiles.unshift(newProfile);
       document.getElementById('scout-add-form').style.display = 'none';
       showToast('Profile saved!', 'success');
       loadScoutProfile(newProfile.id);
       generateScoutReport(newProfile.id);
-    }).catch(function(err) { showToast('Save failed: ' + err.message, 'error'); });
+    }).catch(function(err) {
+      console.error('[Scout] Insert catch:', err);
+      showToast('Save failed: ' + err.message, 'error');
+    });
+  }).catch(function(err) {
+    console.error('[Scout] getSession failed:', err);
+    showToast('Session error: ' + err.message, 'error');
   });
 }
 
