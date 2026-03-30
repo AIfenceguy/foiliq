@@ -3208,17 +3208,21 @@ function answerDrill(choice, btn) {
   var explDiv = document.createElement('div');
   explDiv.className = 'drill-explanation ' + (isCorrect ? 'correct-expl' : 'wrong-expl');
   explDiv.textContent = isCorrect ? 'Correct! ' + (scenario.explanation || '') : 'You chose ' + choice.toUpperCase() + '. The right answer is ' + correct.toUpperCase() + '. ' + (scenario.explanation || '');
-  document.getElementById('drill-active-card').appendChild(explDiv);
-
-  // Auto advance
-  setTimeout(function() {
+  // Add Next button
+  var nextBtn = document.createElement('button');
+  nextBtn.className = 'btn btn-gold';
+  nextBtn.style.cssText = 'margin-top:14px;display:block;width:100%';
+  nextBtn.textContent = drillState.currentIndex >= 4 ? 'See Results' : 'Next';
+  nextBtn.onclick = function() {
     drillState.currentIndex++;
     if (drillState.currentIndex >= 5) {
       finishDrillSession();
     } else {
       showDrillCard();
     }
-  }, 2500);
+  };
+  explDiv.appendChild(nextBtn);
+  document.getElementById('drill-active-card').appendChild(explDiv);
 }
 
 function finishDrillSession() {
