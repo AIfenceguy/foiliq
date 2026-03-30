@@ -1004,6 +1004,75 @@ html { scroll-behavior: smooth; }
   .ana-projection { flex-direction: column; gap: 16px; }
 }
 
+/* ============================================
+   CLUB DRILL-DOWN
+   ============================================ */
+.club-drilldown { margin-top:8px; }
+.club-row { display:flex; align-items:center; padding:10px 14px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; margin-bottom:4px; cursor:pointer; transition:border-color 0.2s; }
+.club-row:hover { border-color:rgba(255,255,255,0.1); }
+.club-row.open { border-left:3px solid var(--accent-gold); }
+.club-row .club-name { flex:1; font-size:14px; font-weight:600; }
+.club-row .club-rate { font-family:'JetBrains Mono',monospace; font-size:14px; min-width:50px; text-align:right; }
+.club-row .club-count { font-size:12px; color:var(--text-muted); min-width:50px; text-align:right; margin-right:8px; }
+.club-row .club-chevron { font-size:14px; color:var(--text-muted); transition:transform 0.3s; margin-left:8px; }
+.club-row.open .club-chevron { transform:rotate(90deg); color:var(--accent-gold); }
+.club-expand { max-height:0; overflow:hidden; transition:max-height 0.35s ease, opacity 0.3s ease; opacity:0; background:rgba(255,255,255,0.02); border-left:3px solid var(--accent-gold); margin-bottom:4px; border-radius:0 0 8px 8px; }
+.club-expand.open { max-height:1200px; opacity:1; padding:12px 16px; }
+.fencer-row { display:flex; align-items:center; padding:8px 12px; border-bottom:1px solid var(--border); cursor:pointer; transition:0.15s; font-size:13px; }
+.fencer-row:hover { background:rgba(255,255,255,0.03); }
+.fencer-row.open { border-left:3px solid var(--accent-gold); background:rgba(240,180,41,0.04); }
+.fencer-row .f-name { flex:1; font-weight:500; }
+.fencer-row .f-wl { min-width:70px; }
+.fencer-row .f-rate-pill { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.f-rate-pill.green { background:rgba(34,197,94,0.15); color:var(--success); }
+.f-rate-pill.gold { background:rgba(240,180,41,0.15); color:var(--accent-gold); }
+.f-rate-pill.red { background:rgba(239,68,68,0.15); color:var(--danger); }
+.fencer-row .f-trend { min-width:24px; text-align:center; font-size:16px; }
+.fencer-expand { max-height:0; overflow:hidden; transition:max-height 0.3s ease; background:rgba(255,255,255,0.015); padding:0 12px; border-radius:0 0 6px 6px; }
+.fencer-expand.open { max-height:800px; padding:12px; }
+.trend-dots { display:flex; gap:4px; margin-bottom:10px; }
+.trend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.trend-dot.w { background:var(--success); }
+.trend-dot.l { background:var(--danger); }
+.bout-hist-row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.bout-hist-row .bh-date { color:var(--text-muted); min-width:75px; }
+.bout-hist-row .bh-tourney { flex:1; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; }
+.bout-hist-row .bh-score { font-family:'JetBrains Mono',monospace; min-width:50px; }
+.bout-hist-row .bh-vd { padding:2px 6px; border-radius:4px; font-family:'Bebas Neue',sans-serif; font-size:12px; }
+.bout-hist-row .bh-vd.win { background:rgba(34,197,94,0.2); color:var(--success); }
+.bout-hist-row .bh-vd.loss { background:rgba(239,68,68,0.2); color:var(--danger); }
+.bout-hist-row .bh-type { font-size:11px; color:var(--text-muted); min-width:36px; }
+.rating-pill { display:inline-block; padding:1px 7px; border-radius:8px; font-size:10px; font-weight:600; font-family:'JetBrains Mono',monospace; background:var(--bg-elevated); color:var(--text-secondary); margin-left:6px; }
+
+/* ============================================
+   SCOUT PROFILES
+   ============================================ */
+.scout-layout { display:flex; gap:0; min-height:calc(100vh - 120px); }
+.scout-left { width:280px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; padding:16px; }
+.scout-left h4 { font-size:16px; color:var(--accent-gold); margin-bottom:12px; letter-spacing:1px; }
+.scout-right { flex:1; padding:24px; overflow-y:auto; }
+.scout-card { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:8px; cursor:pointer; transition:0.2s; }
+.scout-card:hover { border-color:rgba(255,255,255,0.1); }
+.scout-card.active { border-left:3px solid var(--accent-gold); }
+.scout-card h5 { font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700; margin-bottom:2px; }
+.scout-card .sc-meta { font-size:12px; color:var(--text-muted); }
+.scout-card .sc-update { float:right; font-size:11px; color:var(--accent-gold); cursor:pointer; background:none; border:none; font-family:'DM Sans',sans-serif; }
+.scout-empty { text-align:center; padding:80px 20px; color:var(--text-muted); }
+.scout-report h3 { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--accent-gold); margin-top:24px; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid rgba(240,180,41,0.2); letter-spacing:1px; }
+.scout-report p { font-size:14px; line-height:1.75; color:var(--text-secondary); margin-bottom:12px; }
+.scout-report ul { margin:0 0 12px 20px; }
+.scout-report li { font-size:14px; line-height:1.75; color:var(--text-secondary); list-style:none; position:relative; padding-left:16px; }
+.scout-report li::before { content:''; position:absolute; left:0; top:10px; width:6px; height:6px; border-radius:50%; background:var(--accent-gold); }
+.scout-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+.scout-header h2 { font-size:28px; flex:1; }
+@media (max-width:768px) {
+  .scout-layout { flex-direction:column; }
+  .scout-left { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:200px; padding:8px; }
+  .club-row .club-count { display:none; }
+  .fencer-row .f-rate-pill, .fencer-row .f-trend { display:none; }
+  .bout-hist-row .bh-tourney { max-width:100px; }
+}
+
 /* Modal */
 .modal-overlay {
   display: none;
@@ -1629,6 +1698,9 @@ html { scroll-behavior: smooth; }
         <div class="nav-item" onclick="navigateTo('analytics')" data-screen="analytics">
           <span class="nav-icon">&#128200;</span> Analytics <span style="font-size:9px;background:var(--accent-gold);color:var(--bg-primary);padding:1px 6px;border-radius:8px;margin-left:4px;font-family:'DM Sans',sans-serif;font-weight:700;vertical-align:middle">NEW</span>
         </div>
+        <div class="nav-item" onclick="navigateTo('scout')" data-screen="scout">
+          <span class="nav-icon">&#9678;</span> Scout
+        </div>
         <div class="nav-item" onclick="navigateTo('settings')" data-screen="settings">
           <span class="nav-icon">&#9881;</span> Settings
         </div>
@@ -1651,6 +1723,7 @@ html { scroll-behavior: smooth; }
         <div class="bottom-item" onclick="navigateTo('opponents')" data-screen="opponents"><span class="nav-icon">&#127919;</span>Opp</div>
         <div class="bottom-item" onclick="navigateTo('history')" data-screen="history"><span class="nav-icon">&#128202;</span>Log</div>
         <div class="bottom-item" onclick="navigateTo('analytics')" data-screen="analytics"><span class="nav-icon">&#128200;</span>Stats</div>
+        <div class="bottom-item" onclick="navigateTo('scout')" data-screen="scout"><span class="nav-icon">&#9678;</span>Scout</div>
         <div class="bottom-item" onclick="navigateTo('settings')" data-screen="settings"><span class="nav-icon">&#9881;</span>Set</div>
       </div>
     </div>
@@ -2044,7 +2117,7 @@ html { scroll-behavior: smooth; }
             <div class="ana-upset-cards" id="ana-upset-cards"></div>
             <div class="ana-chart-row">
               <div class="ana-chart-card"><h4>LOSS TYPE DISTRIBUTION</h4><div class="ana-chart-wrap"><canvas id="ana-chart-losstype"></canvas></div></div>
-              <div class="ana-chart-card"><h4>WIN RATE BY OPPONENT CLUB</h4><div class="ana-chart-wrap"><canvas id="ana-chart-clubs"></canvas></div></div>
+              <div class="ana-chart-card"><h4>WIN RATE BY OPPONENT CLUB</h4><div class="ana-chart-wrap"><canvas id="ana-chart-clubs"></canvas></div><div id="club-drilldown" class="club-drilldown"></div></div>
             </div>
             <div class="ana-chart-card full" style="margin-top:24px"><h4>RECENT BOUT DETAIL</h4><div id="ana-bout-detail"></div></div>
           </div>
@@ -2057,6 +2130,52 @@ html { scroll-behavior: smooth; }
             </div>
             <div id="ana-insights-list"></div>
             <div id="ana-projection-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCOUT SCREEN -->
+      <div class="screen" id="screen-scout">
+        <div class="page-header"><div><h1>Scout Profiles</h1><div class="subtitle">Opponent intelligence reports</div></div></div>
+        <div class="scout-layout">
+          <div class="scout-left">
+            <h4>OPPONENTS</h4>
+            <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:12px" onclick="showScoutAddForm()">+ Add Opponent</button>
+            <div id="scout-list"></div>
+          </div>
+          <div class="scout-right" id="scout-right">
+            <div class="scout-empty" id="scout-empty">
+              <div style="font-size:48px;margin-bottom:12px">&#9678;</div>
+              <p>Select an opponent or add a new one to generate a scout report.</p>
+            </div>
+            <!-- Add form -->
+            <div id="scout-add-form" style="display:none">
+              <h3 style="font-size:24px;margin-bottom:16px">Add Opponent</h3>
+              <div class="form-group"><label>Opponent Name</label><input type="text" id="scout-add-name" placeholder="Last Name, First Name" required></div>
+              <div class="form-row">
+                <div class="form-group"><label>Club</label><input type="text" id="scout-add-club" placeholder="Club name"></div>
+                <div class="form-group"><label>Rating</label><input type="text" id="scout-add-rating" placeholder="e.g. D25"></div>
+              </div>
+              <div class="form-group"><label>Paste FencingTracker Profile Data</label><textarea id="scout-add-raw" rows="8" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical" placeholder="Go to fencingtracker.com, find the opponent's profile page, select all text on the page, and paste it here."></textarea></div>
+              <button class="btn btn-gold" style="width:100%" onclick="saveScoutProfile()">Save &amp; Generate Report</button>
+              <p style="text-align:center;margin-top:10px;cursor:pointer;color:var(--text-muted);font-size:13px" onclick="hideScoutAddForm()">Cancel</p>
+            </div>
+            <!-- Profile view -->
+            <div id="scout-profile-view" style="display:none">
+              <div class="scout-header">
+                <div style="flex:1">
+                  <h2 id="scout-view-name"></h2>
+                  <div style="font-size:13px;color:var(--text-secondary)"><span id="scout-view-club"></span> <span class="rating-pill" id="scout-view-rating"></span> <span style="color:var(--text-muted);margin-left:12px" id="scout-view-date"></span></div>
+                </div>
+                <button class="btn btn-outline btn-sm" id="scout-update-btn" onclick="toggleScoutUpdate()">Update Data</button>
+              </div>
+              <div id="scout-update-area" style="display:none;margin-bottom:20px">
+                <div class="form-group"><label>Paste Updated FencingTracker Data</label><textarea id="scout-update-raw" rows="6" style="width:100%;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical"></textarea></div>
+                <button class="btn btn-gold" onclick="regenerateScoutReport()">Regenerate Report</button>
+              </div>
+              <div id="scout-report-area" class="scout-report"></div>
+              <div id="scout-loading" style="display:none;text-align:center;padding:40px"><div class="loading-msg"><div class="spinner"></div>Generating scout report...</div></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2521,6 +2640,7 @@ function navigateTo(screen) {
   if (screen === 'drills') loadDrillHome();
   if (screen === 'postbout') loadPostbout();
   if (screen === 'analytics') loadAnalytics();
+  if (screen === 'scout') loadScoutProfiles();
 }
 
 // ---- FENCER SELECTOR ----
@@ -4304,6 +4424,8 @@ function renderBoutAnalysis() {
       options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100, ticks: { color: '#4a5568', callback: function(v) { return v + '%'; } }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#8899bb', font: { size: 11 } }, grid: { display: false } } } }
     });
   }
+  // Club drill-down (below chart)
+  renderClubDrilldown(bouts);
 
   // RECENT BOUT DETAIL
   var detailHtml = '';
@@ -4438,6 +4560,332 @@ function loadSavedInsights() {
   if (analyticsData && analyticsData.training_recommendations && analyticsData.training_recommendations.length > 0) {
     renderTrainingInsights(analyticsData.training_recommendations);
   }
+}
+
+// ---- CLUB DRILL-DOWN ----
+var clubDrillData = [];
+
+function renderClubDrilldown(bouts) {
+  var container = document.getElementById('club-drilldown');
+  if (!container) return;
+  // Group bouts by club
+  var clubMap = {};
+  bouts.forEach(function(b) {
+    var club = b.opponent_club || 'Unknown';
+    if (!clubMap[club]) clubMap[club] = [];
+    clubMap[club].push(b);
+  });
+  var clubs = Object.keys(clubMap).map(function(c) {
+    var cb = clubMap[c];
+    var wins = cb.filter(function(b) { return b.result === 'V'; }).length;
+    return { club: c, bouts: cb, wins: wins, total: cb.length, rate: Math.round(wins / cb.length * 100) };
+  }).filter(function(c) { return c.total >= 2; }).sort(function(a, b) { return b.total - a.total; }).slice(0, 12);
+  clubDrillData = clubs;
+
+  var html = '';
+  clubs.forEach(function(c, idx) {
+    var rateColor = c.rate < 40 ? 'var(--danger)' : c.rate > 65 ? 'var(--success)' : 'var(--accent-gold)';
+    html += '<div class="club-row" onclick="toggleClubExpand(' + idx + ')" id="club-row-' + idx + '">';
+    html += '<span class="club-name">' + c.club + '</span>';
+    html += '<span class="club-count">' + c.total + ' bouts</span>';
+    html += '<span class="club-rate" style="color:' + rateColor + '">' + c.rate + '%</span>';
+    html += '<span class="club-chevron">&#9654;</span>';
+    html += '</div>';
+    html += '<div class="club-expand" id="club-expand-' + idx + '"></div>';
+  });
+  container.innerHTML = html;
+}
+
+function toggleClubExpand(idx) {
+  // Close any open club
+  document.querySelectorAll('.club-row.open').forEach(function(r) { r.classList.remove('open'); });
+  document.querySelectorAll('.club-expand.open').forEach(function(e) { e.classList.remove('open'); e.innerHTML = ''; });
+
+  var row = document.getElementById('club-row-' + idx);
+  var expand = document.getElementById('club-expand-' + idx);
+  if (row.classList.contains('open')) return;
+
+  row.classList.add('open');
+  expand.classList.add('open');
+
+  var club = clubDrillData[idx];
+  if (!club) return;
+
+  // Group bouts by fencer
+  var fencerMap = {};
+  club.bouts.forEach(function(b) {
+    var name = b.opponent_name || 'Unknown';
+    if (!fencerMap[name]) fencerMap[name] = { name: name, rating: b.opponent_rating || '', bouts: [] };
+    fencerMap[name].bouts.push(b);
+    if (b.opponent_rating) fencerMap[name].rating = b.opponent_rating;
+  });
+  var fencers = Object.values(fencerMap).sort(function(a, b) { return b.bouts.length - a.bouts.length; });
+
+  var html = '<table style="width:100%;font-size:13px"><thead><tr style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px"><th style="text-align:left;padding:6px 8px">Fencer</th><th style="padding:6px 8px">W / L</th><th style="padding:6px 8px">Win %</th><th style="padding:6px 4px">Trend</th></tr></thead><tbody>';
+  fencers.forEach(function(f, fi) {
+    var wins = f.bouts.filter(function(b) { return b.result === 'V'; }).length;
+    var losses = f.bouts.length - wins;
+    var rate = Math.round(wins / f.bouts.length * 100);
+    var rateClass = rate >= 60 ? 'green' : rate >= 40 ? 'gold' : 'red';
+    // Trend from last 3 bouts
+    var last3 = f.bouts.slice(-3);
+    var last3Wins = last3.filter(function(b) { return b.result === 'V'; }).length;
+    var trend = last3Wins >= 2 ? '&#8593;' : (last3.length - last3Wins >= 2 ? '&#8595;' : '&#8594;');
+    var trendColor = last3Wins >= 2 ? 'var(--success)' : (last3.length - last3Wins >= 2 ? 'var(--danger)' : 'var(--text-muted)');
+
+    html += '<tr class="fencer-row" onclick="toggleFencerExpand(' + idx + ',' + fi + ')" id="fencer-row-' + idx + '-' + fi + '">';
+    html += '<td class="f-name" style="padding:8px">' + f.name + '<span class="rating-pill">' + f.rating + '</span></td>';
+    html += '<td style="text-align:center;padding:8px">' + wins + 'W / ' + losses + 'L</td>';
+    html += '<td style="text-align:center;padding:8px"><span class="f-rate-pill ' + rateClass + '">' + rate + '%</span></td>';
+    html += '<td class="f-trend" style="color:' + trendColor + '">' + trend + '</td>';
+    html += '</tr>';
+    html += '<tr><td colspan="4"><div class="fencer-expand" id="fencer-expand-' + idx + '-' + fi + '"></div></td></tr>';
+  });
+  html += '</tbody></table>';
+  expand.innerHTML = html;
+}
+
+function toggleFencerExpand(clubIdx, fencerIdx) {
+  // Close any open fencer within this club
+  var clubExpand = document.getElementById('club-expand-' + clubIdx);
+  clubExpand.querySelectorAll('.fencer-row.open').forEach(function(r) { r.classList.remove('open'); });
+  clubExpand.querySelectorAll('.fencer-expand.open').forEach(function(e) { e.classList.remove('open'); e.innerHTML = ''; });
+
+  var row = document.getElementById('fencer-row-' + clubIdx + '-' + fencerIdx);
+  var expand = document.getElementById('fencer-expand-' + clubIdx + '-' + fencerIdx);
+  if (row.classList.contains('open')) return;
+  row.classList.add('open');
+  expand.classList.add('open');
+
+  var club = clubDrillData[clubIdx];
+  var fencerMap = {};
+  club.bouts.forEach(function(b) {
+    var name = b.opponent_name || 'Unknown';
+    if (!fencerMap[name]) fencerMap[name] = [];
+    fencerMap[name].push(b);
+  });
+  var fencers = Object.keys(fencerMap).sort(function(a, b) { return fencerMap[b].length - fencerMap[a].length; });
+  var fName = fencers[fencerIdx];
+  var bouts = (fencerMap[fName] || []).slice().sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+
+  var html = '<div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">All Bouts vs ' + fName + '</div>';
+  // Trend dots
+  html += '<div class="trend-dots">';
+  bouts.forEach(function(b) {
+    html += '<span class="trend-dot ' + (b.result === 'V' ? 'w' : 'l') + '"></span>';
+  });
+  html += '</div>';
+  // Bout rows
+  bouts.forEach(function(b) {
+    var isWin = b.result === 'V';
+    html += '<div class="bout-hist-row">';
+    html += '<span class="bh-date">' + (b.date || b.tournament || '') + '</span>';
+    html += '<span class="bh-tourney">' + (b.tournament || '').substring(0, 30) + '</span>';
+    html += '<span class="bh-score">' + (b.score || '') + '</span>';
+    html += '<span class="bh-vd ' + (isWin ? 'win' : 'loss') + '">' + b.result + '</span>';
+    html += '<span class="bh-type">' + (b.round || '') + '</span>';
+    html += (b.win_probability ? '<span style="font-size:11px;color:var(--text-muted)">' + b.win_probability + '%</span>' : '');
+    html += '</div>';
+  });
+  expand.innerHTML = html;
+}
+
+// ---- SCOUT PROFILES ----
+var scoutProfiles = [];
+var currentScoutId = null;
+
+function loadScoutProfiles() {
+  if (!supabaseClient || !currentUser) return;
+  supabaseClient.from('scout_profiles').select('*').eq('user_id', currentUser.id).order('updated_at', { ascending: false }).then(function(res) {
+    scoutProfiles = res.data || [];
+    renderScoutList();
+  }).catch(function() { scoutProfiles = []; renderScoutList(); });
+}
+
+function renderScoutList() {
+  var container = document.getElementById('scout-list');
+  if (scoutProfiles.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">No scout profiles yet.</p>';
+    return;
+  }
+  var html = '';
+  scoutProfiles.forEach(function(p) {
+    var isActive = currentScoutId === p.id;
+    html += '<div class="scout-card' + (isActive ? ' active' : '') + '" onclick="loadScoutProfile(\'' + p.id + '\')">';
+    html += '<h5>' + (p.opponent_name || 'Unknown') + '</h5>';
+    html += '<div class="sc-meta">' + (p.opponent_club || '') + (p.opponent_rating ? ' <span class="rating-pill">' + p.opponent_rating + '</span>' : '') + '</div>';
+    html += '<div class="sc-meta" style="margin-top:4px">' + (p.updated_at ? new Date(p.updated_at).toLocaleDateString() : '') + '</div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function showScoutAddForm() {
+  document.getElementById('scout-empty').style.display = 'none';
+  document.getElementById('scout-profile-view').style.display = 'none';
+  document.getElementById('scout-add-form').style.display = 'block';
+  document.getElementById('scout-add-name').value = '';
+  document.getElementById('scout-add-club').value = '';
+  document.getElementById('scout-add-rating').value = '';
+  document.getElementById('scout-add-raw').value = '';
+  currentScoutId = null;
+  renderScoutList();
+}
+
+function hideScoutAddForm() {
+  document.getElementById('scout-add-form').style.display = 'none';
+  document.getElementById('scout-empty').style.display = 'block';
+}
+
+function saveScoutProfile() {
+  var name = document.getElementById('scout-add-name').value.trim();
+  if (!name) { showToast('Opponent name required.', 'error'); return; }
+  var data = {
+    user_id: currentUser.id,
+    opponent_name: name,
+    opponent_club: document.getElementById('scout-add-club').value.trim(),
+    opponent_rating: document.getElementById('scout-add-rating').value.trim(),
+    fencingtracker_raw: document.getElementById('scout-add-raw').value,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  supabaseClient.from('scout_profiles').insert(data).select().then(function(res) {
+    if (res.error) { showToast('Error: ' + res.error.message, 'error'); return; }
+    var newProfile = res.data[0];
+    scoutProfiles.unshift(newProfile);
+    document.getElementById('scout-add-form').style.display = 'none';
+    showToast('Profile saved!', 'success');
+    loadScoutProfile(newProfile.id);
+    generateScoutReport(newProfile.id);
+  }).catch(function(err) { showToast('Save failed: ' + err.message, 'error'); });
+}
+
+function loadScoutProfile(id) {
+  currentScoutId = id;
+  renderScoutList();
+  var profile = scoutProfiles.find(function(p) { return p.id === id; });
+  if (!profile) return;
+
+  document.getElementById('scout-empty').style.display = 'none';
+  document.getElementById('scout-add-form').style.display = 'none';
+  document.getElementById('scout-profile-view').style.display = 'block';
+  document.getElementById('scout-update-area').style.display = 'none';
+
+  document.getElementById('scout-view-name').textContent = profile.opponent_name || '';
+  document.getElementById('scout-view-club').textContent = profile.opponent_club || '';
+  document.getElementById('scout-view-rating').textContent = profile.opponent_rating || '';
+  document.getElementById('scout-view-date').textContent = profile.report_generated_at ? 'Report: ' + new Date(profile.report_generated_at).toLocaleDateString() : '';
+
+  var reportArea = document.getElementById('scout-report-area');
+  if (profile.ai_report) {
+    reportArea.innerHTML = renderScoutReportMarkdown(profile.ai_report);
+  } else {
+    reportArea.innerHTML = '<div style="text-align:center;padding:40px"><p style="color:var(--text-muted);margin-bottom:16px">No report generated yet.</p><button class="btn btn-gold" onclick="generateScoutReport(\'' + id + '\')">Generate Report</button></div>';
+  }
+}
+
+function toggleScoutUpdate() {
+  var area = document.getElementById('scout-update-area');
+  if (area.style.display === 'none') {
+    area.style.display = 'block';
+    var profile = scoutProfiles.find(function(p) { return p.id === currentScoutId; });
+    if (profile) document.getElementById('scout-update-raw').value = profile.fencingtracker_raw || '';
+  } else {
+    area.style.display = 'none';
+  }
+}
+
+function regenerateScoutReport() {
+  if (!currentScoutId) return;
+  var newRaw = document.getElementById('scout-update-raw').value;
+  supabaseClient.from('scout_profiles').update({
+    fencingtracker_raw: newRaw,
+    updated_at: new Date().toISOString()
+  }).eq('id', currentScoutId).then(function() {
+    var profile = scoutProfiles.find(function(p) { return p.id === currentScoutId; });
+    if (profile) profile.fencingtracker_raw = newRaw;
+    document.getElementById('scout-update-area').style.display = 'none';
+    generateScoutReport(currentScoutId);
+  });
+}
+
+function generateScoutReport(profileId) {
+  var profile = scoutProfiles.find(function(p) { return p.id === profileId; });
+  if (!profile) return;
+
+  document.getElementById('scout-report-area').innerHTML = '';
+  document.getElementById('scout-loading').style.display = 'block';
+
+  // Get head-to-head history from match logs
+  var h2hText = 'No recorded bouts against this opponent yet.';
+  var bouts = ((analyticsData || {}).raw_history || {}).bouts || [];
+  var h2hBouts = bouts.filter(function(b) {
+    return (b.opponent_name || '').toLowerCase().indexOf((profile.opponent_name || '').split(',')[0].toLowerCase()) >= 0;
+  });
+  if (h2hBouts.length > 0) {
+    h2hText = h2hBouts.map(function(b) {
+      return (b.tournament || '') + ' | ' + (b.score || '') + ' | ' + (b.result === 'V' ? 'WIN' : 'LOSS') + ' | ' + (b.round || '');
+    }).join('\n');
+  }
+
+  var fencerName = currentFencerData ? currentFencerData.name : 'Our fencer';
+  var systemExtra = 'You are FoilIQ, an elite foil fencing tactical coach specializing in youth competitive fencing. You analyze opponent data and generate precise, actionable scout reports. Be direct, specific, and tactical. Format your response with clearly labeled sections using ## headers.';
+
+  var userMsg = 'Generate a full scout report.\n\nFENCER THIS REPORT IS FOR:\n' + fencerName +
+    '\n\nOPPONENT:\nName: ' + profile.opponent_name +
+    '\nClub: ' + (profile.opponent_club || 'Unknown') +
+    '\nRating: ' + (profile.opponent_rating || 'Unknown') +
+    '\n\nOPPONENT DATA (pasted from FencingTracker.com):\n' + (profile.fencingtracker_raw || 'No data pasted.') +
+    '\n\nHEAD-TO-HEAD HISTORY:\n' + h2hText +
+    '\n\nGenerate the scout report with these exact sections:\n## OPPONENT OVERVIEW\n## KNOWN PATTERNS & TENDENCIES\n## HEAD-TO-HEAD ANALYSIS\n## TACTICAL GAME PLAN\n## SUN TZU ANGLE';
+
+  callAI(systemExtra, userMsg, function(text) {
+    document.getElementById('scout-loading').style.display = 'none';
+    if (text.indexOf('Error:') === 0 || text.indexOf('AI Error:') === 0) {
+      document.getElementById('scout-report-area').innerHTML = '<div class="card" style="border-left:4px solid var(--danger);padding:20px"><p style="color:var(--danger)">' + text + '</p></div>';
+      return;
+    }
+    document.getElementById('scout-report-area').innerHTML = renderScoutReportMarkdown(text);
+    // Save report to Supabase
+    supabaseClient.from('scout_profiles').update({
+      ai_report: text,
+      report_generated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).eq('id', profileId).then(function() {
+      var p = scoutProfiles.find(function(sp) { return sp.id === profileId; });
+      if (p) { p.ai_report = text; p.report_generated_at = new Date().toISOString(); }
+      document.getElementById('scout-view-date').textContent = 'Report: ' + new Date().toLocaleDateString();
+    });
+  });
+}
+
+function renderScoutReportMarkdown(text) {
+  if (!text) return '';
+  // Convert ## headers to styled h3
+  var html = text
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Convert bullet lines to list items
+  var lines = html.split('\n');
+  var result = [];
+  var inList = false;
+  lines.forEach(function(line) {
+    var trimmed = line.trim();
+    if (trimmed.match(/^[-*]\s/)) {
+      if (!inList) { result.push('<ul>'); inList = true; }
+      result.push('<li>' + trimmed.replace(/^[-*]\s+/, '') + '</li>');
+    } else {
+      if (inList) { result.push('</ul>'); inList = false; }
+      if (trimmed.indexOf('<h3>') === 0) {
+        result.push(trimmed);
+      } else if (trimmed.length > 0) {
+        result.push('<p>' + trimmed + '</p>');
+      }
+    }
+  });
+  if (inList) result.push('</ul>');
+  return result.join('\n');
 }
 
 // ---- MARKETING PAGE ----
