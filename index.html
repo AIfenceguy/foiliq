@@ -4597,13 +4597,15 @@ function renderClubDrilldown(bouts) {
 }
 
 function toggleClubExpand(idx) {
+  var row = document.getElementById('club-row-' + idx);
+  var expand = document.getElementById('club-expand-' + idx);
+  var wasOpen = row.classList.contains('open');
+
   // Close any open club
   document.querySelectorAll('.club-row.open').forEach(function(r) { r.classList.remove('open'); });
   document.querySelectorAll('.club-expand.open').forEach(function(e) { e.classList.remove('open'); e.innerHTML = ''; });
 
-  var row = document.getElementById('club-row-' + idx);
-  var expand = document.getElementById('club-expand-' + idx);
-  if (row.classList.contains('open')) return;
+  if (wasOpen) return;
 
   row.classList.add('open');
   expand.classList.add('open');
@@ -4646,14 +4648,16 @@ function toggleClubExpand(idx) {
 }
 
 function toggleFencerExpand(clubIdx, fencerIdx) {
+  var row = document.getElementById('fencer-row-' + clubIdx + '-' + fencerIdx);
+  var expand = document.getElementById('fencer-expand-' + clubIdx + '-' + fencerIdx);
+  var wasOpen = row.classList.contains('open');
+
   // Close any open fencer within this club
   var clubExpand = document.getElementById('club-expand-' + clubIdx);
   clubExpand.querySelectorAll('.fencer-row.open').forEach(function(r) { r.classList.remove('open'); });
   clubExpand.querySelectorAll('.fencer-expand.open').forEach(function(e) { e.classList.remove('open'); e.innerHTML = ''; });
 
-  var row = document.getElementById('fencer-row-' + clubIdx + '-' + fencerIdx);
-  var expand = document.getElementById('fencer-expand-' + clubIdx + '-' + fencerIdx);
-  if (row.classList.contains('open')) return;
+  if (wasOpen) return;
   row.classList.add('open');
   expand.classList.add('open');
 
