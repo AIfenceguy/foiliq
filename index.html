@@ -4777,24 +4777,28 @@ function hideScoutAddForm() {
 function saveScoutProfile() {
   var name = document.getElementById('scout-add-name').value.trim();
   if (!name) { showToast('Opponent name required.', 'error'); return; }
-  var data = {
-    user_id: currentUser.id,
-    opponent_name: name,
-    opponent_club: document.getElementById('scout-add-club').value.trim(),
-    opponent_rating: document.getElementById('scout-add-rating').value.trim(),
-    fencingtracker_raw: document.getElementById('scout-add-raw').value,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  supabaseClient.from('scout_profiles').insert(data).select().then(function(res) {
-    if (res.error) { showToast('Error: ' + res.error.message, 'error'); return; }
-    var newProfile = res.data[0];
-    scoutProfiles.unshift(newProfile);
-    document.getElementById('scout-add-form').style.display = 'none';
-    showToast('Profile saved!', 'success');
-    loadScoutProfile(newProfile.id);
-    generateScoutReport(newProfile.id);
-  }).catch(function(err) { showToast('Save failed: ' + err.message, 'error'); });
+  supabaseClient.auth.getSession().then(function(sessionRes) {
+    var user = sessionRes.data && sessionRes.data.session ? sessionRes.data.session.user : null;
+    if (!user) { showToast('You must be logged in to save scout profiles.', 'error'); return; }
+    var data = {
+      user_id: user.id,
+      opponent_name: name,
+      opponent_club: document.getElementById('scout-add-club').value.trim(),
+      opponent_rating: document.getElementById('scout-add-rating').value.trim(),
+      fencingtracker_raw: document.getElementById('scout-add-raw').value,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    supabaseClient.from('scout_profiles').insert(data).select().then(function(res) {
+      if (res.error) { showToast('Error: ' + res.error.message, 'error'); return; }
+      var newProfile = res.data[0];
+      scoutProfiles.unshift(newProfile);
+      document.getElementById('scout-add-form').style.display = 'none';
+      showToast('Profile saved!', 'success');
+      loadScoutProfile(newProfile.id);
+      generateScoutReport(newProfile.id);
+    }).catch(function(err) { showToast('Save failed: ' + err.message, 'error'); });
+  });
 }
 
 function loadScoutProfile(id) {
