@@ -3887,15 +3887,23 @@ function parsePasteHistory() {
       var clubVal = '';
       var oppStr = 0, myStr = 0, strChange = '', winProb = 0;
       // Work backwards from end to find strength/prob numbers
+      // FT columns after club: OppStrength(3-4 digits), MyStrength(3-4 digits), Change(decimal), ChanceOfVictory(0-100 with optional %)
       var fi = fields.length - 1;
-      // Last field with % is win probability
-      if (fi >= 0 && fields[fi].match(/\d+%?$/)) { winProb = parseInt(fields[fi]); fi--; }
-      // Strength change (could be negative decimal like "-4.7" or "10.2")
-      if (fi >= 0 && fields[fi].match(/^-?\d+\.?\d*$/)) { strChange = fields[fi]; fi--; }
-      // My strength (3-4 digit number)
-      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/)) { myStr = parseInt(fields[fi]); fi--; }
-      // Opponent strength (3-4 digit number)
-      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/)) { oppStr = parseInt(fields[fi]); fi--; }
+      // Last field: Chance of Victory — must be 0-100 range (with optional %), NOT a 3-4 digit strength
+      if (fi >= 0) {
+        var lastVal = fields[fi].replace(/%$/, '');
+        var lastNum = parseFloat(lastVal);
+        if (!isNaN(lastNum) && lastNum >= 0 && lastNum <= 100 && fields[fi].length <= 4) {
+          winProb = Math.round(lastNum);
+          fi--;
+        }
+      }
+      // Strength change (decimal like "-4.7", "10.2", "0.0")
+      if (fi >= 0 && fields[fi].match(/^-?\d+\.\d+$/)) { strChange = fields[fi]; fi--; }
+      // My strength (3-5 digit number, typically 1000-3000)
+      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/) && parseInt(fields[fi]) >= 500) { myStr = parseInt(fields[fi]); fi--; }
+      // Opponent strength (3-5 digit number)
+      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/) && parseInt(fields[fi]) >= 500) { oppStr = parseInt(fields[fi]); fi--; }
       // Everything from index 4 to fi is the club name (may be multiple fields if spaces split it)
       if (fi >= 4) {
         clubVal = fields.slice(4, fi + 1).join(' ');
@@ -3906,6 +3914,12 @@ function parsePasteHistory() {
       }
       // Guard: if club is a pure integer, it's a misread seed/place — discard
       if (clubVal.match(/^\d+$/)) clubVal = '';
+
+      // Log first 3 bouts for debugging
+      if (data.bouts.length < 3) {
+        console.log('[Bout Parse] fields:', JSON.stringify(fields));
+        console.log('[Bout Parse] mapped:', { name: oppName, seed: oppSeed, rating: oppRating, place: oppPlace, club: clubVal, oppStr: oppStr, myStr: myStr, change: strChange, winProb: winProb, fi_stopped_at: fi });
+      }
 
       var bout = {
         tournament: currentTournament,
