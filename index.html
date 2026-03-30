@@ -3858,21 +3858,53 @@ function parsePasteHistory() {
       var rest = boutMatch[4];
       // Split remaining by tabs or 2+ spaces
       var fields = rest.split(/\t+|\s{2,}/).map(function(f) { return f.trim(); }).filter(function(f) { return f; });
+      // Fields: Name, Seed, Rating, Place, Club, OppStrength, MyStrength, Change, WinProb%
+      // Club names may contain spaces — scan from the end to find strength numbers,
+      // then everything between Place and the first strength number is the club.
+      var oppName = fields[0] || '';
+      var oppSeed = fields[1] || '';
+      var oppRating = fields[2] || '';
+      var oppPlace = fields[3] || '';
+      // Find the club: skip past known integer/rating fields, find the text field before strength numbers
+      // Strength numbers are typically 3-4 digit integers (1000-3000 range)
+      var clubVal = '';
+      var oppStr = 0, myStr = 0, strChange = '', winProb = 0;
+      // Work backwards from end to find strength/prob numbers
+      var fi = fields.length - 1;
+      // Last field with % is win probability
+      if (fi >= 0 && fields[fi].match(/\d+%?$/)) { winProb = parseInt(fields[fi]); fi--; }
+      // Strength change (could be negative decimal like "-4.7" or "10.2")
+      if (fi >= 0 && fields[fi].match(/^-?\d+\.?\d*$/)) { strChange = fields[fi]; fi--; }
+      // My strength (3-4 digit number)
+      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/)) { myStr = parseInt(fields[fi]); fi--; }
+      // Opponent strength (3-4 digit number)
+      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/)) { oppStr = parseInt(fields[fi]); fi--; }
+      // Everything from index 4 to fi is the club name (may be multiple fields if spaces split it)
+      if (fi >= 4) {
+        clubVal = fields.slice(4, fi + 1).join(' ');
+      } else if (fi === 3) {
+        clubVal = '';
+      } else {
+        clubVal = fields[4] || '';
+      }
+      // Guard: if club is a pure integer, it's a misread seed/place — discard
+      if (clubVal.match(/^\d+$/)) clubVal = '';
+
       var bout = {
         tournament: currentTournament,
         event: currentEvent,
         round: boutMatch[1],
         result: boutMatch[2],
         score: boutMatch[3],
-        opponent_name: fields[0] || '',
-        opponent_seed: fields[1] || '',
-        opponent_rating: fields[2] || '',
-        opponent_place: fields[3] || '',
-        opponent_club: fields[4] || '',
-        opponent_strength: parseInt(fields[5]) || 0,
-        my_strength: parseInt(fields[6]) || 0,
-        strength_change: fields[7] || '',
-        win_probability: parseInt(fields[8]) || 0
+        opponent_name: oppName,
+        opponent_seed: oppSeed,
+        opponent_rating: oppRating,
+        opponent_place: oppPlace,
+        opponent_club: clubVal,
+        opponent_strength: oppStr,
+        my_strength: myStr,
+        strength_change: strChange,
+        win_probability: winProb
       };
       data.bouts.push(bout);
       continue;
@@ -4992,6 +5024,47 @@ if (!localStorage.getItem('foiliq_supa_key')) {
 // AI key must be set by user in Settings — never hardcoded
 
 appInit();
+
+// One-time fix: correct opponent_club values that were stored as seed numbers
+(function fixBadClubData() {
+  if (localStorage.getItem('foiliq_club_fix_v1')) return;
+  var fixes = [
+    { name: 'REN Ryan', club: 'Star Fencing Academy' },
+    { name: 'CHEN kenneth', club: 'Team Touche Fencing Center' },
+    { name: 'CHOI Colin', club: 'Precision Athletics Fencing Club' },
+    { name: 'WANDJI Noah', club: 'Unattached' },
+    { name: 'TEH Tang-Ngu', club: 'Culver Military Academy' },
+    { name: 'PARK Avan', club: 'Silicon Valley Fencing Center' },
+    { name: 'CHOI Ethan', club: 'Golubitsky Fencing Center' },
+    { name: 'YANG Charles', club: 'Silicon Valley Fencing Center' },
+    { name: 'ZHAN Kevin', club: 'Golubitsky Fencing Center' }
+  ];
+  // Wait for supabase to be ready
+  setTimeout(function() {
+    if (!supabaseClient) return;
+    var pending = fixes.length;
+    fixes.forEach(function(f) {
+      supabaseClient.from('fencer_analytics').select('id, raw_history').then(function(res) {
+        if (!res.data) return;
+        res.data.forEach(function(row) {
+          if (!row.raw_history || !row.raw_history.bouts) return;
+          var changed = false;
+          row.raw_history.bouts.forEach(function(b) {
+            if (b.opponent_name && b.opponent_name.toLowerCase() === f.name.toLowerCase()) {
+              b.opponent_club = f.club;
+              changed = true;
+            }
+          });
+          if (changed) {
+            supabaseClient.from('fencer_analytics').update({ raw_history: row.raw_history, updated_at: new Date().toISOString() }).eq('id', row.id).then(function() {});
+          }
+        });
+      });
+    });
+    localStorage.setItem('foiliq_club_fix_v1', '1');
+    console.log('[FoilIQ] Applied club name fixes for 9 opponents');
+  }, 3000);
+})();
 </script>
 </body>
 </html>
