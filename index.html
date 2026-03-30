@@ -3458,13 +3458,20 @@ function saveMatch() {
 // ---- SETTINGS ----
 function loadSettings() {
   document.getElementById('settings-ai-provider').value = getAIProvider();
-  var aiKey = getAIKey();
+  // Read API key directly from all possible localStorage keys
+  var aiKey = localStorage.getItem('anthropic_api_key')
+    || localStorage.getItem('foiliq_ai_key')
+    || localStorage.getItem('anthropic_key')
+    || localStorage.getItem('apiKey')
+    || localStorage.getItem('claudeApiKey')
+    || '';
   // Migrate: ensure key is saved under canonical name
   if (aiKey && aiKey !== 'YOUR_ANTHROPIC_API_KEY') {
     localStorage.setItem('anthropic_api_key', aiKey);
     localStorage.setItem('foiliq_ai_key', aiKey);
   }
   document.getElementById('settings-ai-key').value = (aiKey && aiKey !== 'YOUR_ANTHROPIC_API_KEY') ? aiKey : '';
+  console.log('[Settings] Loaded AI key: length=' + (aiKey ? aiKey.length : 0) + ', source:', localStorage.getItem('anthropic_api_key') ? 'anthropic_api_key' : localStorage.getItem('foiliq_ai_key') ? 'foiliq_ai_key' : 'none');
   document.getElementById('settings-supa-url').value = localStorage.getItem('foiliq_supa_url') || 'https://kyfkiigbiwhczrtnlivc.supabase.co';
   document.getElementById('settings-supa-key').value = localStorage.getItem('foiliq_supa_key') || 'sb_publishable_GbLL0419rGP6EYSmq42Bsg_r5EkOYtg';
 
