@@ -2370,6 +2370,10 @@ function buildSystemPrompt() {
 function callAI(systemExtra, userMessage, callback) {
   var provider = getAIProvider();
   var key = getAIKey();
+  console.log('[callAI] provider:', provider, 'key length:', key ? key.length : 0, 'key prefix:', key ? key.substring(0, 10) : 'EMPTY', 'raw localStorage:', {
+    anthropic_api_key: localStorage.getItem('anthropic_api_key') ? 'SET(' + localStorage.getItem('anthropic_api_key').length + ')' : 'NULL',
+    foiliq_ai_key: localStorage.getItem('foiliq_ai_key') ? 'SET(' + localStorage.getItem('foiliq_ai_key').length + ')' : 'NULL'
+  });
   if (!key || key === 'YOUR_ANTHROPIC_API_KEY') { callback('Error: No API key configured. Go to Settings and enter your Anthropic API key.'); return; }
 
   var systemPrompt = buildSystemPrompt() + '\n\n' + systemExtra;
