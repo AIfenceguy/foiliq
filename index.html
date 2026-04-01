@@ -1701,6 +1701,9 @@ html { scroll-behavior: smooth; }
         <div class="nav-item" onclick="navigateTo('scout')" data-screen="scout">
           <span class="nav-icon">&#9678;</span> Scout
         </div>
+        <div class="nav-item" onclick="navigateTo('import')" data-screen="import">
+          <span class="nav-icon">&#8681;</span> Import
+        </div>
         <div class="nav-item" onclick="navigateTo('settings')" data-screen="settings">
           <span class="nav-icon">&#9881;</span> Settings
         </div>
@@ -1724,6 +1727,7 @@ html { scroll-behavior: smooth; }
         <div class="bottom-item" onclick="navigateTo('history')" data-screen="history"><span class="nav-icon">&#128202;</span>Log</div>
         <div class="bottom-item" onclick="navigateTo('analytics')" data-screen="analytics"><span class="nav-icon">&#128200;</span>Stats</div>
         <div class="bottom-item" onclick="navigateTo('scout')" data-screen="scout"><span class="nav-icon">&#9678;</span>Scout</div>
+        <div class="bottom-item" onclick="navigateTo('import')" data-screen="import"><span class="nav-icon">&#8681;</span>Import</div>
         <div class="bottom-item" onclick="navigateTo('settings')" data-screen="settings"><span class="nav-icon">&#9881;</span>Set</div>
       </div>
     </div>
@@ -2182,6 +2186,40 @@ html { scroll-behavior: smooth; }
         </div>
       </div>
 
+      <!-- IMPORT SCREEN -->
+      <div class="screen" id="screen-import">
+        <div class="page-header"><div><h1>Import Data</h1><div class="subtitle">FencingTracker data pipeline</div></div></div>
+        <div class="card" style="margin-bottom:20px">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-gold" id="imp-mode-fencer" onclick="setImportMode('fencer')" style="flex:1">Primary Fencer</button>
+            <button class="btn btn-outline" id="imp-mode-opponent" onclick="setImportMode('opponent')" style="flex:1">Opponent</button>
+          </div>
+          <!-- Fencer mode -->
+          <div id="imp-fencer-panel">
+            <div class="form-group"><label>Select Fencer</label><select id="imp-fencer-select" style="width:100%;padding:10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'DM Sans',sans-serif"></select></div>
+            <div class="grid-2" style="margin-bottom:0">
+              <div class="form-group"><label>SUMMARY PAGE</label><textarea id="imp-summary" rows="8" style="width:100%;padding:10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;resize:vertical" placeholder="Paste FencingTracker Summary tab text here..."></textarea></div>
+              <div class="form-group"><label>HISTORY PAGE</label><textarea id="imp-history" rows="8" style="width:100%;padding:10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;resize:vertical" placeholder="Paste FencingTracker History tab text here..."></textarea></div>
+            </div>
+            <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="runFencerImport()">Import Fencer Data</button>
+          </div>
+          <!-- Opponent mode -->
+          <div id="imp-opponent-panel" style="display:none">
+            <div class="form-group"><label>PASTE FENCINGTRACKER PROFILE (Summary + History)</label><textarea id="imp-opp-text" rows="10" style="width:100%;padding:10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;resize:vertical" placeholder="Paste opponent's FencingTracker profile text..."></textarea></div>
+            <button class="btn btn-gold" style="width:100%" onclick="runOpponentImport()">Import Opponent</button>
+          </div>
+        </div>
+        <!-- Progress log -->
+        <div class="card" id="imp-log-card" style="display:none">
+          <h4>IMPORT PROGRESS</h4>
+          <div id="imp-log" style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:var(--text-secondary);max-height:400px;overflow-y:auto"></div>
+          <div id="imp-summary-box" style="display:none;margin-top:16px;padding:16px;background:var(--bg-elevated);border-radius:8px">
+            <h4 style="color:var(--success);margin-bottom:8px">IMPORT COMPLETE</h4>
+            <div id="imp-summary-text" style="font-size:13px;line-height:1.8"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- SETTINGS SCREEN -->
       <div class="screen" id="screen-settings">
         <div class="page-header"><div><h1>Settings</h1><div class="subtitle">Configuration</div></div></div>
@@ -2510,6 +2548,15 @@ function handleLogout() {
   });
 }
 
+// Normalize fencer rows from DB: map full_name → name so the rest of the app works.
+function normalizeFencer(f) {
+  if (f && f.full_name && !f.name) { f.name = f.full_name; }
+  return f;
+}
+function normalizeFencers(list) {
+  return (list || []).map(normalizeFencer);
+}
+
 function checkUserSetup() {
   if (!currentUser) { showPage('auth'); return; }
   // Check if user has fencers already
@@ -2521,7 +2568,7 @@ function checkUserSetup() {
       return;
     }
     if (res.data && res.data.length > 0) {
-      fencersList = res.data;
+      fencersList = normalizeFencers(res.data);
       currentFencerId = res.data[0].id;
       showPage('landing');
     } else {
@@ -2562,7 +2609,7 @@ function completeProfileSetup() {
     var name = block.querySelector('.setup-name').value.trim();
     if (!name) return;
     fencersToAdd.push({
-      name: name,
+      full_name: name,
       division: block.querySelector('.setup-division').value,
       handedness: block.querySelector('.setup-hand').value,
       club: block.querySelector('.setup-club').value || 'SoCAL Fencing Center',
@@ -2582,7 +2629,7 @@ function completeProfileSetup() {
       showToast('Error creating fencers: ' + res.error.message, 'error');
       return;
     }
-    fencersList = res.data;
+    fencersList = normalizeFencers(res.data);
     currentFencerId = res.data[0].id;
     // Create empty profiles
     var profiles = res.data.map(function(f) { return { fencer_id: f.id, season: '2025 Spring' }; });
@@ -2647,6 +2694,7 @@ function navigateTo(screen) {
   if (screen === 'postbout') loadPostbout();
   if (screen === 'analytics') loadAnalytics();
   if (screen === 'scout') loadScoutProfiles();
+  if (screen === 'import') loadImportScreen();
 }
 
 // ---- FENCER SELECTOR ----
@@ -4999,6 +5047,630 @@ function renderScoutReportMarkdown(text) {
   });
   if (inList) result.push('</ul>');
   return result.join('\n');
+}
+
+// ---- FENCINGTRACKER IMPORT ENGINE ----
+var impMode = 'fencer';
+var impCounts = {};
+
+function loadImportScreen() {
+  var sel = document.getElementById('imp-fencer-select');
+  sel.innerHTML = '';
+  fencersList.forEach(function(f) {
+    var opt = document.createElement('option');
+    opt.value = f.id;
+    opt.textContent = f.name + ' (' + f.division + ')';
+    sel.appendChild(opt);
+  });
+}
+
+function setImportMode(mode) {
+  impMode = mode;
+  document.getElementById('imp-fencer-panel').style.display = mode === 'fencer' ? 'block' : 'none';
+  document.getElementById('imp-opponent-panel').style.display = mode === 'opponent' ? 'block' : 'none';
+  document.getElementById('imp-mode-fencer').className = mode === 'fencer' ? 'btn btn-gold' : 'btn btn-outline';
+  document.getElementById('imp-mode-opponent').className = mode === 'opponent' ? 'btn btn-gold' : 'btn btn-outline';
+}
+
+function impLog(msg) {
+  var el = document.getElementById('imp-log');
+  el.innerHTML += msg + '<br>';
+  el.scrollTop = el.scrollHeight;
+}
+
+// ---- MAIN PARSERS ----
+function parseFTSummaryText(text) {
+  var data = { name: '', birthYear: null, clubs: [], ratings: [], podiums: {}, registrations: [], seasonStats: {} };
+  var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
+  var FT_SKIP = /^(fencing tracker|largest clubs|top clubs|national circuit|recruiting|summary|history|strength|home|search|log in|sign up|contact|rankings|about|results|clubs|fencers|events|blog|bosf|donate|login|register|menu|skip)/i;
+
+  // Name + birth year: find 4-digit year (2005-2018), name is line before
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].match(/^(200[5-9]|201[0-9]|202[0-5])$/) && i > 0) {
+      var cand = lines[i - 1];
+      if (!cand.match(FT_SKIP) && cand.length > 3) {
+        data.name = cand;
+        data.birthYear = parseInt(lines[i]);
+        if (i + 1 < lines.length && !lines[i + 1].match(FT_SKIP) && !lines[i + 1].match(/^\d{4}$/)) {
+          var clubLine = lines[i + 1];
+          clubLine.split(/\s*\/\s*/).forEach(function(c) { if (c.trim()) data.clubs.push(c.trim()); });
+        }
+        break;
+      }
+    }
+  }
+
+  // Ratings: "Foil  D25  Jan 29, 2026"
+  lines.forEach(function(line) {
+    var m = line.match(/^(Foil|Epee|Saber|Sabre)\s+([A-Z]\d{2}|U\d*)\s+(.+)/i);
+    if (m) data.ratings.push({ weapon: m[1], rating: m[2], date: m[3].trim(), rating_letter: m[2].charAt(0), rating_year: parseInt(m[2].substring(1)) || null });
+  });
+
+  // Season header detection
+  function findSeasonHeader(startIdx) {
+    for (var si = startIdx; si < lines.length; si++) {
+      if (lines[si].match(/\d{4}-\d{4}/) && (lines[si].match(/Before 2022|All Time/) || lines[si].match(/\d{4}-\d{4}.*\d{4}-\d{4}/))) return si;
+    }
+    return -1;
+  }
+
+  // Podiums, Win/Loss, Scores, Time-expired — all use parseSeasonTable
+  function parseSeasonBlock(headerIdx) {
+    var seasons = [];
+    var parts = lines[headerIdx].split(/\t+|\s{2,}/);
+    parts.forEach(function(p) {
+      p = p.trim();
+      if (p.match(/\d{4}-\d{4}/) || p === 'Before 2022' || p === 'All Time') seasons.push(p);
+    });
+    var result = {};
+    seasons.forEach(function(s) { result[s] = {}; });
+    for (var ri = headerIdx + 1; ri < lines.length; ri++) {
+      var rp = lines[ri].split(/\t+|\s{2,}/);
+      if (rp.length < 2) break;
+      var label = rp[0].replace(/[†‡*\u2020\u2021]/g, '').trim().toLowerCase();
+      if (!label || label.match(/^\d{4}/) || label === 'all time') continue;
+      if (lines[ri].match(/\d{4}-\d{4}.*\d{4}-\d{4}/)) break;
+      var vals = rp.slice(1);
+      for (var vi = 0; vi < vals.length && vi < seasons.length; vi++) {
+        var v = vals[vi].trim();
+        if (v === '-') v = '0';
+        result[seasons[vi]][label] = v;
+      }
+    }
+    return result;
+  }
+
+  // Find and parse all season-header blocks
+  var sIdx = 0;
+  var blockNum = 0;
+  while (true) {
+    var hIdx = findSeasonHeader(sIdx);
+    if (hIdx < 0) break;
+    // Detect section type by looking backwards
+    var secType = 'unknown';
+    for (var bk = hIdx - 1; bk >= Math.max(0, hIdx - 5); bk--) {
+      var tl = lines[bk].toLowerCase();
+      if (tl.match(/gold|silver|bronze|podium/)) { secType = 'podiums'; break; }
+      if (tl.match(/win\/loss|win.loss stat/)) { secType = 'winloss'; break; }
+      if (tl.match(/^scores$/)) { secType = 'scores'; break; }
+      if (tl.match(/time.expired/)) { secType = 'timeexpired'; break; }
+      if (tl.match(/^events$/)) { secType = 'events'; break; }
+      if (lines[bk].match(/\d{4}-\d{4}.*\d{4}-\d{4}/)) break;
+    }
+    // Also check first data row
+    if (secType === 'unknown' && hIdx + 1 < lines.length) {
+      var fl = lines[hIdx + 1].toLowerCase();
+      if (fl.match(/gold|🥇/)) secType = 'podiums';
+      else if (fl.match(/easy win/)) secType = 'scores';
+      else if (fl.match(/^victories/) && blockNum > 1) secType = 'timeexpired';
+      else if (fl.match(/victories|losses|win ratio/)) secType = 'winloss';
+    }
+    var parsed = parseSeasonBlock(hIdx);
+    Object.keys(parsed).forEach(function(season) {
+      if (!data.seasonStats[season]) data.seasonStats[season] = {};
+      var d = data.seasonStats[season];
+      var p = parsed[season];
+      if (secType === 'podiums') {
+        Object.keys(p).forEach(function(k) { d['podium_' + k.replace(/[🥇🥈🥉\s]/g, '')] = parseInt(p[k]) || 0; });
+      } else {
+        Object.keys(p).forEach(function(k) { d[k] = p[k]; });
+      }
+    });
+    sIdx = hIdx + 1;
+    blockNum++;
+  }
+
+  // Registrations: "Apr 10  7th Annual Precision...  Junior Men's Foil (JNRMF)"
+  lines.forEach(function(line) {
+    var m = line.match(/^([A-Z][a-z]{2}\s+\d{1,2})\s{2,}(.+?)\s{2,}(.+)/);
+    if (m && m[3].match(/\(.*\)/)) {
+      var divMatch = m[3].match(/\((Y\d+|CDT|JNR|VET|DIV|SEN).*?\)/i);
+      data.registrations.push({ event_date: m[1], tournament_name: m[2].trim(), event_name: m[3].trim(), division: divMatch ? divMatch[1] : '' });
+    }
+  });
+
+  // Results: "Mar 15  Fortune RYC  Event  5 / 76  D25  A3"
+  data.results = [];
+  lines.forEach(function(line) {
+    var m = line.match(/^([A-Z][a-z]{2}\s+\d{1,2})\s{2,}(.+)/);
+    if (!m) return;
+    var placeMatch = m[2].match(/(\d{1,3})\s*\/\s*(\d{1,4})/);
+    if (placeMatch) {
+      var before = m[2].substring(0, m[2].indexOf(placeMatch[0]));
+      var after = m[2].substring(m[2].indexOf(placeMatch[0]) + placeMatch[0].length);
+      var bp = before.split(/\t+|\s{2,}/).filter(function(x) { return x.trim(); });
+      var ap = after.split(/\t+|\s{2,}/).filter(function(x) { return x.trim(); });
+      data.results.push({ date: m[1], tournament: bp[0] || '', event: bp[1] || '', place: parseInt(placeMatch[1]), total: parseInt(placeMatch[2]), rating_earned: ap[0] || '', event_class: ap[1] || ap[0] || '' });
+    }
+  });
+
+  return data;
+}
+
+function parseFTHistoryText(text) {
+  var data = { tournamentBlocks: [], seasonStats: {} };
+  var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
+
+  // Parse season stat tables (same logic as summary)
+  var seasonHeaderIdxs = [];
+  lines.forEach(function(line, idx) {
+    if (line.match(/\d{4}-\d{4}/) && (line.match(/Before 2022|All Time/) || line.match(/\d{4}-\d{4}.*\d{4}-\d{4}/))) {
+      seasonHeaderIdxs.push(idx);
+    }
+  });
+
+  // Find tournament blocks — they start with event lines containing (Class, Div), Month Day, Year
+  var currentBlock = null;
+  for (var i = 0; i < lines.length; i++) {
+    var bl = lines[i];
+
+    // Event info line: "Junior Men's Foil (A3, JNR), March 15, 2026"
+    var eventMatch = bl.match(/^(.+?)\s*\(([^)]+)\),?\s*((?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s*\d{4})/i);
+    if (eventMatch) {
+      var classParts = eventMatch[2].split(',').map(function(c) { return c.trim(); });
+      // Tournament name is the line before this
+      var tournName = (i > 0 && !lines[i - 1].match(/^(Pool|T\d|Place|$)/i) && lines[i - 1].length < 120) ? lines[i - 1] : '';
+      currentBlock = {
+        tournament_name: tournName,
+        event_name: eventMatch[1].trim(),
+        event_class: classParts[0] || '',
+        division: classParts[1] || classParts[0] || '',
+        event_date: eventMatch[3].trim(),
+        seed: null, rank: null, rating: '', club: '', final_place: null, total_fencers: null, rating_earned: null,
+        bouts: []
+      };
+      data.tournamentBlocks.push(currentBlock);
+      continue;
+    }
+
+    // Place line: "Place 45 of 80, Seed 50, Not ranked, Rating D25, SoCAL Fencing Center"
+    var placeMatch = bl.match(/^Place\s+(\d+)\s+of\s+(\d+)/);
+    if (placeMatch && currentBlock) {
+      currentBlock.final_place = parseInt(placeMatch[1]);
+      currentBlock.total_fencers = parseInt(placeMatch[2]);
+      var seedM = bl.match(/Seed\s+(\d+)/);
+      if (seedM) currentBlock.seed = parseInt(seedM[1]);
+      var rankM = bl.match(/Ranked?\s+(\d+)/);
+      if (rankM) currentBlock.rank = parseInt(rankM[1]);
+      var ratM = bl.match(/Rating\s+([A-Z]\d{2}|U\d*)/);
+      if (ratM) currentBlock.rating = ratM[1];
+      // Club: everything after last comma-delimited section that isn't a keyword
+      var comParts = bl.split(',');
+      var lastPart = comParts[comParts.length - 1].trim();
+      if (lastPart && !lastPart.match(/^(Place|Seed|Rank|Rating|Not|Unranked|\d)/i)) {
+        currentBlock.club = lastPart;
+      }
+      // Check for rating earned
+      var earnM = bl.match(/Earned\s+([A-Z]\d{2})/i);
+      if (earnM) currentBlock.rating_earned = earnM[1];
+      continue;
+    }
+
+    // Bout line: "Pool  D  3:5  CHONG Tristan  25  B25  34  S-class Fencing  2209  1727  4.7  21%"
+    var boutMatch = bl.match(/^(Pool|T\d+)\s+([VD])\s+(\d+):(\d+)\s+(.+)/);
+    if (boutMatch && currentBlock) {
+      var rest = boutMatch[5];
+      var fields = rest.split(/\t+|\s{2,}/).map(function(f) { return f.trim(); }).filter(function(f) { return f; });
+      var oppName = fields[0] || '';
+      var oppSeed = fields[1] || '';
+      var oppRating = fields[2] || '';
+      var oppPlace = fields[3] || '';
+      // Work backwards for strength/prob
+      var clubVal = '', oppStr = 0, myStr = 0, strChange = '', winProb = 0;
+      var fi = fields.length - 1;
+      if (fi >= 0) {
+        var lastVal = fields[fi].replace(/%$/, '').replace(/^>\s*/, '');
+        var lastNum = parseFloat(lastVal);
+        if (!isNaN(lastNum) && lastNum >= 0 && lastNum <= 100 && fields[fi].length <= 6) { winProb = Math.round(lastNum); fi--; }
+      }
+      if (fi >= 0 && fields[fi].match(/^[▼▲]?\s*-?\d+\.\d+$/)) { strChange = fields[fi].replace(/[▼▲]/g, ''); if (fields[fi].indexOf('\u25BC') >= 0) strChange = '-' + strChange.replace('-',''); fi--; }
+      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/) && parseInt(fields[fi]) >= 500) { myStr = parseInt(fields[fi]); fi--; }
+      if (fi >= 0 && fields[fi].match(/^\d{3,5}$/) && parseInt(fields[fi]) >= 500) { oppStr = parseInt(fields[fi]); fi--; }
+      if (fi >= 4) { clubVal = fields.slice(4, fi + 1).join(' '); }
+      else if (fi === 3) { clubVal = ''; }
+      else { clubVal = fields[4] || ''; }
+      if (clubVal.match(/^\d+$/)) clubVal = '';
+
+      var scoreFor = parseInt(boutMatch[3]);
+      var scoreAgainst = parseInt(boutMatch[4]);
+      var scoreDiff = scoreFor - scoreAgainst;
+      var isDe = boutMatch[1] !== 'Pool';
+      var result = boutMatch[2];
+
+      currentBlock.bouts.push({
+        bout_round: boutMatch[1],
+        result: result,
+        score_for: scoreFor,
+        score_against: scoreAgainst,
+        score_differential: scoreDiff,
+        opponent_name: oppName,
+        opponent_seed: oppSeed ? parseInt(oppSeed) : null,
+        opponent_rating: oppRating,
+        opponent_place: oppPlace ? parseInt(oppPlace) : null,
+        opponent_club: clubVal,
+        opponent_strength: oppStr,
+        fencer_strength: myStr,
+        strength_change: parseFloat(strChange) || 0,
+        chance_of_victory: winProb,
+        is_de_bout: isDe,
+        is_upset_win: result === 'V' && winProb > 0 && winProb < 40,
+        is_upset_loss: result === 'D' && winProb > 60,
+        is_close_bout: isDe ? Math.abs(scoreDiff) <= 3 : Math.abs(scoreDiff) <= 1,
+        is_easy_win: result === 'V' && (isDe ? scoreDiff >= 7 : scoreDiff >= 4),
+        is_big_loss: result === 'D' && (isDe ? scoreDiff <= -7 : scoreDiff <= -4),
+        bout_sequence: currentBlock.bouts.length + 1
+      });
+    }
+  }
+
+  return data;
+}
+
+// ---- SUPABASE INSERT ENGINE ----
+function runFencerImport() {
+  var fencerId = document.getElementById('imp-fencer-select').value;
+  if (!fencerId) { showToast('Select a fencer.', 'error'); return; }
+  var summaryText = document.getElementById('imp-summary').value;
+  var historyText = document.getElementById('imp-history').value;
+  if (!summaryText && !historyText) { showToast('Paste at least Summary or History data.', 'error'); return; }
+
+  document.getElementById('imp-log-card').style.display = 'block';
+  document.getElementById('imp-log').innerHTML = '';
+  document.getElementById('imp-summary-box').style.display = 'none';
+  impCounts = { tournaments: 0, events: 0, bouts: 0, opponents: 0, ratings: 0, errors: 0 };
+
+  impLog('Starting import for fencer ' + fencerId + '...');
+
+  var summaryData = summaryText ? parseFTSummaryText(summaryText) : null;
+  var historyData = historyText ? parseFTHistoryText(historyText) : null;
+
+  if (summaryData) {
+    impLog('Parsed summary: name=' + summaryData.name + ', ratings=' + summaryData.ratings.length + ', results=' + summaryData.results.length);
+  }
+  if (historyData) {
+    var totalBouts = 0;
+    historyData.tournamentBlocks.forEach(function(b) { totalBouts += b.bouts.length; });
+    impLog('Parsed history: ' + historyData.tournamentBlocks.length + ' events, ' + totalBouts + ' bouts');
+  }
+
+  // Chain all inserts sequentially
+  var chain = Promise.resolve();
+
+  // 1. Update fencer record
+  if (summaryData && summaryData.name) {
+    chain = chain.then(function() {
+      impLog('Updating fencer record...');
+      var update = { updated_at: new Date().toISOString() };
+      if (summaryData.birthYear) update.birth_year = summaryData.birthYear;
+      return supabaseClient.from('fencers').update(update).eq('id', fencerId).then(function(r) {
+        if (r.error) impLog('<span style="color:var(--danger)">Fencer update error: ' + r.error.message + '</span>');
+      });
+    });
+  }
+
+  // 2. Clubs
+  if (summaryData && summaryData.clubs.length > 0) {
+    chain = chain.then(function() {
+      impLog('Inserting ' + summaryData.clubs.length + ' club(s)...');
+      var clubInserts = summaryData.clubs.map(function(c) { return { fencer_id: fencerId, club_name: c }; });
+      return supabaseClient.from('fencer_clubs').upsert(clubInserts, { onConflict: 'fencer_id,club_name', ignoreDuplicates: true }).then(function(r) {
+        if (r.error) impLog('<span style="color:var(--danger)">Club insert: ' + r.error.message + '</span>');
+        else impLog('\u2713 Clubs saved');
+      });
+    });
+  }
+
+  // 3. Rating history
+  if (summaryData && summaryData.ratings.length > 0) {
+    chain = chain.then(function() {
+      impLog('Inserting ' + summaryData.ratings.length + ' rating(s)...');
+      var ratingInserts = summaryData.ratings.map(function(r) {
+        return { fencer_id: fencerId, weapon: r.weapon, rating: r.rating, rating_letter: r.rating_letter, rating_year: r.rating_year, earned_date: r.date };
+      });
+      return supabaseClient.from('fencer_rating_history').upsert(ratingInserts, { onConflict: 'fencer_id,rating,earned_date', ignoreDuplicates: true }).then(function(r) {
+        if (r.error) impLog('<span style="color:var(--danger)">Rating insert: ' + r.error.message + '</span>');
+        else { impCounts.ratings = summaryData.ratings.length; impLog('\u2713 ' + summaryData.ratings.length + ' ratings saved'); }
+      });
+    });
+  }
+
+  // 4. Season stats
+  if (summaryData && Object.keys(summaryData.seasonStats).length > 0) {
+    chain = chain.then(function() {
+      var seasons = Object.keys(summaryData.seasonStats).filter(function(s) { return s !== 'All Time'; });
+      impLog('Inserting ' + seasons.length + ' season stat rows...');
+      var statInserts = seasons.map(function(s) {
+        var d = summaryData.seasonStats[s];
+        return {
+          fencer_id: fencerId, season: s,
+          victories: parseInt(d['victories'] || '0'), losses: parseInt(d['losses'] || '0'),
+          win_ratio: parseFloat(d['win ratio'] || '0'), pool_victories: parseInt(d['pool victories'] || '0'),
+          pool_losses: parseInt(d['pool losses'] || '0'), pool_win_ratio: parseFloat(d['pool win ratio'] || '0'),
+          de_victories: parseInt(d['de victories'] || '0'), de_losses: parseInt(d['de losses'] || '0'),
+          de_win_ratio: parseFloat(d['de win ratio'] || '0'),
+          easy_wins: parseInt(d['easy wins'] || '0'), close_wins: parseInt(d['close wins'] || '0'),
+          close_losses: parseInt(d['close losses'] || '0'), big_losses: parseInt(d['big losses'] || '0'),
+          time_expired_wins: parseInt(d['time_expired_wins'] || d['victories'] || '0'),
+          podium_gold: d['podium_gold'] || 0, podium_silver: d['podium_silver'] || 0,
+          podium_bronze: d['podium_bronze'] || 0
+        };
+      });
+      return supabaseClient.from('fencer_season_stats').upsert(statInserts, { onConflict: 'fencer_id,season', ignoreDuplicates: false }).then(function(r) {
+        if (r.error) impLog('<span style="color:var(--danger)">Season stats: ' + r.error.message + '</span>');
+        else impLog('\u2713 ' + seasons.length + ' season stats saved');
+      });
+    });
+  }
+
+  // 5. Registrations
+  if (summaryData && summaryData.registrations.length > 0) {
+    chain = chain.then(function() {
+      impLog('Inserting ' + summaryData.registrations.length + ' registration(s)...');
+      var regInserts = summaryData.registrations.map(function(r) {
+        return { fencer_id: fencerId, tournament_name: r.tournament_name, event_name: r.event_name, event_division: r.division, event_date: r.event_date };
+      });
+      return supabaseClient.from('fencer_registrations').upsert(regInserts, { onConflict: 'fencer_id,tournament_name,event_name', ignoreDuplicates: true }).then(function(r) {
+        if (r.error) impLog('<span style="color:var(--danger)">Registrations: ' + r.error.message + '</span>');
+        else impLog('\u2713 ' + summaryData.registrations.length + ' registrations saved');
+      });
+    });
+  }
+
+  // 6. Tournament blocks from history
+  if (historyData && historyData.tournamentBlocks.length > 0) {
+    historyData.tournamentBlocks.forEach(function(block, blockIdx) {
+      chain = chain.then(function() {
+        return processHistoryBlock(block, blockIdx, fencerId, historyData.tournamentBlocks.length);
+      });
+    });
+  }
+
+  // Finish
+  chain.then(function() {
+    impLog('<strong style="color:var(--accent-gold)">\u2713 Import complete!</strong>');
+    document.getElementById('imp-summary-box').style.display = 'block';
+    document.getElementById('imp-summary-text').innerHTML =
+      'Tournaments: ' + impCounts.tournaments + '<br>' +
+      'Events: ' + impCounts.events + '<br>' +
+      'Bouts: ' + impCounts.bouts + '<br>' +
+      'Opponents: ' + impCounts.opponents + '<br>' +
+      'Ratings: ' + impCounts.ratings + '<br>' +
+      (impCounts.errors > 0 ? '<span style="color:var(--danger)">Errors: ' + impCounts.errors + '</span>' : '');
+  }).catch(function(err) {
+    impLog('<span style="color:var(--danger)">Fatal error: ' + err.message + '</span>');
+  });
+}
+
+function processHistoryBlock(block, blockIdx, fencerId, totalBlocks) {
+  impLog('Processing event ' + (blockIdx + 1) + '/' + totalBlocks + ': ' + block.event_name + ' (' + block.event_date + ')');
+
+  var isNational = /NAC|National|Junior Olympic/i.test(block.tournament_name);
+  var isRegional = /SYC|RYC|RJC|RJCC/i.test(block.tournament_name);
+
+  // Insert tournament
+  return supabaseClient.from('tournaments').upsert({
+    name: block.tournament_name,
+    tournament_date: block.event_date,
+    is_national: isNational,
+    is_regional: isRegional,
+    user_id: currentUser ? currentUser.id : null
+  }, { onConflict: 'name,tournament_date', ignoreDuplicates: false }).select().then(function(tRes) {
+    var tournamentId = (tRes.data && tRes.data[0]) ? tRes.data[0].id : null;
+    if (tRes.error) { impLog('<span style="color:var(--danger)">Tournament: ' + tRes.error.message + '</span>'); impCounts.errors++; }
+    else impCounts.tournaments++;
+
+    if (!tournamentId) return;
+
+    // Insert event
+    return supabaseClient.from('events').upsert({
+      tournament_id: tournamentId,
+      event_name: block.event_name,
+      division: block.division,
+      event_class: block.event_class,
+      total_fencers: block.total_fencers,
+      event_date: block.event_date,
+      user_id: currentUser ? currentUser.id : null
+    }, { onConflict: 'tournament_id,event_name,event_date', ignoreDuplicates: false }).select().then(function(eRes) {
+      var eventId = (eRes.data && eRes.data[0]) ? eRes.data[0].id : null;
+      if (eRes.error) { impLog('<span style="color:var(--danger)">Event: ' + eRes.error.message + '</span>'); impCounts.errors++; }
+      else impCounts.events++;
+
+      if (!eventId) return;
+
+      // Insert event entry
+      return supabaseClient.from('event_entries').upsert({
+        event_id: eventId,
+        fencer_id: fencerId,
+        seed: block.seed,
+        rank: block.rank,
+        rating_at_time: block.rating,
+        club_at_time: block.club,
+        final_place: block.final_place,
+        total_fencers: block.total_fencers,
+        rating_earned: block.rating_earned,
+        earned_rating: !!block.rating_earned,
+        user_id: currentUser ? currentUser.id : null
+      }, { onConflict: 'event_id,fencer_id', ignoreDuplicates: false }).select().then(function(eeRes) {
+        var entryId = (eeRes.data && eeRes.data[0]) ? eeRes.data[0].id : null;
+        if (eeRes.error) { impLog('<span style="color:var(--danger)">Entry: ' + eeRes.error.message + '</span>'); impCounts.errors++; }
+
+        // Process bouts sequentially
+        var boutChain = Promise.resolve();
+        block.bouts.forEach(function(bout) {
+          boutChain = boutChain.then(function() {
+            return processBout(bout, eventId, entryId, fencerId, block.event_date);
+          });
+        });
+        return boutChain;
+      });
+    });
+  });
+}
+
+function processBout(bout, eventId, entryId, fencerId, eventDate) {
+  // Upsert opponent
+  var oppName = bout.opponent_name.trim();
+  if (!oppName) return Promise.resolve();
+
+  return supabaseClient.from('opponents').upsert({
+    full_name: oppName,
+    current_club: bout.opponent_club || null,
+    current_rating: bout.opponent_rating || null,
+    user_id: currentUser ? currentUser.id : null
+  }, { onConflict: 'full_name', ignoreDuplicates: false }).select().then(function(oppRes) {
+    var opponentId = (oppRes.data && oppRes.data[0]) ? oppRes.data[0].id : null;
+    if (oppRes.error && !oppRes.error.message.includes('duplicate')) {
+      impLog('<span style="color:var(--danger)">Opponent ' + oppName + ': ' + oppRes.error.message + '</span>');
+      impCounts.errors++;
+    } else {
+      impCounts.opponents++;
+    }
+
+    if (!opponentId) {
+      // Try to fetch existing
+      return supabaseClient.from('opponents').select('id').ilike('full_name', oppName).limit(1).then(function(fRes) {
+        if (fRes.data && fRes.data[0]) return insertBoutRecord(bout, eventId, entryId, fencerId, fRes.data[0].id, eventDate);
+      });
+    }
+
+    // Opponent snapshot
+    if (eventId && opponentId) {
+      supabaseClient.from('opponent_event_snapshots').upsert({
+        opponent_id: opponentId,
+        event_id: eventId,
+        seed: bout.opponent_seed,
+        rating: bout.opponent_rating,
+        rating_letter: bout.opponent_rating ? bout.opponent_rating.charAt(0) : null,
+        rating_year: bout.opponent_rating ? (parseInt(bout.opponent_rating.substring(1)) || null) : null,
+        final_place: bout.opponent_place,
+        club_at_time: bout.opponent_club || null,
+        strength_value: bout.opponent_strength || null,
+        user_id: currentUser ? currentUser.id : null
+      }, { onConflict: 'opponent_id,event_id', ignoreDuplicates: false }).then(function() {});
+    }
+
+    return insertBoutRecord(bout, eventId, entryId, fencerId, opponentId, eventDate);
+  });
+}
+
+function insertBoutRecord(bout, eventId, entryId, fencerId, opponentId, eventDate) {
+  return supabaseClient.from('bouts').upsert({
+    event_entry_id: entryId,
+    event_id: eventId,
+    fencer_id: fencerId,
+    opponent_id: opponentId,
+    bout_round: bout.bout_round,
+    result: bout.result,
+    score_for: bout.score_for,
+    score_against: bout.score_against,
+    score_differential: bout.score_differential,
+    fencer_strength: bout.fencer_strength,
+    opponent_strength: bout.opponent_strength,
+    strength_change: bout.strength_change,
+    chance_of_victory: bout.chance_of_victory,
+    is_de_bout: bout.is_de_bout,
+    is_upset_win: bout.is_upset_win,
+    is_upset_loss: bout.is_upset_loss,
+    is_close_bout: bout.is_close_bout,
+    is_easy_win: bout.is_easy_win,
+    is_big_loss: bout.is_big_loss,
+    bout_sequence: bout.bout_sequence,
+    bout_date: eventDate,
+    user_id: currentUser ? currentUser.id : null
+  }, { onConflict: 'event_entry_id,bout_round,opponent_id,score_for,score_against', ignoreDuplicates: true }).then(function(r) {
+    if (r.error) { impCounts.errors++; }
+    else { impCounts.bouts++; }
+  });
+}
+
+// ---- OPPONENT IMPORT ----
+function runOpponentImport() {
+  var text = document.getElementById('imp-opp-text').value;
+  if (!text || text.length < 50) { showToast('Paste opponent FencingTracker data.', 'error'); return; }
+
+  document.getElementById('imp-log-card').style.display = 'block';
+  document.getElementById('imp-log').innerHTML = '';
+  document.getElementById('imp-summary-box').style.display = 'none';
+  impCounts = { opponents: 0, snapshots: 0, errors: 0 };
+
+  impLog('Parsing opponent data...');
+  var summary = parseFTSummaryText(text);
+  var history = parseFTHistoryText(text);
+  impLog('Name: ' + (summary.name || 'Unknown') + ', Ratings: ' + summary.ratings.length);
+
+  if (!summary.name) { impLog('<span style="color:var(--danger)">Could not find opponent name.</span>'); return; }
+
+  // Upsert opponent
+  supabaseClient.from('opponents').upsert({
+    full_name: summary.name,
+    current_club: summary.clubs[0] || null,
+    current_rating: summary.ratings.length > 0 ? summary.ratings[0].rating : null,
+    user_id: currentUser ? currentUser.id : null
+  }, { onConflict: 'full_name', ignoreDuplicates: false }).select().then(function(res) {
+    if (res.error) { impLog('<span style="color:var(--danger)">Opponent upsert: ' + res.error.message + '</span>'); return; }
+    var oppId = res.data[0].id;
+    impCounts.opponents = 1;
+    impLog('\u2713 Opponent record created/updated: ' + summary.name);
+
+    // Create scout profile
+    supabaseClient.from('scout_profiles').upsert({
+      user_id: currentUser.id,
+      opponent_name: summary.name,
+      opponent_club: summary.clubs[0] || null,
+      opponent_rating: summary.ratings.length > 0 ? summary.ratings[0].rating : null,
+      fencingtracker_raw: text,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,opponent_name', ignoreDuplicates: false }).then(function(sRes) {
+      if (sRes.error) impLog('Scout profile: ' + sRes.error.message);
+      else impLog('\u2713 Scout profile saved');
+    });
+
+    // Process event snapshots from history blocks
+    var chain = Promise.resolve();
+    if (history.tournamentBlocks.length > 0) {
+      impLog('Processing ' + history.tournamentBlocks.length + ' events for snapshots...');
+      history.tournamentBlocks.forEach(function(block) {
+        chain = chain.then(function() {
+          // Just store snapshots, not full event entries
+          return supabaseClient.from('opponent_event_snapshots').upsert({
+            opponent_id: oppId,
+            event_id: null,
+            seed: block.seed,
+            rating: block.rating,
+            final_place: block.final_place,
+            club_at_time: block.club,
+            user_id: currentUser ? currentUser.id : null
+          }, { ignoreDuplicates: true }).then(function() { impCounts.snapshots++; });
+        });
+      });
+    }
+
+    chain.then(function() {
+      impLog('<strong style="color:var(--accent-gold)">\u2713 Opponent import complete!</strong>');
+      document.getElementById('imp-summary-box').style.display = 'block';
+      document.getElementById('imp-summary-text').innerHTML = 'Opponent: ' + summary.name + '<br>Snapshots: ' + impCounts.snapshots + '<br>Errors: ' + impCounts.errors;
+    });
+  });
 }
 
 // ---- MARKETING PAGE ----
