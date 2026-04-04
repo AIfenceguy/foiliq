@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FoilIQ — Raedyn Tsui Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f5f5f3;
+  --bg-tertiary: #eeede8;
+  --text: #1a1a19;
+  --text-secondary: #5f5e5a;
+  --text-hint: #888780;
+  --border: rgba(0,0,0,0.12);
+  --border-strong: rgba(0,0,0,0.22);
+  --blue-50: #E6F1FB;
+  --blue-400: #378ADD;
+  --blue-600: #185FA5;
+  --blue-800: #0C447C;
+  --green-50: #E1F5EE;
+  --green-400: #1D9E75;
+  --green-600: #0F6E56;
+  --amber-50: #FAEEDA;
+  --amber-400: #BA7517;
+  --amber-600: #854F0B;
+  --red-50: #FCEBEB;
+  --red-400: #E24B4A;
+  --red-600: #A32D2D;
+  --purple-50: #EEEDFE;
+  --purple-600: #534AB7;
+  --r-md: 8px;
+  --r-lg: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg-secondary); color: var(--text); min-height: 100vh; }
+
+/* ── Layout ── */
+.app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
+.topbar { padding: 14px 18px 12px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+.logo { font-size: 18px; font-weight: 500; color: var(--text); letter-spacing: -0.4px; }
+.logo span { color: var(--blue-400); }
+.back-btn { font-size: 13px; color: var(--blue-600); cursor: pointer; padding: 4px 8px; border-radius: var(--r-md); border: 0.5px solid var(--border); background: none; display: none; }
+.back-btn.show { display: block; }
+.progress-wrap { flex: 1; }
+.prog-bar { height: 3px; background: var(--bg-tertiary); border-radius: 2px; }
+.prog-fill { height: 3px; background: var(--blue-400); border-radius: 2px; transition: width 0.4s ease; }
+.step-num { font-size: 11px; color: var(--text-hint); white-space: nowrap; }
+
+/* ── Screens ── */
+.screen { display: none; flex-direction: column; gap: 18px; padding: 22px 18px 32px; flex: 1; }
+.screen.active { display: flex; }
+
+/* ── Typography ── */
+.who-tag { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
+.tag-kelly { background: var(--amber-50); color: var(--amber-600); }
+.tag-raedyn { background: var(--blue-50); color: var(--blue-600); }
+.tag-foiliq { background: var(--green-50); color: var(--green-600); }
+h2 { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1.25; }
+.sub { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-top: 4px; }
+
+/* ── Form elements ── */
+.q-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
+.q-input { width: 100%; padding: 10px 13px; border: 0.5px solid var(--border-strong); border-radius: var(--r-md); font-size: 14px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; }
+.q-input:focus { border-color: var(--blue-400); box-shadow: 0 0 0 3px rgba(55,138,221,0.12); }
+.q-textarea { width: 100%; padding: 10px 13px; border: 0.5px solid var(--border-strong); border-radius: var(--r-md); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); resize: none; height: 72px; outline: none; }
+.q-textarea:focus { border-color: var(--blue-400); }
+
+/* ── Option buttons ── */
+.options { display: flex; flex-direction: column; gap: 7px; }
+.opt { padding: 11px 14px; border: 0.5px solid var(--border); border-radius: var(--r-md); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); text-align: left; cursor: pointer; transition: all 0.15s; }
+.opt:hover { background: var(--bg-secondary); border-color: var(--border-strong); }
+.opt.sel { border-color: var(--blue-400); background: var(--blue-50); color: var(--blue-800); }
+.multi-opt { padding: 11px 14px; border: 0.5px solid var(--border); border-radius: var(--r-md); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
+.multi-opt:hover { background: var(--bg-secondary); }
+.multi-opt.on { border-color: var(--blue-400); background: var(--blue-50); color: var(--blue-800); }
+.chk-box { width: 17px; height: 17px; border: 0.5px solid var(--border-strong); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.multi-opt.on .chk-box { background: var(--blue-400); border-color: var(--blue-400); color: white; }
+
+/* ── CTA buttons ── */
+.btn-primary { width: 100%; padding: 13px; background: var(--text); color: white; border: none; border-radius: var(--r-md); font-size: 15px; font-weight: 500; font-family: inherit; cursor: pointer; margin-top: auto; transition: opacity 0.15s; }
+.btn-primary:hover { opacity: 0.85; }
+.btn-blue { background: var(--blue-400); }
+.btn-green { background: var(--green-400); }
+
+/* ── Cards ── */
+.card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 14px 16px; }
+.card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 12px; }
+.surface { background: var(--bg-secondary); border-radius: var(--r-md); padding: 13px 14px; }
+
+/* ── Highlight blocks ── */
+.hb { border-radius: var(--r-md); padding: 12px 14px; }
+.hb-blue { background: var(--blue-50); }
+.hb-blue .hb-t { font-size: 12px; font-weight: 500; color: var(--blue-800); margin-bottom: 4px; }
+.hb-blue .hb-b { font-size: 12px; color: var(--blue-600); line-height: 1.55; }
+.hb-green { background: var(--green-50); }
+.hb-green .hb-t { font-size: 12px; font-weight: 500; color: var(--green-600); margin-bottom: 4px; }
+.hb-green .hb-b { font-size: 12px; color: var(--green-600); line-height: 1.55; }
+.hb-amber { background: var(--amber-50); }
+.hb-amber .hb-t { font-size: 12px; font-weight: 500; color: var(--amber-600); margin-bottom: 4px; }
+.hb-amber .hb-b { font-size: 12px; color: var(--amber-400); line-height: 1.55; }
+
+/* ── Data rows ── */
+.row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.row:last-child { border-bottom: none; }
+.rl { color: var(--text-secondary); }
+.rv { font-weight: 500; color: var(--text); }
+.rv-b { font-weight: 500; color: var(--blue-600); }
+.rv-g { font-weight: 500; color: var(--green-600); }
+.rv-a { font-weight: 500; color: var(--amber-600); }
+
+/* ── Slots ── */
+.slot-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.slot-lbl { font-size: 11px; color: var(--text-hint); width: 44px; flex-shrink: 0; }
+.slot-bg { flex: 1; height: 26px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+.slot-fill { height: 26px; display: flex; align-items: center; padding: 0 8px; font-size: 11px; font-weight: 500; color: white; border-radius: 4px; }
+.slot-weak-bar { height: 26px; border: 0.5px dashed var(--amber-400); border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 11px; color: var(--amber-600); }
+.slot-pts { font-size: 11px; width: 42px; text-align: right; flex-shrink: 0; }
+
+/* ── Peer list ── */
+.peer-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.peer-row:last-child { border-bottom: none; }
+.p-rank { width: 30px; flex-shrink: 0; font-weight: 500; color: var(--text); }
+.p-name { flex: 1; color: var(--text); }
+.p-pts { color: var(--text-secondary); font-size: 12px; }
+.you-row { background: var(--blue-50); border-radius: var(--r-md); padding: 6px 8px; margin: 2px -4px; }
+.you-row .p-rank, .you-row .p-name { color: var(--blue-800); }
+.you-row .p-name { font-weight: 500; }
+.you-row .p-pts { color: var(--blue-600); font-weight: 500; }
+
+/* ── Avatar ── */
+.av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+.av-kelly { background: var(--amber-50); color: var(--amber-600); }
+.av-raedyn { background: var(--blue-50); color: var(--blue-600); }
+
+/* ── Big number ── */
+.big-n { font-size: 52px; font-weight: 500; color: var(--text); line-height: 1; text-align: center; }
+.big-n-sub { font-size: 14px; color: var(--text-secondary); text-align: center; margin-top: 5px; }
+
+/* ── KPI grid ── */
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kpi { background: var(--bg-secondary); border-radius: var(--r-md); padding: 12px 13px; }
+.kpi-lbl { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+.kpi-val { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1; }
+.kpi-val-b { font-size: 22px; font-weight: 500; color: var(--blue-600); line-height: 1; }
+.kpi-val-g { font-size: 22px; font-weight: 500; color: var(--green-600); line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--text-hint); margin-top: 3px; }
+
+/* ── Nav tabs ── */
+.nav-tabs { display: flex; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 61px; z-index: 9; }
+.tab { flex: 1; padding: 10px 4px; font-size: 12px; font-family: inherit; color: var(--text-secondary); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
+.tab.active { color: var(--blue-600); border-bottom: 2px solid var(--blue-400); font-weight: 500; }
+
+/* ── Dashboard sections ── */
+.dash-tab { display: none; flex-direction: column; gap: 14px; padding: 16px 14px 32px; }
+.dash-tab.active { display: flex; }
+
+/* ── Event list ── */
+.ev-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
+.ev-row:last-child { border-bottom: none; }
+.ev-month { font-size: 11px; color: var(--text-hint); width: 34px; flex-shrink: 0; padding-top: 2px; }
+.ev-body { flex: 1; }
+.ev-name { font-size: 13px; color: var(--text); }
+.ev-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; }
+.b-syc { background: var(--green-50); color: var(--green-600); }
+.b-nac { background: var(--blue-50); color: var(--blue-600); }
+.b-ryc { background: var(--amber-50); color: var(--amber-600); }
+.b-nat { background: var(--red-50); color: var(--red-600); }
+.b-sjcc { background: var(--purple-50); color: var(--purple-600); }
+.b-solo { background: var(--bg-tertiary); color: var(--text-secondary); }
+.ev-pts { font-size: 11px; color: var(--text-secondary); width: 58px; text-align: right; flex-shrink: 0; padding-top: 2px; }
+
+/* ── Projection bar ── */
+.proj-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.proj-lbl { font-size: 11px; color: var(--text-secondary); width: 52px; flex-shrink: 0; }
+.proj-track { flex: 1; height: 22px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+.proj-fill { height: 22px; display: flex; align-items: center; padding: 0 7px; font-size: 10px; font-weight: 500; color: white; border-radius: 3px; transition: width 0.5s ease; }
+.proj-total { font-size: 11px; width: 50px; text-align: right; flex-shrink: 0; }
+
+/* ── Target bar ── */
+.target-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+.target-row:last-child { border-bottom: none; }
+.t-name { font-size: 12px; font-weight: 500; color: var(--text); width: 56px; flex-shrink: 0; }
+.t-track { flex: 1; height: 7px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+.t-fill { height: 7px; border-radius: 4px; }
+.t-pts { font-size: 11px; color: var(--text-secondary); width: 66px; text-align: right; flex-shrink: 0; }
+
+/* ── Insight row ── */
+.ins-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.ins-row:last-child { border-bottom: none; }
+.ins-dot { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; }
+.ins-b { background: var(--blue-50); color: var(--blue-600); }
+.ins-g { background: var(--green-50); color: var(--green-600); }
+.ins-a { background: var(--amber-50); color: var(--amber-600); }
+.ins-text { flex: 1; color: var(--text-secondary); line-height: 1.5; }
+.ins-text strong { color: var(--text); font-weight: 500; }
+
+/* ── Rec card ── */
+.rec { border: 0.5px solid var(--border); border-left: 3px solid var(--blue-400); border-radius: var(--r-md); padding: 12px 13px; }
+.rec-g { border-left-color: var(--green-400); }
+.rec-a { border-left-color: var(--amber-400); }
+.rec-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.rec-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ── Separator ── */
+.sep { height: 0.5px; background: var(--border); }
+.sep-label { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-hint); }
+.sep-label::before, .sep-label::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
+
+/* ── Welcome screen ── */
+.welcome-hero { text-align: center; padding: 24px 0 16px; }
+.welcome-hero .logo-big { font-size: 36px; font-weight: 500; color: var(--text); letter-spacing: -0.8px; }
+.welcome-hero .logo-big span { color: var(--blue-400); }
+.welcome-hero p { font-size: 14px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; }
+
+/* ── Outcome cards ── */
+.outcome-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.oc { border-radius: var(--r-md); padding: 11px 10px; text-align: center; }
+.oc-lbl { font-size: 10px; margin-bottom: 3px; }
+.oc-val { font-size: 17px; font-weight: 500; }
+
+/* ── Cost grid ── */
+.cost-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.cost-c { background: var(--bg-secondary); border-radius: var(--r-md); padding: 10px; text-align: center; }
+.cc-val { font-size: 17px; font-weight: 500; color: var(--text); }
+.cc-lbl { font-size: 10px; color: var(--text-hint); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">Foil<span>IQ</span></div>
+  <button class="back-btn" id="back-btn" onclick="goBack()">← Back</button>
+  <div class="progress-wrap" id="prog-wrap">
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:7%"></div></div>
+  </div>
+  <div class="step-num" id="step-num">1 of 14</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ONBOARDING SCREENS
+══════════════════════════════════════════════ -->
+
+<!-- S0: Welcome -->
+<div class="screen active" id="s0">
+  <div class="welcome-hero">
+    <div class="logo-big">Foil<span>IQ</span></div>
+    <p>AI-powered fencing analytics for competitive families.</p>
+  </div>
+  <div class="hb hb-blue">
+    <div class="hb-t">This demo is set up for Raedyn Tsui</div>
+    <div class="hb-b">Walk through the full onboarding — Kelly's parent interview, then Raedyn's fencer interview — then see the live dashboard with your real competition data.</div>
+  </div>
+  <div class="surface">
+    <div class="row"><div class="rl">Fencer</div><div class="rv">Raedyn Tsui</div></div>
+    <div class="row"><div class="rl">Division</div><div class="rv">Y14 MF · SoCAL FC</div></div>
+    <div class="row"><div class="rl">Born</div><div class="rv">2012</div></div>
+    <div class="row"><div class="rl">Trial</div><div class="rv-g">14 days free</div></div>
+  </div>
+  <button class="btn-primary btn-blue" onclick="go(1)">Start with Kelly's interview →</button>
+</div>
+
+<!-- S1: Kelly Welcome -->
+<div class="screen" id="s1">
+  <div>
+    <div class="who-tag tag-kelly">Kelly — Parent</div>
+    <h2>Welcome to FoilIQ</h2>
+    <div class="sub">Let's set up Raedyn's profile. About 5 minutes.</div>
+  </div>
+  <div class="surface" style="display:flex;align-items:center;gap:12px">
+    <div class="av av-kelly">KT</div>
+    <div>
+      <div style="font-size:14px;font-weight:500">Kelly Tsui</div>
+      <div style="font-size:12px;color:var(--text-secondary)">Parent / Guardian · SoCAL FC family</div>
+    </div>
+  </div>
+  <div class="options">
+    <div class="q-label">Your name</div>
+    <input class="q-input" value="Kelly Tsui" readonly>
+    <div class="q-label" style="margin-top:8px">Email</div>
+    <input class="q-input" value="kelly@tsui-family.com" readonly>
+  </div>
+  <button class="btn-primary" onclick="go(2)">Continue →</button>
+</div>
+
+<!-- S2: Fencer Profile -->
+<div class="screen" id="s2">
+  <div>
+    <div class="who-tag tag-kelly">Kelly — Fencer Setup</div>
+    <h2>Tell us about your fencer</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div><div class="q-label">First name</div><input class="q-input" value="Raedyn" readonly></div>
+    <div><div class="q-label">Birth year</div><input class="q-input" value="2012" readonly></div>
+    <div><div class="q-label">Primary weapon</div><input class="q-input" value="Foil" readonly></div>
+    <div><div class="q-label">Division</div><input class="q-input" value="Y14 MF" readonly></div>
+    <div><div class="q-label">Club</div><input class="q-input" value="SoCAL Fencing Center" readonly></div>
+    <div><div class="q-label">USFA Member # (optional — auto-imports ranking)</div><input class="q-input" placeholder="Enter to pull live data" style="color:var(--text-hint)"></div>
+  </div>
+  <div class="hb hb-green">
+    <div class="hb-t">Already found in our database</div>
+    <div class="hb-b">FoilIQ has Raedyn's full competition history — 84+ events across 5 seasons. No import needed.</div>
+  </div>
+  <button class="btn-primary" onclick="go(3)">Continue →</button>
+</div>
+
+<!-- S3: Spending -->
+<div class="screen" id="s3">
+  <div>
+    <div class="who-tag tag-kelly">Kelly — Investment</div>
+    <h2>What does fencing cost your family?</h2>
+    <div class="sub">Coaching, events, travel, gear — everything. This helps us show you the real picture.</div>
+  </div>
+  <div class="options" id="spend-g">
+    <button class="opt" onclick="sel('spend-g',this)">Under $5,000/year</button>
+    <button class="opt" onclick="sel('spend-g',this)">$5,000 – $10,000/year</button>
+    <button class="opt sel" onclick="sel('spend-g',this)">$10,000 – $20,000/year</button>
+    <button class="opt" onclick="sel('spend-g',this)">$20,000 – $30,000/year</button>
+    <button class="opt" onclick="sel('spend-g',this)">Over $30,000/year</button>
+  </div>
+  <button class="btn-primary" onclick="go(4)">Continue →</button>
+</div>
+
+<!-- S4: Goals -->
+<div class="screen" id="s4">
+  <div>
+    <div class="who-tag tag-kelly">Kelly — Goals</div>
+    <h2>What are you hoping Raedyn achieves?</h2>
+    <div class="sub">Select all that apply.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:7px">
+    <button class="multi-opt on" onclick="tog(this)"><div class="chk-box">✓</div>Improve national ranking</button>
+    <button class="multi-opt on" onclick="tog(this)"><div class="chk-box">✓</div>Qualify for Summer Nationals</button>
+    <button class="multi-opt" onclick="tog(this)"><div class="chk-box"></div>Earn a letter rating (A/B/C)</button>
+    <button class="multi-opt" onclick="tog(this)"><div class="chk-box"></div>College recruiting visibility</button>
+    <button class="multi-opt on" onclick="tog(this)"><div class="chk-box">✓</div>Develop toward Cadet / Junior</button>
+    <button class="multi-opt" onclick="tog(this)"><div class="chk-box"></div>Build mental competition skills</button>
+  </div>
+  <button class="btn-primary" onclick="go(5)">Continue →</button>
+</div>
+
+<!-- S5: Parent Reveal -->
+<div class="screen" id="s5">
+  <div>
+    <div class="who-tag tag-foiliq">FoilIQ — Analysis ready</div>
+    <h2>Here's what we found, Kelly.</h2>
+  </div>
+  <div class="surface">
+    <div class="row"><div class="rl">Y14 national rank</div><div class="rv-b">#91 of 240</div></div>
+    <div class="row"><div class="rl">2012 birth year rank</div><div class="rv">#28 of 74</div></div>
+    <div class="row"><div class="rl">Current points</div><div class="rv">202.4 pts</div></div>
+    <div class="row"><div class="rl">Points slots</div><div class="rv-a">All 4 filled · weakest = 19.2</div></div>
+    <div class="row"><div class="rl">Tournament avg</div><div class="rv-g">Top 29% placements</div></div>
+  </div>
+  <div class="hb hb-green">
+    <div class="hb-t">The opportunity this season</div>
+    <div class="hb-b">Replacing his weakest 19.2 pt slot plus a strong Summer Nationals result projects Raedyn into the top 10 of his 2012 birth year group nationally.</div>
+  </div>
+  <div class="hb hb-amber">
+    <div class="hb-t">Your investment vs FoilIQ</div>
+    <div class="hb-b">~$15,000/year in fencing. FoilIQ = $65/month = 0.4 cents per dollar spent. Knowing the right 2 events to target this season pays for itself.</div>
+  </div>
+  <button class="btn-primary btn-blue" onclick="go(6)">Now let's talk to Raedyn →</button>
+</div>
+
+<!-- S6: Fencer Welcome -->
+<div class="screen" id="s6">
+  <div>
+    <div class="who-tag tag-raedyn">Raedyn — Your turn</div>
+    <h2>Hey Raedyn.</h2>
+    <div class="sub">I've pulled your full competition history. Let me show you where you actually stand — and what's holding you back.</div>
+  </div>
+  <div class="surface" style="display:flex;align-items:center;gap:12px">
+    <div class="av av-raedyn">RT</div>
+    <div>
+      <div style="font-size:14px;font-weight:500">Raedyn Tsui</div>
+      <div style="font-size:12px;color:var(--text-secondary)">Y14 MF · SoCAL FC · Born 2012</div>
+    </div>
+  </div>
+  <div style="padding:16px 0 8px;text-align:center">
+    <div class="big-n">#28</div>
+    <div class="big-n-sub">of 74 fencers born in 2012 nationally</div>
+    <div style="font-size:13px;color:var(--text-hint);margin-top:8px">Top 38% in your true age group.</div>
+  </div>
+  <div class="hb hb-green">
+    <div class="hb-t">Your real picture</div>
+    <div class="hb-b">Your overall rank #91 includes older fencers. Among the 74 kids your actual age, you're #28. Your tournament placement average this season is top 29% — you're performing better than your ranking shows.</div>
+  </div>
+  <button class="btn-primary" onclick="go(7)">Show me the points breakdown →</button>
+</div>
+
+<!-- S7: Points Slots -->
+<div class="screen" id="s7">
+  <div>
+    <div class="who-tag tag-foiliq">FoilIQ — Points formula</div>
+    <h2>How your ranking actually works</h2>
+    <div class="sub">Your total = your best 4 results from the season. Attend 20 events — only your top 4 count.</div>
+  </div>
+  <div>
+    <div style="font-size:11px;font-weight:500;color:var(--text-hint);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Your current 4 slots</div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 1</div>
+      <div class="slot-bg"><div class="slot-fill" style="width:53%;background:var(--blue-400)">84.8 pts</div></div>
+      <div class="slot-pts" style="color:var(--blue-600)">84.8</div>
+    </div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 2</div>
+      <div class="slot-bg"><div class="slot-fill" style="width:31%;background:var(--blue-400)">50.4 pts</div></div>
+      <div class="slot-pts" style="color:var(--blue-600)">50.4</div>
+    </div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 3</div>
+      <div class="slot-bg"><div class="slot-fill" style="width:30%;background:var(--blue-400)">48.0 pts</div></div>
+      <div class="slot-pts" style="color:var(--blue-600)">48.0</div>
+    </div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 4</div>
+      <div class="slot-bg"><div class="slot-weak-bar">19.2 pts — replace this one</div></div>
+      <div class="slot-pts" style="color:var(--amber-600)">19.2</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:6px">
+      <span style="color:var(--text-secondary)">Total</span>
+      <span style="font-weight:500">202.4 pts → Rank #91 overall · #28 in 2012</span>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div>
+    <div style="font-size:11px;font-weight:500;color:var(--green-600);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">If you replace slot 4</div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 1</div>
+      <div class="slot-bg"><div class="slot-fill" style="width:53%;background:var(--green-400)">84.8 pts</div></div>
+      <div class="slot-pts">84.8</div>
+    </div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 2</div>
+      <div class="slot-bg"><div class="slot-fill" style="width:31%;background:var(--green-400)">50.4 pts</div></div>
+      <div class="slot-pts">50.4</div>
+    </div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 3</div>
+      <div class="slot-bg"><div class="slot-fill" style="width:30%;background:var(--green-400)">48.0 pts</div></div>
+      <div class="slot-pts">48.0</div>
+    </div>
+    <div class="slot-row">
+      <div class="slot-lbl">Slot 4</div>
+      <div class="slot-bg"><div class="slot-fill" style="width:34%;background:var(--green-400)">~54 pts target</div></div>
+      <div class="slot-pts" style="color:var(--green-600)">~54</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:6px">
+      <span style="color:var(--text-secondary)">New total</span>
+      <span style="font-weight:500;color:var(--green-600)">~237 pts → est. #22 in 2012 cohort</span>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="go(8)">See where I stand in my cohort →</button>
+</div>
+
+<!-- S8: Cohort -->
+<div class="screen" id="s8">
+  <div>
+    <div class="who-tag tag-foiliq">FoilIQ — 2012 cohort</div>
+    <h2>You vs the 74 fencers your age</h2>
+    <div class="sub">Only fencers born in 2012. This is your real peer group.</div>
+  </div>
+  <div class="card" style="padding:12px">
+    <div class="peer-row"><div class="p-rank">#1</div><div class="p-name">Chen, Hanson <span style="font-size:11px;color:var(--text-hint)">[Gutkovskiy]</span></div><div class="p-pts">1098</div></div>
+    <div class="peer-row"><div class="p-rank">#4</div><div class="p-name">Zhou, Shawn <span style="font-size:11px;color:var(--blue-400)">[SoCAL FC]</span></div><div class="p-pts">443</div></div>
+    <div class="peer-row"><div class="p-rank">#14</div><div class="p-name">Chang, Jeremy <span style="font-size:11px;color:var(--blue-400)">[SoCAL FC]</span></div><div class="p-pts">194</div></div>
+    <div class="peer-row"><div class="p-rank">#27</div><div class="p-name">Yee, Colin</div><div class="p-pts">97.1</div></div>
+    <div class="you-row peer-row"><div class="p-rank">#28</div><div class="p-name">Tsui, Raedyn ← you</div><div class="p-pts">202.4</div></div>
+    <div class="peer-row"><div class="p-rank">#29</div><div class="p-name">Bhupathiraju, Arjun</div><div class="p-pts">84.0</div></div>
+    <div class="peer-row"><div class="p-rank">#31</div><div class="p-name">Guo, Austin [LAIFC]</div><div class="p-pts">83.2</div></div>
+    <div class="peer-row"><div class="p-rank">#33</div><div class="p-name">Li, Lucas [LAIFC]</div><div class="p-pts">82.4</div></div>
+    <div style="padding:6px 0;font-size:11px;color:var(--text-hint);text-align:center">· · · 40 more fencers below · · ·</div>
+    <div class="peer-row"><div class="p-rank">#74</div><div class="p-name">He, Ian [Silicon Valley]</div><div class="p-pts">10.5</div></div>
+  </div>
+  <div class="hb hb-blue">
+    <div class="hb-t">Your next internal target</div>
+    <div class="hb-b">Jeremy Chang (#14, 194 pts) is your SoCAL FC clubmate. Gap = +109 pts. One strong Summer Nationals result closes most of it. That's your realistic #1 benchmark this season.</div>
+  </div>
+  <button class="btn-primary" onclick="go(9)">Tell me about my game →</button>
+</div>
+
+<!-- S9: Self Assessment -->
+<div class="screen" id="s9">
+  <div>
+    <div class="who-tag tag-raedyn">Raedyn — Your game</div>
+    <h2>Let's understand how you fence.</h2>
+    <div class="sub">Be honest — the more accurate this is, the better your recommendations.</div>
+  </div>
+  <div>
+    <div class="q-label">In pool bouts, what's usually your issue?</div>
+    <div class="options" id="pool-g" style="margin-top:6px">
+      <button class="opt" onclick="sel('pool-g',this)">I lose early and can't recover</button>
+      <button class="opt" onclick="sel('pool-g',this)">I start strong but fade later</button>
+      <button class="opt sel" onclick="sel('pool-g',this)">Inconsistent — good days and bad</button>
+      <button class="opt" onclick="sel('pool-g',this)">I lose to people I should beat</button>
+    </div>
+  </div>
+  <div>
+    <div class="q-label">Trailing 8-5 at the DE break — what happens?</div>
+    <div class="options" id="de-g" style="margin-top:6px">
+      <button class="opt" onclick="sel('de-g',this)">I come back most of the time</button>
+      <button class="opt sel" onclick="sel('de-g',this)">I come back sometimes</button>
+      <button class="opt" onclick="sel('de-g',this)">I usually lose from there</button>
+    </div>
+  </div>
+  <div>
+    <div class="q-label">What's your biggest strength on the strip?</div>
+    <textarea class="q-textarea" style="margin-top:6px">My footwork and distance control</textarea>
+  </div>
+  <button class="btn-primary" onclick="go(10)">Get my first recommendation →</button>
+</div>
+
+<!-- S10: Recommendation -->
+<div class="screen" id="s10">
+  <div>
+    <div class="who-tag tag-foiliq">FoilIQ — Your priority</div>
+    <h2>Here's what to focus on first.</h2>
+  </div>
+  <div class="rec">
+    <div class="rec-title">Priority 1 — Replace your 19.2 pt slot</div>
+    <div class="rec-body">Target event: Cascade Clash SYC (Sep 2027, Seattle)<br>Field: ~80-100 fencers · Top 40% earns points<br>What you need: Top 32-40 finish<br>Points if achieved: ~50-60 pts<br><br>This one result moves you from #28 → est. #22 in your 2012 birth year group.</div>
+  </div>
+  <div class="rec rec-g">
+    <div class="rec-title">Priority 2 — Summer Nationals is your season anchor</div>
+    <div class="rec-body">Y14 field: ~350 fencers · target top 25% (~top 90)<br>Points if achieved: ~120 pts<br><br>This single event projects you into the top 10-12 of your 2012 cohort. Everything else in the season builds toward July.</div>
+  </div>
+  <div class="rec rec-a">
+    <div class="rec-title">Based on your inconsistency pattern</div>
+    <div class="rec-body">Key drill: first-touch action training. Data shows you win 67% when you score first touch in pools vs 31% when opponent scores first. This is your highest-leverage habit to build before Cascade.</div>
+  </div>
+  <button class="btn-primary" onclick="go(11)">Log a private lesson →</button>
+</div>
+
+<!-- S11: Lesson Log -->
+<div class="screen" id="s11">
+  <div>
+    <div class="who-tag tag-raedyn">Raedyn — Lesson log</div>
+    <h2>Log today's private lesson</h2>
+    <div class="sub">Every lesson compounds when it's connected to your competition data.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div><div class="q-label">Focus area</div>
+    <div class="options" id="focus-g" style="margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <button class="opt sel" onclick="sel('focus-g',this)">Technique</button>
+      <button class="opt" onclick="sel('focus-g',this)">Tactics</button>
+      <button class="opt" onclick="sel('focus-g',this)">Footwork</button>
+      <button class="opt" onclick="sel('focus-g',this)">Mental prep</button>
+    </div></div>
+    <div><div class="q-label">What did you work on?</div>
+    <textarea class="q-textarea" style="margin-top:5px;height:80px">Worked on fleche attack. Coach said I'm telegraphing my preparation — need to keep back arm lower and in guard position throughout.</textarea></div>
+    <div><div class="q-label">What did coach say to practice before next lesson?</div>
+    <textarea class="q-textarea" style="margin-top:5px">Footwork drill: advance-advance-fleche × 50 reps daily. Focus on keeping back arm still until the action launches.</textarea></div>
+  </div>
+  <button class="btn-primary btn-green" onclick="go(12)">Save lesson — generate training scenarios →</button>
+</div>
+
+<!-- S12: Scenarios -->
+<div class="screen" id="s12">
+  <div>
+    <div class="who-tag tag-foiliq">FoilIQ — Training scenarios</div>
+    <h2>3 scenarios built for your lesson</h2>
+    <div class="sub">Designed to transfer this technique to real competition conditions.</div>
+  </div>
+  <div class="rec">
+    <div class="rec-title">Scenario 1 — "First touch pressure"</div>
+    <div class="rec-body">Pool bout, 0-0. Set up ONE fleche in the first minute. Do not telegraph back arm.<br><br>Tell your partner: watch your back arm and parry if they see movement. Give honest feedback after each attempt.</div>
+  </div>
+  <div class="rec rec-g">
+    <div class="rec-title">Scenario 2 — "The 4-3 moment"</div>
+    <div class="rec-body">You lead 4-3. Opponent pressing forward. Use fleche as a counter off their advance — not an offensive launch.<br><br>Tell your partner: advance with short attacks every 3-4 seconds, vary timing so you can't predict it.</div>
+  </div>
+  <div class="rec rec-a">
+    <div class="rec-title">Scenario 3 — "8-7 DE break comeback"</div>
+    <div class="rec-body">Trailing by 1 at the break. Come out with ONE prepared fleche in first 30 seconds to reset momentum.<br><br>Best practice partner: Shawn Zhou. If it lands against him, it'll land at any SYC.</div>
+  </div>
+  <button class="btn-primary" onclick="go(13)">See pre-tournament briefing →</button>
+</div>
+
+<!-- S13: Pre-Tournament Briefing -->
+<div class="screen" id="s13">
+  <div>
+    <div class="who-tag tag-foiliq">FoilIQ — 48hrs out</div>
+    <h2>Cascade Clash SYC briefing</h2>
+    <div class="sub">Saturday · Seattle, WA · Sep 2027</div>
+  </div>
+  <div class="surface">
+    <div class="row"><div class="rl">Your mission</div><div class="rv-b">Top 40% = top 32-40 of field</div></div>
+    <div class="row"><div class="rl">Points if achieved</div><div class="rv-g">~50-60 pts</div></div>
+    <div class="row"><div class="rl">Ranking impact</div><div class="rv-g">#28 → est. #22 in 2012 cohort</div></div>
+    <div class="row"><div class="rl">This fills</div><div class="rv-a">Slot 4 — your weakest</div></div>
+    <div class="row"><div class="rl">First touch win rate</div><div class="rv-g">67% when you score first</div></div>
+  </div>
+  <div class="hb hb-blue">
+    <div class="hb-t">Field intelligence</div>
+    <div class="hb-b">Field: ~80-90 fencers. Key 2012 opponents likely present. Fencer A (LAIFC, rank ~#31): first-touch dependent, fades in late pools — race him to first touch. Fencer B (LAIFC, ~#33): strong parry-riposte — your fleche prep is well-suited against this style.</div>
+  </div>
+  <div class="hb hb-green">
+    <div class="hb-t">Your game plan</div>
+    <div class="hb-b">First 15 seconds of every pool bout: attempt one prepared action. If trailing 0-2 early, change pace immediately — don't keep playing the same game. Your DE strength (1775) is higher than your pool (1522) — if you make the cut, trust your DE.</div>
+  </div>
+  <button class="btn-primary btn-green" onclick="showDash()">Open full dashboard →</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════════════ -->
+<div style="display:none;flex-direction:column;flex:1" id="dashboard">
+  <div class="nav-tabs">
+    <button class="tab active" onclick="showDTab('overview',this)">Overview</button>
+    <button class="tab" onclick="showDTab('points',this)">Points</button>
+    <button class="tab" onclick="showDTab('calendar',this)">Calendar</button>
+    <button class="tab" onclick="showDTab('insights',this)">Insights</button>
+  </div>
+
+  <!-- Overview -->
+  <div class="dash-tab active" id="dt-overview">
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-lbl">Y14 rank</div><div class="kpi-val-b">#91</div><div class="kpi-sub">of 240 nationally</div></div>
+      <div class="kpi"><div class="kpi-lbl">2012 cohort</div><div class="kpi-val">#28</div><div class="kpi-sub">of 74 born 2012</div></div>
+      <div class="kpi"><div class="kpi-lbl">Current pts</div><div class="kpi-val">202.4</div><div class="kpi-sub">4 slots filled</div></div>
+      <div class="kpi"><div class="kpi-lbl">Season target</div><div class="kpi-val-g">Top 10</div><div class="kpi-sub">2012 cohort</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Points slots</div>
+      <div class="slot-row"><div class="slot-lbl">Slot 1</div><div class="slot-bg"><div class="slot-fill" style="width:53%;background:var(--blue-400)">84.8</div></div><div class="slot-pts" style="color:var(--blue-600)">84.8</div></div>
+      <div class="slot-row"><div class="slot-lbl">Slot 2</div><div class="slot-bg"><div class="slot-fill" style="width:31%;background:var(--blue-400)">50.4</div></div><div class="slot-pts" style="color:var(--blue-600)">50.4</div></div>
+      <div class="slot-row"><div class="slot-lbl">Slot 3</div><div class="slot-bg"><div class="slot-fill" style="width:30%;background:var(--blue-400)">48.0</div></div><div class="slot-pts" style="color:var(--blue-600)">48.0</div></div>
+      <div class="slot-row"><div class="slot-lbl">Slot 4</div><div class="slot-bg"><div class="slot-weak-bar">19.2 — replace this</div></div><div class="slot-pts" style="color:var(--amber-600)">19.2</div></div>
+      <div class="sep" style="margin:8px 0"></div>
+      <div class="row" style="padding-top:0"><div class="rl">Total</div><div class="rv">202.4 pts</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">2012 cohort neighbors</div>
+      <div class="peer-row"><div class="p-rank">#4</div><div class="p-name">Zhou, Shawn <span style="font-size:11px;color:var(--blue-400)">[SoCAL]</span></div><div class="p-pts">443</div></div>
+      <div class="peer-row"><div class="p-rank">#14</div><div class="p-name">Chang, Jeremy <span style="font-size:11px;color:var(--blue-400)">[SoCAL]</span></div><div class="p-pts">194</div></div>
+      <div class="peer-row"><div class="p-rank">#27</div><div class="p-name">Yee, Colin</div><div class="p-pts">97.1</div></div>
+      <div class="you-row peer-row"><div class="p-rank">#28</div><div class="p-name">Tsui, Raedyn ← you</div><div class="p-pts">202.4</div></div>
+      <div class="peer-row"><div class="p-rank">#29</div><div class="p-name">Bhupathiraju, A.</div><div class="p-pts">84.0</div></div>
+      <div class="peer-row"><div class="p-rank">#31</div><div class="p-name">Guo, Austin [LAIFC]</div><div class="p-pts">83.2</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Path to season goals — 2012 cohort</div>
+      <div class="target-row"><div class="t-name">Top 20</div><div class="t-track"><div class="t-fill" style="width:76%;background:var(--blue-400)"></div></div><div class="t-pts" style="color:var(--blue-600)">need 270</div></div>
+      <div class="target-row"><div class="t-name">Top 15</div><div class="t-track"><div class="t-fill" style="width:60%;background:var(--blue-400)"></div></div><div class="t-pts" style="color:var(--blue-600)">need 342</div></div>
+      <div class="target-row"><div class="t-name">Top 10</div><div class="t-track"><div class="t-fill" style="width:47%;background:var(--green-400)"></div></div><div class="t-pts" style="color:var(--green-600)">need 430</div></div>
+      <div class="target-row"><div class="t-name">Top 5</div><div class="t-track"><div class="t-fill" style="width:25%;background:var(--amber-400)"></div></div><div class="t-pts" style="color:var(--amber-600)">need 598</div></div>
+    </div>
+  </div>
+
+  <!-- Points -->
+  <div class="dash-tab" id="dt-points">
+    <div class="card">
+      <div class="card-title">Season points projection — 2027-2028</div>
+      <div style="font-size:11px;color:var(--text-hint);margin-bottom:12px">How Raedyn's total builds event by event</div>
+      <div class="proj-row"><div class="proj-lbl">Now</div><div class="proj-track"><div class="proj-fill" style="width:28%;background:var(--text-hint)">202</div></div><div class="proj-total" style="color:var(--text-secondary)">202</div></div>
+      <div class="proj-row"><div class="proj-lbl">Sep SYC</div><div class="proj-track"><div class="proj-fill" style="width:33%;background:var(--blue-400)">+60 → 262</div></div><div class="proj-total" style="color:var(--blue-600)">262</div></div>
+      <div class="proj-row"><div class="proj-lbl">Nov SYC</div><div class="proj-track"><div class="proj-fill" style="width:39%;background:var(--blue-400)">+55 → 317</div></div><div class="proj-total" style="color:var(--blue-600)">317</div></div>
+      <div class="proj-row"><div class="proj-lbl">Nov NAC</div><div class="proj-track"><div class="proj-fill" style="width:43%;background:var(--blue-400)">+25 → 342</div></div><div class="proj-total" style="color:var(--blue-600)">342</div></div>
+      <div class="proj-row"><div class="proj-lbl">Dec SYC</div><div class="proj-track"><div class="proj-fill" style="width:49%;background:var(--blue-400)">+55 → 397</div></div><div class="proj-total" style="color:var(--blue-600)">397</div></div>
+      <div class="proj-row"><div class="proj-lbl">Feb SYC</div><div class="proj-track"><div class="proj-fill" style="width:55%;background:var(--blue-400)">+60 → 457</div></div><div class="proj-total" style="color:var(--blue-600)">457</div></div>
+      <div class="proj-row"><div class="proj-lbl">Mar SYC</div><div class="proj-track"><div class="proj-fill" style="width:60%;background:var(--blue-400)">+55 → 512</div></div><div class="proj-total" style="color:var(--blue-600)">512</div></div>
+      <div class="proj-row"><div class="proj-lbl">Mar NAC</div><div class="proj-track"><div class="proj-fill" style="width:63%;background:var(--blue-400)">+25 → 537</div></div><div class="proj-total" style="color:var(--blue-600)">537</div></div>
+      <div class="proj-row"><div class="proj-lbl">May SYC</div><div class="proj-track"><div class="proj-fill" style="width:70%;background:var(--blue-400)">+70 → 607</div></div><div class="proj-total" style="color:var(--blue-600)">607</div></div>
+      <div class="proj-row"><div class="proj-lbl">Nationals</div><div class="proj-track"><div class="proj-fill" style="width:100%;background:var(--green-400)">+120 → 727 pts</div></div><div class="proj-total" style="color:var(--green-600)">727</div></div>
+      <div class="sep" style="margin:12px 0"></div>
+      <div class="outcome-grid">
+        <div class="oc" style="background:var(--blue-50)"><div class="oc-lbl" style="color:var(--blue-600)">Conservative</div><div class="oc-val" style="color:var(--blue-800)">430 pts</div><div style="font-size:10px;color:var(--blue-600);margin-top:2px">Top 10 cohort</div></div>
+        <div class="oc" style="background:var(--green-50);border:1.5px solid var(--green-400)"><div class="oc-lbl" style="color:var(--green-600)">Target</div><div class="oc-val" style="color:var(--green-600)">600 pts</div><div style="font-size:10px;color:var(--green-600);margin-top:2px">Top 5 cohort</div></div>
+        <div class="oc" style="background:var(--amber-50)"><div class="oc-lbl" style="color:var(--amber-600)">Stretch</div><div class="oc-val" style="color:var(--amber-600)">750 pts</div><div style="font-size:10px;color:var(--amber-600);margin-top:2px">Top 3 cohort</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Slot replacement plan to reach top 10</div>
+      <div class="row"><div class="rl">Slot 1 (now 84.8)</div><div class="rv-g">Nationals top 25% → ~120 pts</div></div>
+      <div class="row"><div class="rl">Slot 2 (now 50.4)</div><div class="rv-b">SYC top 15% → ~80 pts</div></div>
+      <div class="row"><div class="rl">Slot 3 (now 48.0)</div><div class="rv-b">SYC top 20% → ~65 pts</div></div>
+      <div class="row"><div class="rl">Slot 4 (now 19.2)</div><div class="rv-a">Any SYC top 40% → ~50 pts</div></div>
+      <div class="sep" style="margin:6px 0"></div>
+      <div class="row"><div class="rl">Projected new total</div><div class="rv-g">~315-430 pts</div></div>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="dash-tab" id="dt-calendar">
+    <div class="card">
+      <div class="card-title">2027-2028 tournament plan</div>
+      <div style="font-size:11px;color:var(--text-hint);margin-bottom:12px">13 events · Y14 + CDT crossover · 2 solo CDT events</div>
+      <div class="ev-row"><div class="ev-month">Sep</div><div class="ev-body"><div class="ev-name">Cascade Clash SYC · Seattle</div><div class="ev-tags"><span class="badge b-syc">SYC — A</span><span class="badge b-syc">Y14MF</span></div></div><div class="ev-pts">+60 pts</div></div>
+      <div class="ev-row"><div class="ev-month">Oct</div><div class="ev-body"><div class="ev-name">Little Musketeers RYC · SoCal</div><div class="ev-tags"><span class="badge b-ryc">RYC</span><span class="badge b-ryc">Y14 + JNR</span></div></div><div class="ev-pts">qualify</div></div>
+      <div class="ev-row"><div class="ev-month">Nov</div><div class="ev-body"><div class="ev-name">Orange Blossom Classic SYC · SoCal</div><div class="ev-tags"><span class="badge b-syc">SYC — A</span><span class="badge b-syc">Y14 + CDT</span></div></div><div class="ev-pts">+55 pts</div></div>
+      <div class="ev-row"><div class="ev-month">Nov</div><div class="ev-body"><div class="ev-name">November NAC</div><div class="ev-tags"><span class="badge b-nac">NAC — B</span><span class="badge b-nac">Y14 + CDT</span></div></div><div class="ev-pts">+25 pts</div></div>
+      <div class="ev-row"><div class="ev-month">Dec</div><div class="ev-body"><div class="ev-name">Nick Itkin Cup SYC · SoCal</div><div class="ev-tags"><span class="badge b-syc">SYC — A</span><span class="badge b-syc">Y14MF</span></div></div><div class="ev-pts">+55 pts</div></div>
+      <div class="ev-row"><div class="ev-month">Jan</div><div class="ev-body"><div class="ev-name">Junior Olympics · Oklahoma City</div><div class="ev-tags"><span class="badge b-sjcc">CDT/JNR</span><span class="badge b-solo">Raedyn solo</span></div></div><div class="ev-pts">CDT pts</div></div>
+      <div class="ev-row"><div class="ev-month">Jan</div><div class="ev-body"><div class="ev-name">Mary Rafanelli RYC · SoCal</div><div class="ev-tags"><span class="badge b-ryc">RYC</span><span class="badge b-ryc">Y14 + CDT</span></div></div><div class="ev-pts">qualify</div></div>
+      <div class="ev-row"><div class="ev-month">Feb</div><div class="ev-body"><div class="ev-name">Midwest SYC · Chicago</div><div class="ev-tags"><span class="badge b-syc">SYC — A</span><span class="badge b-syc">Y14MF</span></div></div><div class="ev-pts">+60 pts</div></div>
+      <div class="ev-row"><div class="ev-month">Mar</div><div class="ev-body"><div class="ev-name">Fortune SYC · SoCal</div><div class="ev-tags"><span class="badge b-syc">SYC — A</span><span class="badge b-syc">Y14MF</span></div></div><div class="ev-pts">+55 pts</div></div>
+      <div class="ev-row"><div class="ev-month">Mar</div><div class="ev-body"><div class="ev-name">March NAC · Y14/Y12</div><div class="ev-tags"><span class="badge b-nac">NAC — B</span><span class="badge b-nac">Y14MF</span></div></div><div class="ev-pts">+25 pts</div></div>
+      <div class="ev-row"><div class="ev-month">May</div><div class="ev-body"><div class="ev-name">BBFC Duel in the Desert SYC · Vegas</div><div class="ev-tags"><span class="badge b-syc">SYC — A</span><span class="badge b-syc">Y14 + CDT</span></div></div><div class="ev-pts">+70 pts</div></div>
+      <div class="ev-row"><div class="ev-month">Jun</div><div class="ev-body"><div class="ev-name">June SJCC</div><div class="ev-tags"><span class="badge b-sjcc">SJCC CDT</span><span class="badge b-solo">Raedyn solo</span></div></div><div class="ev-pts">CDT pts</div></div>
+      <div class="ev-row"><div class="ev-month">Jul</div><div class="ev-body"><div class="ev-name">Summer Nationals + July Challenge</div><div class="ev-tags"><span class="badge b-nat">S PRIORITY</span><span class="badge b-nat">Y14 + CDT</span></div></div><div class="ev-pts">+120 pts</div></div>
+      <div class="sep" style="margin:10px 0"></div>
+      <div class="cost-grid">
+        <div class="cost-c"><div class="cc-val" style="color:var(--green-600)">6</div><div class="cc-lbl">SYC events</div></div>
+        <div class="cost-c"><div class="cc-val" style="color:var(--blue-600)">2</div><div class="cc-lbl">NAC events</div></div>
+        <div class="cost-c"><div class="cc-val">$18K</div><div class="cc-lbl">est. season</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="dash-tab" id="dt-insights">
+    <div class="card">
+      <div class="card-title">Performance patterns — from your bout history</div>
+      <div class="ins-row"><div class="ins-dot ins-b">1T</div><div class="ins-text"><strong>First touch is everything.</strong> You win 67% of pool bouts when you score first touch vs 31% when opponent scores first. This is your single biggest lever.</div></div>
+      <div class="ins-row"><div class="ins-dot ins-g">DE</div><div class="ins-text"><strong>DE is your strength.</strong> Your DE strength (1775) is significantly higher than pool (1522). You're better in 15-touch formats — trust your DE game.</div></div>
+      <div class="ins-row"><div class="ins-dot ins-b">SYC</div><div class="ins-text"><strong>SYC is where points live.</strong> RYC earns zero national points. Your national ranking only moves with SYC and Nationals results.</div></div>
+      <div class="ins-row"><div class="ins-dot ins-g">CDT</div><div class="ins-text"><strong>CDT crossover unlocks a second SYC slot.</strong> Competing Cadet at Orange Blossom, BBFC, and Nationals opens an additional slot in your best-4 formula.</div></div>
+      <div class="ins-row"><div class="ins-dot ins-g">CLB</div><div class="ins-text"><strong>SoCAL FC is a structural advantage.</strong> Training with Shawn Zhou (#4 in 2012 nationally) every week is something almost no other club provides. Use it in your preparation.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Last lesson · Today</div>
+      <div class="ins-row" style="padding:4px 0 0"><div class="ins-dot ins-b">FL</div><div class="ins-text"><strong>Fleche — back arm telegraph fix.</strong> Coach identified preparation tell. Three scenarios generated.</div></div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button style="padding:10px;font-size:12px;font-family:inherit;cursor:pointer;background:none;border:0.5px solid var(--border-strong);border-radius:var(--r-md);color:var(--text)">View scenarios</button>
+        <button style="padding:10px;font-size:12px;font-family:inherit;cursor:pointer;background:none;border:0.5px solid var(--border-strong);border-radius:var(--r-md);color:var(--text)">Pre-event brief</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Season cost breakdown</div>
+      <div class="row"><div class="rl">6 SYC events</div><div class="rv">$5,800</div></div>
+      <div class="row"><div class="rl">2 NAC events</div><div class="rv">$5,000</div></div>
+      <div class="row"><div class="rl">Junior Olympics (solo)</div><div class="rv">$2,000</div></div>
+      <div class="row"><div class="rl">June SJCC (solo)</div><div class="rv">$1,200</div></div>
+      <div class="row"><div class="rl">Summer Nationals</div><div class="rv">$2,800</div></div>
+      <div class="row"><div class="rl">Entry fees</div><div class="rv">$1,200</div></div>
+      <div class="row"><div class="rl">FoilIQ</div><div class="rv" style="color:var(--green-600)">$624/year</div></div>
+      <div class="sep" style="margin:6px 0"></div>
+      <div class="row"><div class="rl" style="font-weight:500;color:var(--text)">Total</div><div class="rv">~$18,624</div></div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-hint)">FoilIQ = 3.3% of season investment. Shared travel with Kaylan saves ~$7K.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+var cur = 0;
+var total = 14;
+var history = [0];
+
+function go(n) {
+  document.getElementById('s' + cur).classList.remove('active');
+  history.push(n);
+  cur = n;
+  document.getElementById('s' + cur).classList.add('active');
+  var pct = Math.round((n / total) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('step-num').textContent = (n + 1) + ' of ' + total;
+  document.getElementById('back-btn').className = n > 0 ? 'back-btn show' : 'back-btn';
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  if (history.length > 1) {
+    history.pop();
+    var prev = history[history.length - 1];
+    document.getElementById('s' + cur).classList.remove('active');
+    cur = prev;
+    document.getElementById('s' + cur).classList.add('active');
+    var pct = Math.round((prev / total) * 100);
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('step-num').textContent = (prev + 1) + ' of ' + total;
+    document.getElementById('back-btn').className = prev > 0 ? 'back-btn show' : 'back-btn';
+    window.scrollTo(0, 0);
+  }
+}
+
+function showDash() {
+  for (var i = 0; i <= 13; i++) {
+    var s = document.getElementById('s' + i);
+    if (s) s.classList.remove('active');
+  }
+  document.getElementById('dashboard').style.display = 'flex';
+  document.getElementById('prog-wrap').style.display = 'none';
+  document.getElementById('step-num').style.display = 'none';
+  document.getElementById('back-btn').className = 'back-btn show';
+  document.getElementById('back-btn').onclick = function() {
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('prog-wrap').style.display = 'block';
+    document.getElementById('step-num').style.display = 'block';
+    go(13);
+  };
+  window.scrollTo(0, 0);
+}
+
+function showDTab(id, el) {
+  ['overview','points','calendar','insights'].forEach(function(t) {
+    document.getElementById('dt-' + t).classList.remove('active');
+  });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('dt-' + id).classList.add('active');
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function sel(gid, el) {
+  document.getElementById(gid).querySelectorAll('.opt').forEach(function(o) {
+    o.classList.remove('sel');
+  });
+  el.classList.add('sel');
+}
+
+function tog(el) {
+  var on = el.classList.toggle('on');
+  el.querySelector('.chk-box').textContent = on ? '✓' : '';
+}
+</script>
+</body>
+</html>
