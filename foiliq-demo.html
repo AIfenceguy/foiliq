@@ -752,11 +752,11 @@ h2 { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1.25; }
 <script>
 var cur = 0;
 var total = 14;
-var history = [0];
+var navHistory = [0];
 
 function go(n) {
   document.getElementById('s' + cur).classList.remove('active');
-  history.push(n);
+  navHistory.push(n);
   cur = n;
   document.getElementById('s' + cur).classList.add('active');
   var pct = Math.round((n / total) * 100);
@@ -767,9 +767,9 @@ function go(n) {
 }
 
 function goBack() {
-  if (history.length > 1) {
-    history.pop();
-    var prev = history[history.length - 1];
+  if (navHistory.length > 1) {
+    navHistory.pop();
+    var prev = navHistory[navHistory.length - 1];
     document.getElementById('s' + cur).classList.remove('active');
     cur = prev;
     document.getElementById('s' + cur).classList.add('active');
